@@ -13,28 +13,35 @@ export function AuthForm() {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage(null);
     setLoading(true);
 
     try {
       if (mode === "sign-up") {
-        const { error } = await signUp(email, password, name);
+        const { error, nestError } = await signUp(email, password, name);
         if (error) {
           setMessage(error.message ?? "Sign up failed.");
           return;
         }
 
-        setMode("sign-in");
-        setPassword("");
-        setMessage("Account created. Sign in to continue.");
+        if (nestError) {
+          setMessage(nestError);
+          return;
+        }
+
         return;
       }
 
-      const { error } = await signIn(email, password);
+      const { error, nestError } = await signIn(email, password);
       if (error) {
         setMessage(error.message ?? "Sign in failed.");
+        return;
+      }
+
+      if (nestError) {
+        setMessage(nestError);
       }
     } finally {
       setLoading(false);
@@ -59,11 +66,10 @@ export function AuthForm() {
             setMode("sign-in");
             setMessage(null);
           }}
-          className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-            mode === "sign-in"
+          className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${mode === "sign-in"
               ? "bg-white text-zinc-950 shadow dark:bg-zinc-800 dark:text-zinc-50"
               : "text-zinc-600 dark:text-zinc-400"
-          }`}
+            }`}
         >
           Sign in
         </button>
@@ -73,11 +79,10 @@ export function AuthForm() {
             setMode("sign-up");
             setMessage(null);
           }}
-          className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-            mode === "sign-up"
+          className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${mode === "sign-up"
               ? "bg-white text-zinc-950 shadow dark:bg-zinc-800 dark:text-zinc-50"
               : "text-zinc-600 dark:text-zinc-400"
-          }`}
+            }`}
         >
           Sign up
         </button>
@@ -126,8 +131,8 @@ export function AuthForm() {
         {message && (
           <p
             className={`rounded-lg px-3 py-2 text-sm ${
-              message.includes("created")
-                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+              message.includes("Signed in, but")
+                ? "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
                 : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
             }`}
           >

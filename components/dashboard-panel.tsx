@@ -1,11 +1,51 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useSession } from "@/lib/betterAuth/auth";
 import { signOutUser } from "@/lib/betterAuth/helpers";
+import { setAccessTokenFromNext } from "@/lib/nest/access-token";
+import { getNestLinkErrorMessage } from "@/lib/nest/link-session";
 
 export function DashboardPanel() {
   const { data: session, isPending } = useSession();
+  const [nestStatus, setNestStatus] = useState<
+    "idle" | "loading" | "ready" | "error"
+  >("idle");
+  const [nestError, setNestError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session) {
+      setNestStatus("idle");
+      setNestError(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadNestSession() {
+      setNestStatus("loading");
+      setNestError(null);
+
+      try {
+        await setAccessTokenFromNext();
+        if (!cancelled) {
+          setNestStatus("ready");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setNestStatus("error");
+          setNestError(getNestLinkErrorMessage(error));
+        }
+      }
+    }
+
+    void loadNestSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
 
   if (isPending) {
     return (
@@ -55,8 +95,27 @@ export function DashboardPanel() {
         </button>
       </div>
 
+      <div className="mt-6 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+        <p className="text-sm font-medium">Nest API session</p>
+        {nestStatus === "loading" && (
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            Linking Nest access token...
+          </p>
+        )}
+        {nestStatus === "ready" && (
+          <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400">
+            Ready. `nestApi` calls will include a valid Bearer token.
+          </p>
+        )}
+        {nestStatus === "error" && (
+          <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">
+            {nestError}
+          </p>
+        )}
+      </div>
+
       <div className="mt-8 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
-        <p className="mb-3 text-sm font-medium">Session payload</p>
+        <p className="mb-3 text-sm font-medium">Better Auth session</p>
         <pre className="overflow-x-auto text-xs leading-6 text-zinc-700 dark:text-zinc-300">
           {JSON.stringify(session, null, 2)}
         </pre>
