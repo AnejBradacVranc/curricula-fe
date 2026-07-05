@@ -1,20 +1,16 @@
 import type {
   ApiResponse,
-  Assignment,
-  AssignmentWithRelations,
   CreateAssignmentRequest,
   DeleteAssignmentRequest,
+  ProgramSubjectItem,
 } from "@/types";
 import { api } from "./axios";
 import { unwrap } from "./unwrap";
 
-export const getAssignments = () =>
+export const assignTeacher = (data: CreateAssignmentRequest) =>
   unwrap(
-    api.get<ApiResponse<AssignmentWithRelations[]>>("/schools/assignments"),
+    api.post<ApiResponse<ProgramSubjectItem>>("/schools/assignments", data),
   );
 
-export const createAssignment = (data: CreateAssignmentRequest) =>
-  unwrap(api.post<ApiResponse<Assignment>>("/schools/assignments", data));
-
-export const deleteAssignment = (data: DeleteAssignmentRequest) =>
+export const unassignTeacher = (data: DeleteAssignmentRequest) =>
   unwrap(api.delete<ApiResponse<null>>("/schools/assignments", { data }));

@@ -17,8 +17,8 @@ export default function Home() {
         Aplikacija za beleženje ur učiteljev
       </p>
       <p className="mt-4 max-w-2xl text-muted-foreground">
-        Upravljajte šole, učitelje, predmete in urnike na enem mestu. Za
-        dostop do nadzorne plošče se prijavite v svoj račun.
+        Upravljajte dodeljene ure za učitelje. {!isAuthenticated && `Za
+        dostop do nadzorne plošče se prijavite v svoj račun.`}
       </p>
       <div className="mt-8 flex gap-3">
         {!isAuthenticated && <Button render={<Link href="/login" />}>Prijava</Button>}

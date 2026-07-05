@@ -10,15 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type {
-  AssignmentWithRelations,
-  ProgramWithRelations,
-} from "@/types";
+import type { ProgramWithRelations } from "@/types";
 
 type ProgramClassesProps = {
   program: ProgramWithRelations;
-  assignments: AssignmentWithRelations[];
-  pendingSubjectId: number | null;
+  pendingAssignmentKey: string | null;
   onAssignTeacher: (input: {
     programId: number;
     subjectId: number;
@@ -31,25 +27,13 @@ type ProgramClassesProps = {
   }) => void;
 };
 
-function getTeacherForSubject(
-  subjectId: number,
-  assignments: AssignmentWithRelations[],
-) {
-  return assignments.find((assignment) => assignment.subjectId === subjectId)
-    ?.teacher;
-}
-
-function getAssignmentForSubject(
-  subjectId: number,
-  assignments: AssignmentWithRelations[],
-) {
-  return assignments.find((assignment) => assignment.subjectId === subjectId);
+function getAssignmentKey(programId: number, subjectId: number) {
+  return `${programId}-${subjectId}`;
 }
 
 export function ProgramClasses({
   program,
-  assignments,
-  pendingSubjectId,
+  pendingAssignmentKey,
   onAssignTeacher,
   onRemoveAssignment,
 }: ProgramClassesProps) {
@@ -79,15 +63,12 @@ export function ProgramClasses({
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {classes.map((programSubject) => {
-            const assignment = getAssignmentForSubject(
+            const teacher = programSubject.teacher ?? undefined;
+            const assignmentKey = getAssignmentKey(
+              program.id,
               programSubject.subjectId,
-              assignments,
             );
-            const teacher = getTeacherForSubject(
-              programSubject.subjectId,
-              assignments,
-            );
-            const isPending = pendingSubjectId === programSubject.subjectId;
+            const isPending = pendingAssignmentKey === assignmentKey;
 
             return (
               <Card key={programSubject.subjectId} size="sm">
@@ -107,7 +88,7 @@ export function ProgramClasses({
                   <SubjectAssignmentSlot
                     teacher={teacher}
                     isPending={isPending}
-                    disabled={pendingSubjectId !== null && !isPending}
+                    disabled={pendingAssignmentKey !== null && !isPending}
                     onAssign={(teacherId) =>
                       onAssignTeacher({
                         programId: program.id,
@@ -116,14 +97,14 @@ export function ProgramClasses({
                       })
                     }
                     onRemove={() => {
-                      if (!assignment) {
+                      if (!programSubject.teacherId) {
                         return;
                       }
 
                       onRemoveAssignment({
                         programId: program.id,
                         subjectId: programSubject.subjectId,
-                        teacherId: assignment.teacherId,
+                        teacherId: programSubject.teacherId,
                       });
                     }}
                   />

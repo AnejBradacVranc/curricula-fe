@@ -21,7 +21,6 @@ export type {
   ProgramSubject,
   ProgramSubjectWithRelations,
 } from "./entities/program-subject";
-export type { Assignment, AssignmentWithRelations } from "./entities/assignment";
 
 export type {
   LoginRequest,

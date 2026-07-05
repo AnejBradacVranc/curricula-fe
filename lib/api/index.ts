@@ -17,4 +17,4 @@ export { getSubjects, createSubject } from "./subjects";
 
 export { getProgramSubjects, createProgramSubject } from "./program-subjects";
 
-export { getAssignments, createAssignment, deleteAssignment } from "./assignments";
+export { assignTeacher, unassignTeacher } from "./assignments";

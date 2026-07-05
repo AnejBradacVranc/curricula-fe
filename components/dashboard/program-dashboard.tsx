@@ -19,17 +19,12 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import {
-  createAssignment,
-  deleteAssignment,
-  getAssignments,
+  assignTeacher,
   getPrograms,
   getTeachers,
+  unassignTeacher,
 } from "@/lib/api";
-import type {
-  AssignmentWithRelations,
-  ProgramWithRelations,
-  Teacher,
-} from "@/types";
+import type { ProgramWithRelations, Teacher } from "@/types";
 
 function DashboardSkeleton() {
   return (
@@ -54,22 +49,23 @@ function DashboardSkeleton() {
 export function ProgramDashboard() {
   const [programs, setPrograms] = useState<ProgramWithRelations[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [assignments, setAssignments] = useState<AssignmentWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [pendingSubjectId, setPendingSubjectId] = useState<number | null>(null);
+  const [pendingAssignmentKey, setPendingAssignmentKey] = useState<
+    string | null
+  >(null);
   const [draggingTeacherId, setDraggingTeacherId] = useState<number | null>(
     null,
   );
 
-  const refreshAssignmentsAndTeachers = useCallback(async () => {
-    const [assignmentsData, teachersData] = await Promise.all([
-      getAssignments(),
+  const refreshDashboard = useCallback(async () => {
+    const [programsData, teachersData] = await Promise.all([
+      getPrograms(),
       getTeachers(),
     ]);
 
-    setAssignments(assignmentsData);
+    setPrograms(programsData);
     setTeachers(teachersData);
   }, []);
 
@@ -81,16 +77,14 @@ export function ProgramDashboard() {
       setError(null);
 
       try {
-        const [programsData, teachersData, assignmentsData] = await Promise.all([
+        const [programsData, teachersData] = await Promise.all([
           getPrograms(),
           getTeachers(),
-          getAssignments(),
         ]);
 
         if (!cancelled) {
           setPrograms(programsData);
           setTeachers(teachersData);
-          setAssignments(assignmentsData);
         }
       } catch {
         if (!cancelled) {
@@ -120,37 +114,30 @@ export function ProgramDashboard() {
       subjectId: number;
       teacherId: number;
     }) => {
-      const existing = assignments.find(
-        (assignment) => assignment.subjectId === subjectId,
+      const program = programs.find((item) => item.id === programId);
+      const programSubject = program?.programSubjects.find(
+        (item) => item.subjectId === subjectId,
       );
 
-      if (existing?.teacherId === teacherId) {
+      if (programSubject?.teacherId === teacherId) {
         return;
       }
 
       setActionError(null);
-      setPendingSubjectId(subjectId);
+      setPendingAssignmentKey(`${programId}-${subjectId}`);
 
       try {
-        if (existing) {
-          await deleteAssignment({
-            programId,
-            subjectId,
-            teacherId: existing.teacherId,
-          });
-        }
-
-        await createAssignment({ programId, subjectId, teacherId });
-        await refreshAssignmentsAndTeachers();
+        await assignTeacher({ programId, subjectId, teacherId });
+        await refreshDashboard();
       } catch {
         setActionError(
           "Dodelitev učitelja ni uspela. Preverite, ali je predmet že zaseden ali poskusite znova.",
         );
       } finally {
-        setPendingSubjectId(null);
+        setPendingAssignmentKey(null);
       }
     },
-    [assignments, refreshAssignmentsAndTeachers],
+    [programs, refreshDashboard],
   );
 
   const handleRemoveAssignment = useCallback(
@@ -164,18 +151,18 @@ export function ProgramDashboard() {
       teacherId: number;
     }) => {
       setActionError(null);
-      setPendingSubjectId(subjectId);
+      setPendingAssignmentKey(`${programId}-${subjectId}`);
 
       try {
-        await deleteAssignment({ programId, subjectId, teacherId });
-        await refreshAssignmentsAndTeachers();
+        await unassignTeacher({ programId, subjectId, teacherId });
+        await refreshDashboard();
       } catch {
         setActionError("Odstranitev dodelitve ni uspela. Poskusite znova.");
       } finally {
-        setPendingSubjectId(null);
+        setPendingAssignmentKey(null);
       }
     },
-    [refreshAssignmentsAndTeachers],
+    [refreshDashboard],
   );
 
   if (isLoading) {
@@ -226,10 +213,6 @@ export function ProgramDashboard() {
         <h1 className="text-2xl font-semibold tracking-tight">
           Nadzorna plošča
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Povlecite učitelja na predmet za dodelitev ali odstranite obstoječo
-          dodelitev.
-        </p>
       </div>
 
       {actionError && (
@@ -260,8 +243,7 @@ export function ProgramDashboard() {
             <TabsContent key={program.id} value={program.id.toString()}>
               <ProgramClasses
                 program={program}
-                assignments={assignments}
-                pendingSubjectId={pendingSubjectId}
+                pendingAssignmentKey={pendingAssignmentKey}
                 onAssignTeacher={handleAssignTeacher}
                 onRemoveAssignment={handleRemoveAssignment}
               />

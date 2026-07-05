@@ -100,7 +100,10 @@ export function TeachersPanel({
           <div className="px-(--card-spacing) py-3 text-xs text-muted-foreground">
             Skupaj dodeljenih ur:{" "}
             <span className="font-medium text-foreground">
-              {teachers.reduce((sum, teacher) => sum + teacher.assignedHours, 0)}
+              {teachers.reduce(
+                (sum, teacher) => sum + Number(teacher.assignedHours),
+                0,
+              )}
               h
             </span>
           </div>
