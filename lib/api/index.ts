@@ -1,4 +1,4 @@
-export { api, setAccessToken } from "./axios";
+export { api, getAccessToken, setAccessToken } from "./axios";
 export { unwrap } from "./unwrap";
 
 export { getAppInfo } from "./app";
