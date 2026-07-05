@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { GraduationCap } from "lucide-react";
 import { ProgramClasses } from "@/components/dashboard/program-classes";
 import { TeachersPanel } from "@/components/dashboard/teachers-panel";
@@ -18,7 +18,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { getAssignments, getPrograms, getTeachers } from "@/lib/api";
+import {
+  createAssignment,
+  deleteAssignment,
+  getAssignments,
+  getPrograms,
+  getTeachers,
+} from "@/lib/api";
 import type {
   AssignmentWithRelations,
   ProgramWithRelations,
@@ -51,6 +57,21 @@ export function ProgramDashboard() {
   const [assignments, setAssignments] = useState<AssignmentWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [pendingSubjectId, setPendingSubjectId] = useState<number | null>(null);
+  const [draggingTeacherId, setDraggingTeacherId] = useState<number | null>(
+    null,
+  );
+
+  const refreshAssignmentsAndTeachers = useCallback(async () => {
+    const [assignmentsData, teachersData] = await Promise.all([
+      getAssignments(),
+      getTeachers(),
+    ]);
+
+    setAssignments(assignmentsData);
+    setTeachers(teachersData);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,6 +110,74 @@ export function ProgramDashboard() {
     };
   }, []);
 
+  const handleAssignTeacher = useCallback(
+    async ({
+      programId,
+      subjectId,
+      teacherId,
+    }: {
+      programId: number;
+      subjectId: number;
+      teacherId: number;
+    }) => {
+      const existing = assignments.find(
+        (assignment) => assignment.subjectId === subjectId,
+      );
+
+      if (existing?.teacherId === teacherId) {
+        return;
+      }
+
+      setActionError(null);
+      setPendingSubjectId(subjectId);
+
+      try {
+        if (existing) {
+          await deleteAssignment({
+            programId,
+            subjectId,
+            teacherId: existing.teacherId,
+          });
+        }
+
+        await createAssignment({ programId, subjectId, teacherId });
+        await refreshAssignmentsAndTeachers();
+      } catch {
+        setActionError(
+          "Dodelitev učitelja ni uspela. Preverite, ali je predmet že zaseden ali poskusite znova.",
+        );
+      } finally {
+        setPendingSubjectId(null);
+      }
+    },
+    [assignments, refreshAssignmentsAndTeachers],
+  );
+
+  const handleRemoveAssignment = useCallback(
+    async ({
+      programId,
+      subjectId,
+      teacherId,
+    }: {
+      programId: number;
+      subjectId: number;
+      teacherId: number;
+    }) => {
+      setActionError(null);
+      setPendingSubjectId(subjectId);
+
+      try {
+        await deleteAssignment({ programId, subjectId, teacherId });
+        await refreshAssignmentsAndTeachers();
+      } catch {
+        setActionError("Odstranitev dodelitve ni uspela. Poskusite znova.");
+      } finally {
+        setPendingSubjectId(null);
+      }
+    },
+    [refreshAssignmentsAndTeachers],
+  );
+
   if (isLoading) {
     return <DashboardSkeleton />;
   }
@@ -118,7 +207,12 @@ export function ProgramDashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <TeachersPanel teachers={teachers} />
+          <TeachersPanel
+            teachers={teachers}
+            draggingTeacherId={draggingTeacherId}
+            onDragStart={setDraggingTeacherId}
+            onDragEnd={() => setDraggingTeacherId(null)}
+          />
         </CardContent>
       </Card>
     );
@@ -133,28 +227,54 @@ export function ProgramDashboard() {
           Nadzorna plošča
         </h1>
         <p className="text-sm text-muted-foreground">
-          Pregled programov, predmetov in učiteljev vaše šole.
+          Povlecite učitelja na predmet za dodelitev ali odstranite obstoječo
+          dodelitev.
         </p>
       </div>
 
+      {actionError && (
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="py-3 text-sm text-destructive">
+            {actionError}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         <Tabs defaultValue={defaultTab} className="min-w-0 gap-4">
-          <TabsList className="h-auto w-full flex-wrap justify-start">
-            {programs.map((program) => (
-              <TabsTrigger key={program.id} value={program.id.toString()}>
-                {program.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="scrollbar-x min-w-0 overscroll-x-contain pb-1">
+            <TabsList className="h-auto w-max max-w-none flex-nowrap justify-start">
+              {programs.map((program) => (
+                <TabsTrigger
+                  key={program.id}
+                  value={program.id.toString()}
+                  className="shrink-0 flex-none px-3"
+                >
+                  {program.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
           {programs.map((program) => (
             <TabsContent key={program.id} value={program.id.toString()}>
-              <ProgramClasses program={program} assignments={assignments} />
+              <ProgramClasses
+                program={program}
+                assignments={assignments}
+                pendingSubjectId={pendingSubjectId}
+                onAssignTeacher={handleAssignTeacher}
+                onRemoveAssignment={handleRemoveAssignment}
+              />
             </TabsContent>
           ))}
         </Tabs>
 
-        <TeachersPanel teachers={teachers} />
+        <TeachersPanel
+          teachers={teachers}
+          draggingTeacherId={draggingTeacherId}
+          onDragStart={setDraggingTeacherId}
+          onDragEnd={() => setDraggingTeacherId(null)}
+        />
       </div>
     </div>
   );
