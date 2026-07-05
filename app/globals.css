@@ -3,11 +3,28 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --primary: #ba5454;
+  --secondary: #525252;
+
+  --container-padding-inline: 1rem;
+  --container-padding-inline-sm: 1.5rem;
+  --container-padding-inline-md: 2rem;
+  --container-padding-inline-lg: 2rem;
+  --container-padding-inline-xl: 2rem;
+  --container-padding-inline-2xl: 2rem;
+
+  --container-max-width-sm: 640px;
+  --container-max-width-md: 768px;
+  --container-max-width-lg: 1024px;
+  --container-max-width-xl: 1280px;
+  --container-max-width-2xl: 1536px;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -16,6 +33,43 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --secondary: #9e9e9e;
+  }
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: var(--container-padding-inline);
+  width: 100%;
+
+  /* sm */
+  @media (min-width: 640px) {
+    padding-inline: var(--container-padding-inline-sm);
+    max-width: var(--container-max-width-sm);
+  }
+
+  /* md */
+  @media (min-width: 768px) {
+    padding-inline: var(--container-padding-inline-md);
+    max-width: var(--container-max-width-md);
+  }
+
+  /* lg */
+  @media (min-width: 1024px) {
+    padding-inline: var(--container-padding-inline-lg);
+    max-width: var(--container-max-width-lg);
+  }
+
+  /* xl */
+  @media (min-width: 1280px) {
+    padding-inline: var(--container-padding-inline-xl);
+    max-width: var(--container-max-width-xl);
+  }
+
+  /* 2xl */
+  @media (min-width: 1536px) {
+    padding-inline: var(--container-padding-inline-2xl);
+    max-width: var(--container-max-width-2xl);
   }
 }
 
