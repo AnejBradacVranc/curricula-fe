@@ -42,7 +42,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <Button render={<Link href="/" />} variant="outline">
-            Nazaj na domov
+            Nazaj domov
           </Button>
         </CardContent>
       </Card>

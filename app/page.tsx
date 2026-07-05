@@ -1,7 +1,13 @@
+"use client"
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/auth-provider";
 
 export default function Home() {
+
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="container py-12">
       <h1 className="text-3xl font-semibold tracking-tight text-primary">
@@ -15,7 +21,7 @@ export default function Home() {
         dostop do nadzorne plošče se prijavite v svoj račun.
       </p>
       <div className="mt-8 flex gap-3">
-        <Button render={<Link href="/login" />}>Prijava</Button>
+        {!isAuthenticated && <Button render={<Link href="/login" />}>Prijava</Button>}
         <Button render={<Link href="/dashboard" />} variant="outline">
           Nadzorna plošča
         </Button>
