@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { GraduationCap } from "lucide-react";
-import { ProgramClasses } from "@/components/dashboard/program-classes";
+import { ProgramCurriculumTable } from "@/components/dashboard/program-curriculum-table";
 import { TeachersPanel } from "@/components/dashboard/teachers-panel";
+import { getAssignmentKey } from "@/lib/curriculum/build-curriculum-rows";
 import {
   Card,
   CardContent,
@@ -35,11 +36,7 @@ function DashboardSkeleton() {
       </div>
       <Skeleton className="h-9 w-full max-w-md" />
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-        <div className="grid gap-4 sm:grid-cols-2">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-36 rounded-xl" />
-          ))}
-        </div>
+        <Skeleton className="h-96 w-full rounded-xl" />
         <Skeleton className="h-96 rounded-xl" />
       </div>
     </div>
@@ -108,15 +105,17 @@ export function ProgramDashboard() {
     async ({
       programId,
       subjectId,
+      yearId,
       teacherId,
     }: {
       programId: number;
       subjectId: number;
+      yearId: number;
       teacherId: number;
     }) => {
       const program = programs.find((item) => item.id === programId);
       const programSubject = program?.programSubjects.find(
-        (item) => item.subjectId === subjectId,
+        (item) => item.subjectId === subjectId && item.yearId === yearId,
       );
 
       if (programSubject?.teacherId === teacherId) {
@@ -124,10 +123,10 @@ export function ProgramDashboard() {
       }
 
       setActionError(null);
-      setPendingAssignmentKey(`${programId}-${subjectId}`);
+      setPendingAssignmentKey(getAssignmentKey(programId, subjectId, yearId));
 
       try {
-        await assignTeacher({ programId, subjectId, teacherId });
+        await assignTeacher({ programId, subjectId, yearId, teacherId });
         await refreshDashboard();
       } catch {
         setActionError(
@@ -144,17 +143,19 @@ export function ProgramDashboard() {
     async ({
       programId,
       subjectId,
+      yearId,
       teacherId,
     }: {
       programId: number;
       subjectId: number;
+      yearId: number;
       teacherId: number;
     }) => {
       setActionError(null);
-      setPendingAssignmentKey(`${programId}-${subjectId}`);
+      setPendingAssignmentKey(getAssignmentKey(programId, subjectId, yearId));
 
       try {
-        await unassignTeacher({ programId, subjectId, teacherId });
+        await unassignTeacher({ programId, subjectId, yearId, teacherId });
         await refreshDashboard();
       } catch {
         setActionError("Odstranitev dodelitve ni uspela. Poskusite znova.");
@@ -213,6 +214,10 @@ export function ProgramDashboard() {
         <h1 className="text-2xl font-semibold tracking-tight">
           Nadzorna plošča
         </h1>
+        <p className="text-sm text-muted-foreground">
+          Izvedbeni predmetnik po letnikih — povlecite učitelja v celico za
+          dodelitev.
+        </p>
       </div>
 
       {actionError && (
@@ -223,7 +228,7 @@ export function ProgramDashboard() {
         </Card>
       )}
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
         <Tabs defaultValue={defaultTab} className="min-w-0 gap-4">
           <div className="scrollbar-x min-w-0 overscroll-x-contain pb-1">
             <TabsList className="h-auto w-max max-w-none flex-nowrap justify-start">
@@ -241,7 +246,7 @@ export function ProgramDashboard() {
 
           {programs.map((program) => (
             <TabsContent key={program.id} value={program.id.toString()}>
-              <ProgramClasses
+              <ProgramCurriculumTable
                 program={program}
                 pendingAssignmentKey={pendingAssignmentKey}
                 onAssignTeacher={handleAssignTeacher}

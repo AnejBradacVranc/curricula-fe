@@ -1,0 +1,171 @@
+"use client";
+
+import { CurriculumCell } from "@/components/dashboard/curriculum-cell";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  buildCurriculumRows,
+  getAssignmentKey,
+} from "@/lib/curriculum/build-curriculum-rows";
+import { formatHours, sumHours } from "@/lib/curriculum/format-hours";
+import type { ProgramWithRelations } from "@/types";
+
+type ProgramCurriculumTableProps = {
+  program: ProgramWithRelations;
+  pendingAssignmentKey: string | null;
+  onAssignTeacher: (input: {
+    programId: number;
+    subjectId: number;
+    yearId: number;
+    teacherId: number;
+  }) => void;
+  onRemoveAssignment: (input: {
+    programId: number;
+    subjectId: number;
+    yearId: number;
+    teacherId: number;
+  }) => void;
+};
+
+export function ProgramCurriculumTable({
+  program,
+  pendingAssignmentKey,
+  onAssignTeacher,
+  onRemoveAssignment,
+}: ProgramCurriculumTableProps) {
+  const years = [...program.programYears].sort((a, b) => a.yearId - b.yearId);
+  const rows = buildCurriculumRows(program);
+
+  const weeklyTotals = years.map((programYear) =>
+    sumHours(
+      program.programSubjects
+        .filter((item) => item.yearId === programYear.yearId)
+        .map((item) => item.requiredHours),
+    ),
+  );
+
+  if (years.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          Ta program še nima dodeljenih letnikov.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1 border-b border-border pb-4">
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          Izvedbeni predmetnik
+        </p>
+        <h2 className="text-lg font-semibold">{program.name}</h2>
+        <p className="text-sm text-muted-foreground">
+          Število ur na teden po letnikih. Povlecite učitelja v celico za
+          dodelitev.
+        </p>
+      </div>
+
+      <Card className="overflow-hidden py-0">
+        <CardHeader className="border-b bg-muted/30 py-3">
+          <CardTitle className="text-sm font-medium">
+            Programska struktura
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto p-0">
+          <table className="w-full min-w-[720px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b bg-muted/20">
+                <th className="sticky left-0 z-10 min-w-[180px] border-r bg-muted/30 px-3 py-2 text-left text-xs font-medium">
+                  Predmet
+                </th>
+                {years.map((programYear) => (
+                  <th
+                    key={programYear.yearId}
+                    className="min-w-[110px] border-r px-2 py-2 text-center text-xs font-medium last:border-r-0"
+                  >
+                    <div>{programYear.year.name}</div>
+                    <div className="mt-0.5 font-normal text-muted-foreground">
+                      {programYear.numWeeks} tednov
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr
+                  key={row.subjectId}
+                  className="border-b border-border/70 hover:bg-muted/10"
+                >
+                  <td className="sticky left-0 z-10 border-r bg-card px-3 py-2 align-top font-medium">
+                    {row.subjectName}
+                  </td>
+                  {years.map((programYear) => {
+                    const programSubject = row.cellsByYearId.get(
+                      programYear.yearId,
+                    );
+                    const assignmentKey = getAssignmentKey(
+                      program.id,
+                      row.subjectId,
+                      programYear.yearId,
+                    );
+
+                    return (
+                      <td
+                        key={programYear.yearId}
+                        className="border-r px-1 py-1 align-top last:border-r-0"
+                      >
+                        <CurriculumCell
+                          programSubject={programSubject}
+                          isPending={pendingAssignmentKey === assignmentKey}
+                          disabled={
+                            pendingAssignmentKey !== null &&
+                            pendingAssignmentKey !== assignmentKey
+                          }
+                          onAssign={(teacherId) =>
+                            onAssignTeacher({
+                              programId: program.id,
+                              subjectId: row.subjectId,
+                              yearId: programYear.yearId,
+                              teacherId,
+                            })
+                          }
+                          onRemove={() => {
+                            if (!programSubject?.teacherId) {
+                              return;
+                            }
+
+                            onRemoveAssignment({
+                              programId: program.id,
+                              subjectId: row.subjectId,
+                              yearId: programYear.yearId,
+                              teacherId: programSubject.teacherId,
+                            });
+                          }}
+                        />
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+              <tr className="border-t-2 bg-muted/30 font-medium">
+                <td className="sticky left-0 z-10 border-r bg-muted/30 px-3 py-2">
+                  Skupaj ur / teden
+                </td>
+                {weeklyTotals.map((total, index) => (
+                  <td
+                    key={years[index].yearId}
+                    className="border-r px-2 py-2 text-center tabular-nums last:border-r-0"
+                  >
+                    {formatHours(total)}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
