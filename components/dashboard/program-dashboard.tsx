@@ -106,37 +106,59 @@ export function ProgramDashboard() {
       programId,
       subjectId,
       yearId,
+      classId,
       teacherId,
     }: {
       programId: number;
       subjectId: number;
       yearId: number;
+      classId: number;
       teacherId: number;
     }) => {
+      const assignmentKey = getAssignmentKey(
+        programId,
+        subjectId,
+        yearId,
+        classId,
+      );
+
+      if (pendingAssignmentKey === assignmentKey) {
+        return;
+      }
+
       const program = programs.find((item) => item.id === programId);
       const programSubject = program?.programSubjects.find(
         (item) => item.subjectId === subjectId && item.yearId === yearId,
       );
+      const existingAssignment = programSubject?.assignments.find(
+        (assignment) => assignment.classId === classId,
+      );
 
-      if (programSubject?.teacherId === teacherId) {
+      if (existingAssignment?.teacherId === teacherId) {
         return;
       }
 
       setActionError(null);
-      setPendingAssignmentKey(getAssignmentKey(programId, subjectId, yearId));
+      setPendingAssignmentKey(assignmentKey);
 
       try {
-        await assignTeacher({ programId, subjectId, yearId, teacherId });
+        await assignTeacher({
+          programId,
+          subjectId,
+          yearId,
+          classId,
+          teacherId,
+        });
         await refreshDashboard();
       } catch {
         setActionError(
-          "Dodelitev učitelja ni uspela. Preverite, ali je predmet že zaseden ali poskusite znova.",
+          "Dodelitev učitelja ni uspela. Preverite, ali je razred že zaseden ali poskusite znova.",
         );
       } finally {
         setPendingAssignmentKey(null);
       }
     },
-    [programs, refreshDashboard],
+    [programs, pendingAssignmentKey, refreshDashboard],
   );
 
   const handleRemoveAssignment = useCallback(
@@ -144,18 +166,28 @@ export function ProgramDashboard() {
       programId,
       subjectId,
       yearId,
+      classId,
       teacherId,
     }: {
       programId: number;
       subjectId: number;
       yearId: number;
+      classId: number;
       teacherId: number;
     }) => {
       setActionError(null);
-      setPendingAssignmentKey(getAssignmentKey(programId, subjectId, yearId));
+      setPendingAssignmentKey(
+        getAssignmentKey(programId, subjectId, yearId, classId),
+      );
 
       try {
-        await unassignTeacher({ programId, subjectId, yearId, teacherId });
+        await unassignTeacher({
+          programId,
+          subjectId,
+          yearId,
+          classId,
+          teacherId,
+        });
         await refreshDashboard();
       } catch {
         setActionError("Odstranitev dodelitve ni uspela. Poskusite znova.");

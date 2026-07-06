@@ -3,6 +3,11 @@ export { Role } from "./enums/role";
 
 export type { Timestamps } from "./entities/common";
 export type {
+  ClassLabel,
+  ClassSubjectAssignment,
+  ProgramClass,
+} from "./entities/class";
+export type {
   School,
   SchoolProgram,
   SchoolSubject,

@@ -1,4 +1,5 @@
 export interface CreateAssignmentRequest {
+  classId: number;
   subjectId: number;
   teacherId: number;
   programId: number;

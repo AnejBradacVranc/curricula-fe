@@ -1,4 +1,4 @@
-import type { ProgramSubjectItem, ProgramWithRelations } from "@/types";
+import type { ProgramClass, ProgramSubjectItem, ProgramWithRelations } from "@/types";
 
 export type CurriculumSubjectRow = {
   subjectId: number;
@@ -29,10 +29,31 @@ export function buildCurriculumRows(program: ProgramWithRelations) {
   );
 }
 
+export function getClassesForYear(
+  program: ProgramWithRelations,
+  yearId: number,
+): ProgramClass[] {
+  const programYear = program.programYears.find((item) => item.yearId === yearId);
+
+  return [...(programYear?.classes ?? [])].sort((a, b) =>
+    a.label.label.localeCompare(b.label.label, "sl"),
+  );
+}
+
 export function getAssignmentKey(
   programId: number,
   subjectId: number,
   yearId: number,
+  classId: number,
 ) {
-  return `${programId}-${subjectId}-${yearId}`;
+  return `${programId}-${subjectId}-${yearId}-${classId}`;
+}
+
+export function findAssignmentForClass(
+  programSubject: ProgramSubjectItem | undefined,
+  classId: number,
+) {
+  return programSubject?.assignments.find(
+    (assignment) => assignment.classId === classId,
+  );
 }

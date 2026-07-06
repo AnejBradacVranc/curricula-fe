@@ -13,6 +13,7 @@ type SubjectAssignmentSlotProps = {
   teacher?: SubjectTeacher;
   isPending: boolean;
   disabled?: boolean;
+  compact?: boolean;
   onAssign: (teacherId: number) => void;
   onRemove: () => void;
 };
@@ -21,6 +22,7 @@ export function SubjectAssignmentSlot({
   teacher,
   isPending,
   disabled = false,
+  compact = false,
   onAssign,
   onRemove,
 }: SubjectAssignmentSlotProps) {
@@ -32,16 +34,19 @@ export function SubjectAssignmentSlot({
     }
 
     event.preventDefault();
+    event.stopPropagation();
     event.dataTransfer.dropEffect = "copy";
     setIsDragOver(true);
   }
 
-  function handleDragLeave() {
+  function handleDragLeave(event: React.DragEvent<HTMLDivElement>) {
+    event.stopPropagation();
     setIsDragOver(false);
   }
 
   function handleDrop(event: React.DragEvent<HTMLDivElement>) {
     event.preventDefault();
+    event.stopPropagation();
     setIsDragOver(false);
 
     if (disabled || isPending) {
@@ -64,9 +69,10 @@ export function SubjectAssignmentSlot({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={cn(
-          "flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-2 text-sm transition-colors",
+          "flex items-center gap-2 rounded-lg bg-muted/60 text-sm transition-colors",
+          compact ? "px-2 py-1 text-[10px]" : "px-3 py-2",
           isPending && "opacity-60",
-          isDragOver && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+          isDragOver && "border-primary bg-primary/10 text-foreground",
         )}
       >
         <UserRound className="size-4 shrink-0 text-muted-foreground" />
@@ -97,7 +103,8 @@ export function SubjectAssignmentSlot({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "rounded-lg border border-dashed px-3 py-2 text-sm text-muted-foreground transition-colors",
+        "rounded-lg border border-dashed text-muted-foreground transition-colors",
+        compact ? "px-2 py-1 text-[10px]" : "px-3 py-2 text-sm",
         !disabled &&
           !isPending &&
           "cursor-copy hover:border-primary/40 hover:bg-primary/5",
@@ -110,6 +117,8 @@ export function SubjectAssignmentSlot({
           <Loader2 className="size-4 animate-spin" />
           Dodeljevanje...
         </span>
+      ) : compact ? (
+        "Povleci"
       ) : (
         "Povlecite učitelja sem"
       )}

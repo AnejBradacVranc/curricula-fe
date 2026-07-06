@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   buildCurriculumRows,
   getAssignmentKey,
+  getClassesForYear,
 } from "@/lib/curriculum/build-curriculum-rows";
 import { formatHours, sumHours } from "@/lib/curriculum/format-hours";
 import type { ProgramWithRelations } from "@/types";
@@ -16,12 +17,14 @@ type ProgramCurriculumTableProps = {
     programId: number;
     subjectId: number;
     yearId: number;
+    classId: number;
     teacherId: number;
   }) => void;
   onRemoveAssignment: (input: {
     programId: number;
     subjectId: number;
     yearId: number;
+    classId: number;
     teacherId: number;
   }) => void;
 };
@@ -61,16 +64,14 @@ export function ProgramCurriculumTable({
         </p>
         <h2 className="text-lg font-semibold">{program.name}</h2>
         <p className="text-sm text-muted-foreground">
-          Število ur na teden po letnikih. Povlecite učitelja v celico za
-          dodelitev.
+          Število ur na teden po letnikih. Povlecite učitelja v celico razreda
+          za dodelitev.
         </p>
       </div>
 
       <Card className="overflow-hidden py-0">
         <CardHeader className="border-b bg-muted/30 py-3">
-          <CardTitle className="text-sm font-medium">
-            Programska struktura
-          </CardTitle>
+          <CardTitle className="text-sm font-medium">Program</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           <table className="w-full min-w-[720px] border-collapse text-sm">
@@ -82,7 +83,7 @@ export function ProgramCurriculumTable({
                 {years.map((programYear) => (
                   <th
                     key={programYear.yearId}
-                    className="min-w-[110px] border-r px-2 py-2 text-center text-xs font-medium last:border-r-0"
+                    className="min-w-[140px] border-r px-2 py-2 text-center text-xs font-medium last:border-r-0"
                   >
                     <div>{programYear.year.name}</div>
                     <div className="mt-0.5 font-normal text-muted-foreground">
@@ -105,10 +106,19 @@ export function ProgramCurriculumTable({
                     const programSubject = row.cellsByYearId.get(
                       programYear.yearId,
                     );
-                    const assignmentKey = getAssignmentKey(
-                      program.id,
-                      row.subjectId,
+                    const classes = getClassesForYear(
+                      program,
                       programYear.yearId,
+                    );
+                    const cellHasPending = classes.some(
+                      (programClass) =>
+                        pendingAssignmentKey ===
+                        getAssignmentKey(
+                          program.id,
+                          row.subjectId,
+                          programYear.yearId,
+                          programClass.id,
+                        ),
                     );
 
                     return (
@@ -118,31 +128,40 @@ export function ProgramCurriculumTable({
                       >
                         <CurriculumCell
                           programSubject={programSubject}
-                          isPending={pendingAssignmentKey === assignmentKey}
-                          disabled={
-                            pendingAssignmentKey !== null &&
-                            pendingAssignmentKey !== assignmentKey
+                          classes={classes}
+                          pendingClassId={
+                            classes.find(
+                              (programClass) =>
+                                pendingAssignmentKey ===
+                                getAssignmentKey(
+                                  program.id,
+                                  row.subjectId,
+                                  programYear.yearId,
+                                  programClass.id,
+                                ),
+                            )?.id ?? null
                           }
-                          onAssign={(teacherId) =>
+                          disabled={
+                            pendingAssignmentKey !== null && !cellHasPending
+                          }
+                          onAssign={(classId, teacherId) =>
                             onAssignTeacher({
                               programId: program.id,
                               subjectId: row.subjectId,
                               yearId: programYear.yearId,
+                              classId,
                               teacherId,
                             })
                           }
-                          onRemove={() => {
-                            if (!programSubject?.teacherId) {
-                              return;
-                            }
-
+                          onRemove={(classId, teacherId) =>
                             onRemoveAssignment({
                               programId: program.id,
                               subjectId: row.subjectId,
                               yearId: programYear.yearId,
-                              teacherId: programSubject.teacherId,
-                            });
-                          }}
+                              classId,
+                              teacherId,
+                            })
+                          }
                         />
                       </td>
                     );

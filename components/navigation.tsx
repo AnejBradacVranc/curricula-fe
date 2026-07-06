@@ -33,6 +33,7 @@ export function Navigation() {
             .filter((link) => !link.auth || isAuthenticated)
             .map((link) => (
               <Button
+                nativeButton={false}
                 key={link.href}
                 variant="ghost"
                 size="sm"
@@ -46,13 +47,15 @@ export function Navigation() {
             ))}
 
           {!isLoading && !isAuthenticated && (
-            <Button size="sm" render={<Link href="/login" />}>
+            <Button size="sm" nativeButton={false}
+              render={<Link href="/login" />}>
               Prijava
             </Button>
           )}
 
           {!isLoading && isAuthenticated && (
-            <Button variant="outline" size="sm" onClick={handleLogout}>
+            <Button nativeButton={false}
+              variant="outline" size="sm" onClick={handleLogout}>
               Odjava
             </Button>
           )}
