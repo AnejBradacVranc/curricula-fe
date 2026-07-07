@@ -1,9 +1,10 @@
 "use client";
 
+import { Fragment } from "react";
 import { CurriculumCell } from "@/components/dashboard/curriculum-cell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  buildCurriculumRows,
+  buildCurriculumSections,
   getAssignmentKey,
   getClassesForYear,
 } from "@/lib/curriculum/build-curriculum-rows";
@@ -36,7 +37,7 @@ export function ProgramCurriculumTable({
   onRemoveAssignment,
 }: ProgramCurriculumTableProps) {
   const years = [...program.programYears].sort((a, b) => a.yearId - b.yearId);
-  const rows = buildCurriculumRows(program);
+  const sections = buildCurriculumSections(program);
 
   const weeklyTotals = years.map((programYear) =>
     sumHours(
@@ -94,79 +95,91 @@ export function ProgramCurriculumTable({
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <tr
-                  key={row.subjectId}
-                  className="border-b border-border/70 hover:bg-muted/10"
-                >
-                  <td className="sticky left-0 z-10 border-r bg-card px-3 py-2 align-top font-medium">
-                    {row.subjectName}
-                  </td>
-                  {years.map((programYear) => {
-                    const programSubject = row.cellsByYearId.get(
-                      programYear.yearId,
-                    );
-                    const classes = getClassesForYear(
-                      program,
-                      programYear.yearId,
-                    );
-                    const cellHasPending = classes.some(
-                      (programClass) =>
-                        pendingAssignmentKey ===
-                        getAssignmentKey(
-                          program.id,
-                          row.subjectId,
-                          programYear.yearId,
-                          programClass.id,
-                        ),
-                    );
-
-                    return (
-                      <td
-                        key={programYear.yearId}
-                        className="border-r px-1 py-1 align-top last:border-r-0"
-                      >
-                        <CurriculumCell
-                          programSubject={programSubject}
-                          classes={classes}
-                          pendingClassId={
-                            classes.find(
-                              (programClass) =>
-                                pendingAssignmentKey ===
-                                getAssignmentKey(
-                                  program.id,
-                                  row.subjectId,
-                                  programYear.yearId,
-                                  programClass.id,
-                                ),
-                            )?.id ?? null
-                          }
-                          disabled={
-                            pendingAssignmentKey !== null && !cellHasPending
-                          }
-                          onAssign={(classId, teacherId) =>
-                            onAssignTeacher({
-                              programId: program.id,
-                              subjectId: row.subjectId,
-                              yearId: programYear.yearId,
-                              classId,
-                              teacherId,
-                            })
-                          }
-                          onRemove={(classId, teacherId) =>
-                            onRemoveAssignment({
-                              programId: program.id,
-                              subjectId: row.subjectId,
-                              yearId: programYear.yearId,
-                              classId,
-                              teacherId,
-                            })
-                          }
-                        />
+              {sections.map((section) => (
+                <Fragment key={section.categoryId}>
+                  <tr className="border-b border-border bg-muted/40">
+                    <td
+                      colSpan={years.length + 1}
+                      className="px-3 py-2 text-xs font-semibold tracking-wide text-primary-foreground bg-primary/30 uppercase"
+                    >
+                      {section.categoryName}
+                    </td>
+                  </tr>
+                  {section.rows.map((row) => (
+                    <tr
+                      key={row.subjectId}
+                      className="border-b border-border/70 hover:bg-muted/10"
+                    >
+                      <td className="sticky left-0 z-10 border-r bg-card px-3 py-2 align-top font-medium">
+                        {row.subjectName}
                       </td>
-                    );
-                  })}
-                </tr>
+                      {years.map((programYear) => {
+                        const programSubject = row.cellsByYearId.get(
+                          programYear.yearId,
+                        );
+                        const classes = getClassesForYear(
+                          program,
+                          programYear.yearId,
+                        );
+                        const cellHasPending = classes.some(
+                          (programClass) =>
+                            pendingAssignmentKey ===
+                            getAssignmentKey(
+                              program.id,
+                              row.subjectId,
+                              programYear.yearId,
+                              programClass.id,
+                            ),
+                        );
+
+                        return (
+                          <td
+                            key={programYear.yearId}
+                            className="border-r px-1 py-1 align-top last:border-r-0"
+                          >
+                            <CurriculumCell
+                              programSubject={programSubject}
+                              classes={classes}
+                              pendingClassId={
+                                classes.find(
+                                  (programClass) =>
+                                    pendingAssignmentKey ===
+                                    getAssignmentKey(
+                                      program.id,
+                                      row.subjectId,
+                                      programYear.yearId,
+                                      programClass.id,
+                                    ),
+                                )?.id ?? null
+                              }
+                              disabled={
+                                pendingAssignmentKey !== null && !cellHasPending
+                              }
+                              onAssign={(classId, teacherId) =>
+                                onAssignTeacher({
+                                  programId: program.id,
+                                  subjectId: row.subjectId,
+                                  yearId: programYear.yearId,
+                                  classId,
+                                  teacherId,
+                                })
+                              }
+                              onRemove={(classId, teacherId) =>
+                                onRemoveAssignment({
+                                  programId: program.id,
+                                  subjectId: row.subjectId,
+                                  yearId: programYear.yearId,
+                                  classId,
+                                  teacherId,
+                                })
+                              }
+                            />
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </Fragment>
               ))}
               <tr className="border-t-2 bg-muted/30 font-medium">
                 <td className="sticky left-0 z-10 border-r bg-muted/30 px-3 py-2">
