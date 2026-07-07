@@ -232,6 +232,7 @@ export function ProgramDashboard() {
             draggingTeacherId={draggingTeacherId}
             onDragStart={setDraggingTeacherId}
             onDragEnd={() => setDraggingTeacherId(null)}
+            onTeacherUpdated={refreshDashboard}
           />
         </CardContent>
       </Card>
@@ -293,6 +294,7 @@ export function ProgramDashboard() {
           draggingTeacherId={draggingTeacherId}
           onDragStart={setDraggingTeacherId}
           onDragEnd={() => setDraggingTeacherId(null)}
+          onTeacherUpdated={refreshDashboard}
         />
       </div>
     </div>

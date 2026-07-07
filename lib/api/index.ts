@@ -18,3 +18,8 @@ export { getSubjects, createSubject } from "./subjects";
 export { getProgramSubjects, createProgramSubject } from "./program-subjects";
 
 export { assignTeacher, unassignTeacher } from "./assignments";
+export {
+  getAdditionalActivities,
+  createAdditionalActivityAssignment,
+  deleteAdditionalActivityAssignment,
+} from "./additional-activities";

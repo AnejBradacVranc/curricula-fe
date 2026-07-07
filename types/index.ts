@@ -19,6 +19,7 @@ export type { Teacher } from "./entities/teacher";
 export type { TeacherDetail } from "./entities/teacher-detail";
 export type { Year, ProgramYear } from "./entities/year";
 export type { Category } from "./entities/category";
+export type { AdditionalActivity } from "./entities/additional-activity";
 export type {
   Program,
   ProgramSubjectItem,
@@ -45,3 +46,7 @@ export type {
   CreateAssignmentRequest,
   DeleteAssignmentRequest,
 } from "./requests/assignment";
+export type {
+  CreateAdditionalActivityAssignmentRequest,
+  DeleteAdditionalActivityAssignmentRequest,
+} from "./requests/additional-activity";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Clock, GripVertical, Mail, Users } from "lucide-react";
+import { GripVertical, Mail, Users } from "lucide-react";
 import { TeacherDetailDialog } from "@/components/dashboard/teacher-detail-dialog";
 import { setTeacherDragData } from "@/components/dashboard/drag";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ type TeachersPanelProps = {
   draggingTeacherId: number | null;
   onDragStart: (teacherId: number) => void;
   onDragEnd: () => void;
+  onTeacherUpdated?: () => void;
 };
 
 export function TeachersPanel({
@@ -30,6 +31,7 @@ export function TeachersPanel({
   draggingTeacherId,
   onDragStart,
   onDragEnd,
+  onTeacherUpdated,
 }: TeachersPanelProps) {
   const [detailTeacherId, setDetailTeacherId] = useState<number | null>(null);
 
@@ -96,10 +98,22 @@ export function TeachersPanel({
                             {teacher.email}
                           </p>
                         </div>
-                        <Badge variant="outline" className="shrink-0 gap-1">
-                          <Clock className="size-3" />
-                          {formatHours(teacher.assignedHours)}h
-                        </Badge>
+                        <div className="flex shrink-0 flex-col items-end gap-0.5 text-xs">
+                          <span className="text-muted-foreground">
+                            Predmeti{" "}
+                            <span className="font-medium text-foreground">
+                              {formatHours(teacher.assignedHours)}h
+                            </span>
+                          </span>
+                          {Number(teacher.additionalActivityHours) > 0 && (
+                            <span className="text-muted-foreground">
+                              Dodatno{" "}
+                              <span className="font-medium text-foreground">
+                                {formatHours(teacher.additionalActivityHours)}h
+                              </span>
+                            </span>
+                          )}
+                        </div>
                       </button>
                     </div>
                   </li>
@@ -113,10 +127,10 @@ export function TeachersPanel({
           <>
             <Separator />
             <div className="px-(--card-spacing) py-3 text-xs text-muted-foreground">
-              Skupaj dodeljenih ur:{" "}
+              Skupaj ur:{" "}
               <span className="font-medium text-foreground">
                 {teachers.reduce(
-                  (sum, teacher) => sum + Number(teacher.assignedHours),
+                  (sum, teacher) => sum + Number(teacher.totalHours),
                   0,
                 )}
                 h
@@ -134,6 +148,7 @@ export function TeachersPanel({
             setDetailTeacherId(null);
           }
         }}
+        onTeacherUpdated={onTeacherUpdated}
       />
     </>
   );

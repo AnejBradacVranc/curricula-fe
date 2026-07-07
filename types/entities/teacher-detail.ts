@@ -1,3 +1,13 @@
+export interface TeacherDetailAdditionalActivity {
+  name: string;
+}
+
+export interface TeacherDetailAdditionalActivityAssignment {
+  additionalActivityId: number;
+  hoursAmount: string | number;
+  additionalActivity: TeacherDetailAdditionalActivity;
+}
+
 export interface TeacherDetailCategory {
   name: string;
 }
@@ -42,5 +52,8 @@ export interface TeacherDetail {
   email: string;
   schoolId: number;
   assignedHours: string | number;
+  additionalActivityHours: string | number;
+  totalHours: string | number;
   assignments: TeacherDetailAssignment[];
+  additionalActivityAssignments: TeacherDetailAdditionalActivityAssignment[];
 }
