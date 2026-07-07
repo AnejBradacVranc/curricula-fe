@@ -5,7 +5,11 @@ export function formatHours(value: number | string) {
     return String(value);
   }
 
-  return Number.isInteger(hours) ? String(hours) : hours.toFixed(1).replace(/\.0$/, "");
+  if (Number.isInteger(hours)) {
+    return String(hours);
+  }
+
+  return hours.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
 }
 
 export function sumHours(values: Array<number | string>) {

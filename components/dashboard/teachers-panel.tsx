@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Clock, GripVertical, Mail, Users } from "lucide-react";
+import { TeacherDetailDialog } from "@/components/dashboard/teacher-detail-dialog";
 import { setTeacherDragData } from "@/components/dashboard/drag";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +15,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { formatHours } from "@/lib/curriculum/format-hours";
 import type { Teacher } from "@/types";
 
 type TeachersPanelProps = {
@@ -28,87 +31,110 @@ export function TeachersPanel({
   onDragStart,
   onDragEnd,
 }: TeachersPanelProps) {
+  const [detailTeacherId, setDetailTeacherId] = useState<number | null>(null);
+
   return (
-    <Card className="flex h-full min-h-0 flex-col lg:sticky lg:top-6 lg:max-h-[calc(100vh-7rem)]">
-      <CardHeader className="border-b">
-        <div className="flex items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="size-4 text-primary" />
-            Učitelji
-          </CardTitle>
-          <Badge variant="secondary">{teachers.length}</Badge>
-        </div>
-        <CardDescription>
-          Povlecite učitelja na predmet za dodelitev. Ure se posodobijo
-          samodejno.
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="min-h-0 flex-1 p-0">
-        {teachers.length === 0 ? (
-          <p className="px-(--card-spacing) py-8 text-center text-sm text-muted-foreground">
-            Ni registriranih učiteljev.
-          </p>
-        ) : (
-          <ScrollArea className="h-full max-h-[min(70vh,640px)]">
-            <ul className="divide-y divide-border">
-              {teachers.map((teacher) => (
-                <li key={teacher.id}>
-                  <div
-                    draggable
-                    onDragStart={(event) => {
-                      setTeacherDragData(event.dataTransfer, {
-                        id: teacher.id,
-                        name: teacher.name,
-                        surname: teacher.surname,
-                      });
-                      onDragStart(teacher.id);
-                    }}
-                    onDragEnd={onDragEnd}
-                    className={cn(
-                      "flex cursor-grab items-start gap-2 px-(--card-spacing) py-3 transition-opacity active:cursor-grabbing",
-                      draggingTeacherId === teacher.id && "opacity-50",
-                    )}
-                  >
-                    <GripVertical className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                    <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
-                      <div className="min-w-0 space-y-1">
-                        <p className="truncate font-medium">
-                          {teacher.name} {teacher.surname}
-                        </p>
-                        <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-                          <Mail className="size-3 shrink-0" />
-                          {teacher.email}
-                        </p>
-                      </div>
-                      <Badge variant="outline" className="shrink-0 gap-1">
-                        <Clock className="size-3" />
-                        {teacher.assignedHours}h
-                      </Badge>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </ScrollArea>
-        )}
-      </CardContent>
-
-      {teachers.length > 0 && (
-        <>
-          <Separator />
-          <div className="px-(--card-spacing) py-3 text-xs text-muted-foreground">
-            Skupaj dodeljenih ur:{" "}
-            <span className="font-medium text-foreground">
-              {teachers.reduce(
-                (sum, teacher) => sum + Number(teacher.assignedHours),
-                0,
-              )}
-              h
-            </span>
+    <>
+      <Card className="flex h-full min-h-0 flex-col lg:sticky lg:top-6 lg:max-h-[calc(100vh-7rem)]">
+        <CardHeader className="border-b">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="size-4 text-primary" />
+              Učitelji
+            </CardTitle>
+            <Badge variant="secondary">{teachers.length}</Badge>
           </div>
-        </>
-      )}
-    </Card>
+          <CardDescription>
+            Povlecite učitelja na predmet za dodelitev ali kliknite za podrobnosti.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="min-h-0 flex-1 p-0">
+          {teachers.length === 0 ? (
+            <p className="px-(--card-spacing) py-8 text-center text-sm text-muted-foreground">
+              Ni registriranih učiteljev.
+            </p>
+          ) : (
+            <ScrollArea className="h-full max-h-[min(70vh,640px)]">
+              <ul className="divide-y divide-border">
+                {teachers.map((teacher) => (
+                  <li key={teacher.id}>
+                    <div
+                      className={cn(
+                        "flex items-center gap-2 px-(--card-spacing) py-2 transition-opacity",
+                        draggingTeacherId === teacher.id && "opacity-50",
+                      )}
+                    >
+                      <div
+                        draggable
+                        onDragStart={(event) => {
+                          setTeacherDragData(event.dataTransfer, {
+                            id: teacher.id,
+                            name: teacher.name,
+                            surname: teacher.surname,
+                          });
+                          onDragStart(teacher.id);
+                        }}
+                        onDragEnd={onDragEnd}
+                        className="flex shrink-0 cursor-grab items-center self-stretch rounded-md px-1 text-primary hover:bg-primary/10 active:cursor-grabbing"
+                        aria-label={`Povleci ${teacher.name} ${teacher.surname}`}
+                      >
+                        <GripVertical className="size-4" />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setDetailTeacherId(teacher.id)}
+                        className="cursor-pointer flex min-w-0 flex-1 items-center justify-between gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                      >
+                        <div className="min-w-0 space-y-1">
+                          <p className="truncate font-medium">
+                            {teacher.name} {teacher.surname}
+                          </p>
+                          <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                            <Mail className="size-3 shrink-0" />
+                            {teacher.email}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="shrink-0 gap-1">
+                          <Clock className="size-3" />
+                          {formatHours(teacher.assignedHours)}h
+                        </Badge>
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          )}
+        </CardContent>
+
+        {teachers.length > 0 && (
+          <>
+            <Separator />
+            <div className="px-(--card-spacing) py-3 text-xs text-muted-foreground">
+              Skupaj dodeljenih ur:{" "}
+              <span className="font-medium text-foreground">
+                {teachers.reduce(
+                  (sum, teacher) => sum + Number(teacher.assignedHours),
+                  0,
+                )}
+                h
+              </span>
+            </div>
+          </>
+        )}
+      </Card>
+
+      <TeacherDetailDialog
+        teacherId={detailTeacherId}
+        open={detailTeacherId !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDetailTeacherId(null);
+          }
+        }}
+      />
+    </>
   );
 }

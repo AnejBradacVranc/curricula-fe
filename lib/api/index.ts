@@ -9,7 +9,7 @@ export { getSchools, getMySchool, createSchool } from "./schools";
 
 export { getUsers, getUserByEmail } from "./users";
 
-export { getTeachers, createTeacher } from "./teachers";
+export { getTeachers, getTeacher, createTeacher } from "./teachers";
 
 export { getPrograms, createProgram } from "./programs";
 

@@ -100,7 +100,7 @@ export function ProgramCurriculumTable({
                   <tr className="border-b border-border bg-muted/40">
                     <td
                       colSpan={years.length + 1}
-                      className="px-3 py-2 text-xs font-semibold tracking-wide text-primary-foreground bg-primary/30 uppercase"
+                      className="px-3 py-2 text-xs font-semibold tracking-wide text-primary-foreground bg-primary uppercase"
                     >
                       {section.categoryName}
                     </td>

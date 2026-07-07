@@ -16,6 +16,7 @@ export type {
 } from "./entities/school";
 export type { User, UserNoPassword } from "./entities/user";
 export type { Teacher } from "./entities/teacher";
+export type { TeacherDetail } from "./entities/teacher-detail";
 export type { Year, ProgramYear } from "./entities/year";
 export type { Category } from "./entities/category";
 export type {
