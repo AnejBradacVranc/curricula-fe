@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Clock, GripVertical, Mail, Users } from "lucide-react";
 import { TeacherDetailDialog } from "@/components/dashboard/teacher-detail-dialog";
 import { setTeacherDragData } from "@/components/dashboard/drag";
@@ -16,6 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { formatHours } from "@/lib/curriculum/format-hours";
+import { hasTeacherColor } from "@/lib/teacher-color";
 import type { Teacher } from "@/types";
 
 type TeachersPanelProps = {
@@ -74,6 +75,7 @@ export function TeachersPanel({
                             id: teacher.id,
                             name: teacher.name,
                             surname: teacher.surname,
+                            color: teacher.color,
                           });
                           onDragStart(teacher.id);
                         }}
@@ -89,13 +91,22 @@ export function TeachersPanel({
                         onClick={() => setDetailTeacherId(teacher.id)}
                         className="cursor-pointer flex min-w-0 flex-1 items-center justify-between gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                       >
-                        <div className="min-w-0 space-y-1">
-                          <p className="truncate font-medium">
-                            {teacher.name} {teacher.surname}
+                        <div className="min-w-0 flex-1 overflow-hidden space-y-1">
+                          <p className="flex min-w-0 items-center gap-2 truncate font-medium">
+                            {hasTeacherColor(teacher.color) ? (
+                              <span
+                                className="size-2.5 shrink-0 rounded-full ring-1 ring-border"
+                                style={{ backgroundColor: teacher.color }}
+                                aria-hidden
+                              />
+                            ) : null}
+                            <span className="truncate">
+                              {teacher.name} {teacher.surname}
+                            </span>
                           </p>
-                          <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                          <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                             <Mail className="size-3 shrink-0" />
-                            {teacher.email}
+                            <span className="truncate">{teacher.email}</span>
                           </p>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1">

@@ -2,7 +2,12 @@ import type { Teacher } from "@/types";
 
 export const TEACHER_DRAG_MIME = "application/x-curricula-teacher";
 
-export type TeacherDragPayload = Pick<Teacher, "id" | "name" | "surname">;
+export type TeacherDragPayload = Pick<
+  Teacher,
+  "id" | "name" | "surname"
+> & {
+  color?: string | null;
+};
 
 export function setTeacherDragData(
   dataTransfer: DataTransfer,
@@ -12,11 +17,14 @@ export function setTeacherDragData(
 
   const el = document.createElement("div");
 
-  el.textContent = `${teacher.name[0].toUpperCase()} ${teacher.surname[0].toUpperCase()}`;
+  el.textContent = `${teacher.name[0].toUpperCase()}${teacher.surname[0].toUpperCase()}`;
   el.style.position = "fixed";
   el.style.top = "-1000px";
   el.style.padding = "6px 12px";
-  el.style.backgroundColor = "var(--primary)";
+  el.style.backgroundColor =
+    teacher.color && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(teacher.color)
+      ? teacher.color
+      : "var(--primary)";
   el.style.color = "var(--primary-foreground)";
   el.style.borderRadius = "var(--radius)";
   el.style.font = "600 14px sans-serif";

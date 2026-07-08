@@ -3,6 +3,7 @@ import type { ProgramClass, ProgramSubjectItem, ProgramWithRelations } from "@/t
 export type CurriculumSubjectRow = {
   subjectId: number;
   subjectName: string;
+  subjectAbbrevation: string;
   categoryId: number;
   categoryName: string;
   cellsByYearId: Map<number, ProgramSubjectItem>;
@@ -32,6 +33,7 @@ export function buildCurriculumSections(
     rowsBySubject.set(programSubject.subjectId, {
       subjectId: programSubject.subjectId,
       subjectName: subject.name,
+      subjectAbbrevation: subject.abbrevation,
       categoryId: category?.id ?? subject.categoryId,
       categoryName: category?.name ?? "Brez kategorije",
       cellsByYearId: new Map([[programSubject.yearId, programSubject]]),

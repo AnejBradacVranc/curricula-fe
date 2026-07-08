@@ -78,7 +78,7 @@ export function ProgramCurriculumTable({
           <table className="w-full min-w-[720px] border-collapse text-sm">
             <thead>
               <tr className="border-b bg-muted/20">
-                <th className="sticky left-0 z-10 min-w-[180px] border-r bg-muted/30 px-3 py-2 text-left text-xs font-medium">
+                <th className="sticky left-0 z-10 w-16 min-w-16 max-w-20 border-r bg-muted/30 px-2 py-2 text-left text-xs font-medium">
                   Predmet
                 </th>
                 {years.map((programYear) => (
@@ -110,8 +110,13 @@ export function ProgramCurriculumTable({
                       key={row.subjectId}
                       className="border-b border-border/70 hover:bg-muted/10"
                     >
-                      <td className="sticky left-0 z-10 border-r bg-card px-3 py-2 align-top font-medium">
-                        {row.subjectName}
+                      <td
+                        className="sticky left-0 z-10 w-16 min-w-16 max-w-20 border-r bg-card px-2 py-2 align-top text-xs font-semibold tracking-wide uppercase"
+                        title={row.subjectName}
+                      >
+                        <span className="line-clamp-2 break-all">
+                          {row.subjectAbbrevation}
+                        </span>
                       </td>
                       {years.map((programYear) => {
                         const programSubject = row.cellsByYearId.get(
@@ -182,7 +187,7 @@ export function ProgramCurriculumTable({
                 </Fragment>
               ))}
               <tr className="border-t-2 bg-muted/30 font-medium">
-                <td className="sticky left-0 z-10 border-r bg-muted/30 px-3 py-2">
+                <td className="sticky left-0 z-10 w-16 min-w-16 max-w-20 border-r bg-muted/30 px-2 py-2 text-xs">
                   Skupaj ur / teden
                 </td>
                 {weeklyTotals.map((total, index) => (

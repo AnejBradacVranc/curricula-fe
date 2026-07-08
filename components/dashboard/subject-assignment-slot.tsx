@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, UserRound, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { getTeacherDragData } from "@/components/dashboard/drag";
 import { Button } from "@/components/ui/button";
+import { hasTeacherColor, teacherColorWithOpacity } from "@/lib/teacher-color";
 import { cn } from "@/lib/utils";
 import type { Teacher } from "@/types";
 
@@ -63,20 +64,37 @@ export function SubjectAssignmentSlot({
   }
 
   if (teacher) {
+    const teacherColor = hasTeacherColor(teacher.color) ? teacher.color : null;
+
     return (
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        style={
+          teacherColor
+            ? { backgroundColor: teacherColorWithOpacity(teacherColor, 0.5) }
+            : undefined
+        }
         className={cn(
-          "flex items-center gap-2 rounded-lg bg-muted/60 text-sm transition-colors",
+          "flex items-center gap-2 rounded-lg text-sm transition-colors",
           compact ? "px-2 py-1 text-[10px]" : "px-3 py-2",
+          !teacherColor && "bg-muted/60",
           isPending && "opacity-60",
-          isDragOver && "border-primary bg-primary/10 text-foreground",
+          isDragOver &&
+            (teacherColor
+              ? "ring-2 ring-primary/40"
+              : "border-primary bg-primary/10 text-foreground"),
         )}
       >
-        <UserRound className="size-4 shrink-0 text-muted-foreground" />
-        <span className="min-w-0 flex-1 truncate">
+        {teacherColor ? (
+          <span
+            className="size-2 shrink-0 rounded-full ring-1 ring-foreground/10"
+            style={{ backgroundColor: teacherColor }}
+            aria-hidden
+          />
+        ) : null}
+        <span className="min-w-0 flex-1 truncate font-medium">
           {teacher.name} {teacher.surname}
         </span>
         {isPending ? (

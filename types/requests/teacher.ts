@@ -3,4 +3,5 @@ export interface CreateTeacherRequest {
   surname: string;
   email: string;
   assignedHours: number;
+  color?: string;
 }

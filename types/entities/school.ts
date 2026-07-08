@@ -6,6 +6,7 @@ import type { Teacher } from "./teacher";
 export interface School extends Timestamps {
   id: number;
   name: string;
+  logo: string | null;
   tel: string | null;
   email: string | null;
   address: string | null;
