@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 const navLinks = [
   { href: "/", label: "Domov" },
   { href: "/dashboard", label: "Nadzorna plošča", auth: true },
+  { href: "/import", label: "Uvoz", auth: true }
 ];
 
 export function Navigation() {

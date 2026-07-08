@@ -14,7 +14,6 @@ type SubjectAssignmentSlotProps = {
   teacher?: SubjectTeacher;
   isPending: boolean;
   disabled?: boolean;
-  compact?: boolean;
   onAssign: (teacherId: number) => void;
   onRemove: () => void;
 };
@@ -23,7 +22,6 @@ export function SubjectAssignmentSlot({
   teacher,
   isPending,
   disabled = false,
-  compact = false,
   onAssign,
   onRemove,
 }: SubjectAssignmentSlotProps) {
@@ -73,18 +71,18 @@ export function SubjectAssignmentSlot({
         onDrop={handleDrop}
         style={
           teacherColor
-            ? { backgroundColor: teacherColorWithOpacity(teacherColor, 0.5) }
+            ? { backgroundColor: teacherColorWithOpacity(teacherColor, 0.2) }
             : undefined
         }
         className={cn(
           "flex items-center gap-2 rounded-lg text-sm transition-colors",
-          compact ? "px-2 py-1 text-[10px]" : "px-3 py-2",
+          "px-2 py-1 text-[10px]",
           !teacherColor && "bg-muted/60",
           isPending && "opacity-60",
           isDragOver &&
-            (teacherColor
-              ? "ring-2 ring-primary/40"
-              : "border-primary bg-primary/10 text-foreground"),
+          (teacherColor
+            ? "ring-2 ring-primary/40"
+            : "border-primary bg-primary/10 text-foreground"),
         )}
       >
         {teacherColor ? (
@@ -122,10 +120,10 @@ export function SubjectAssignmentSlot({
       onDrop={handleDrop}
       className={cn(
         "rounded-lg border border-dashed text-muted-foreground transition-colors",
-        compact ? "px-2 py-1 text-[10px]" : "px-3 py-2 text-sm",
+        "px-2 py-1 text-[10px]",
         !disabled &&
-          !isPending &&
-          "cursor-copy hover:border-primary/40 hover:bg-primary/5",
+        !isPending &&
+        "cursor-copy hover:border-primary/40 hover:bg-primary/5",
         isDragOver && "border-primary bg-primary/10 text-foreground",
         isPending && "opacity-60",
       )}
@@ -135,10 +133,8 @@ export function SubjectAssignmentSlot({
           <Loader2 className="size-4 animate-spin" />
           Dodeljevanje...
         </span>
-      ) : compact ? (
-        "Povleci"
       ) : (
-        "Povlecite učitelja sem"
+        "Povleci"
       )}
     </div>
   );

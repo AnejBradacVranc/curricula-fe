@@ -71,7 +71,6 @@ export function CurriculumCell({
                     disabled ||
                     (pendingClassId !== null && pendingClassId !== programClass.id)
                   }
-                  compact
                   onAssign={(teacherId) => onAssign(programClass.id, teacherId)}
                   onRemove={() => {
                     if (!assignment) {
