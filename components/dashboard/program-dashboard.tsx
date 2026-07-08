@@ -261,7 +261,7 @@ export function ProgramDashboard() {
         </Card>
       )}
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <Tabs defaultValue={defaultTab} className="min-w-0 gap-4">
           <div className="scrollbar-x min-w-0 overscroll-x-contain pb-1">
             <TabsList className="h-auto w-max max-w-none flex-nowrap justify-start">

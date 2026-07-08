@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/auth-provider";
+import { useAuth } from "@/components/auth/auth-provider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -52,7 +52,7 @@ export function AuthForm() {
   const [registerSurname, setRegisterSurname] = useState("");
   const [registerSchoolId, setRegisterSchoolId] = useState("1");
 
-  async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
+  async function handleLogin(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setSuccess(null);
@@ -72,7 +72,7 @@ export function AuthForm() {
     }
   }
 
-  async function handleRegister(event: React.FormEvent<HTMLFormElement>) {
+  async function handleRegister(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setSuccess(null);

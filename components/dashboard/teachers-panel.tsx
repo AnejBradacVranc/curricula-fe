@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { GripVertical, Mail, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Clock, GripVertical, Mail, Users } from "lucide-react";
 import { TeacherDetailDialog } from "@/components/dashboard/teacher-detail-dialog";
 import { setTeacherDragData } from "@/components/dashboard/drag";
 import { Badge } from "@/components/ui/badge";
@@ -63,7 +63,7 @@ export function TeachersPanel({
                   <li key={teacher.id}>
                     <div
                       className={cn(
-                        "flex items-center gap-2 px-(--card-spacing) py-2 transition-opacity",
+                        "flex items-center  px-(--card-spacing) py-2 transition-opacity",
                         draggingTeacherId === teacher.id && "opacity-50",
                       )}
                     >
@@ -98,22 +98,33 @@ export function TeachersPanel({
                             {teacher.email}
                           </p>
                         </div>
-                        <div className="flex shrink-0 flex-col items-end gap-0.5 text-xs">
-                          <span className="text-muted-foreground">
-                            Predmeti{" "}
-                            <span className="font-medium text-foreground">
-                              {formatHours(teacher.assignedHours)}h
+                        <div className="flex shrink-0 flex-col items-end gap-1">
+                          <Badge variant="default" className="gap-1.5">
+                            <Clock className="size-3" />
+                            <span className="font-medium text-foreground tabular-nums">
+                              {formatHours(teacher.totalHours)}h
                             </span>
-                          </span>
-                          {Number(teacher.additionalActivityHours) > 0 && (
-                            <span className="text-muted-foreground">
-                              Dodatno{" "}
-                              <span className="font-medium text-foreground">
-                                {formatHours(teacher.additionalActivityHours)}h
+                          </Badge>
+
+                          <div className="flex flex-col items-end gap-0.5 text-[11px] text-muted-foreground leading-tight">
+                            <span className="whitespace-nowrap">
+                              Predmeti{" "}
+                              <span className="font-medium text-foreground tabular-nums">
+                                {formatHours(teacher.assignedHours)}h
                               </span>
                             </span>
-                          )}
+
+                            {Number(teacher.additionalActivityHours) > 0 && (
+                              <span className="whitespace-nowrap">
+                                Dodatno{" "}
+                                <span className="font-medium text-foreground tabular-nums">
+                                  {formatHours(teacher.additionalActivityHours)}h
+                                </span>
+                              </span>
+                            )}
+                          </div>
                         </div>
+
                       </button>
                     </div>
                   </li>
