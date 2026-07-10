@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { GraduationCap } from "lucide-react";
-import { ProgramCurriculumTable } from "@/components/dashboard/program-curriculum-table";
-import { TeachersPanel } from "@/components/dashboard/teachers-panel";
+
 import { getAssignmentKey } from "@/lib/curriculum/build-curriculum-rows";
 import {
   Card,
@@ -26,6 +25,8 @@ import {
   unassignTeacher,
 } from "@/lib/api";
 import type { ProgramWithRelations, Teacher } from "@/types";
+import { TeachersPanel } from "./teachers-panel";
+import { ProgramAssignmentTable } from "./program-assignment-table";
 
 function DashboardSkeleton() {
   return (
@@ -245,7 +246,7 @@ export function ProgramDashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
-          Nadzorna plošča
+          Dodeljevanje ur
         </h1>
         <p className="text-sm text-muted-foreground">
           Izvedbeni predmetnik po letnikih — povlecite učitelja v celico za
@@ -279,7 +280,7 @@ export function ProgramDashboard() {
 
           {programs.map((program) => (
             <TabsContent key={program.id} value={program.id.toString()}>
-              <ProgramCurriculumTable
+              <ProgramAssignmentTable
                 program={program}
                 pendingAssignmentKey={pendingAssignmentKey}
                 onAssignTeacher={handleAssignTeacher}

@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Clock, GripVertical, Mail, Users } from "lucide-react";
-import { TeacherDetailDialog } from "@/components/dashboard/teacher-detail-dialog";
-import { setTeacherDragData } from "@/components/dashboard/drag";
+
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -18,6 +17,8 @@ import { cn } from "@/lib/utils";
 import { formatHours } from "@/lib/curriculum/format-hours";
 import { hasTeacherColor } from "@/lib/teacher-color";
 import type { Teacher } from "@/types";
+import { setTeacherDragData } from "./drag";
+import { TeacherDetailDialog } from "./teacher-detail-dialog";
 
 type TeachersPanelProps = {
   teachers: Teacher[];

@@ -2,9 +2,10 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ProgramDashboard } from "@/components/dashboard/program-dashboard";
+
 import { useAuth } from "@/components/auth/auth-provider";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProgramDashboard } from "./_components/program-dashboard";
 
 export default function DashboardPage() {
   const router = useRouter();

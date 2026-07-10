@@ -23,7 +23,7 @@ export default function Home() {
       <div className="mt-8 flex gap-3">
         {!isAuthenticated && <Button render={<Link href="/login" />}>Prijava</Button>}
         <Button render={<Link href="/dashboard" />} variant="outline">
-          Nadzorna plošča
+          Dodeljevanje ur
         </Button>
       </div>
     </div>

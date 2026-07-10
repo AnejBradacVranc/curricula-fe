@@ -1,17 +1,17 @@
 "use client";
 
 import { Fragment } from "react";
-import { CurriculumCell } from "@/components/dashboard/curriculum-cell";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   buildCurriculumSections,
   getAssignmentKey,
   getClassesForYear,
 } from "@/lib/curriculum/build-curriculum-rows";
-import { formatHours, sumHours } from "@/lib/curriculum/format-hours";
 import type { ProgramWithRelations } from "@/types";
+import { CurriculumCell } from "./curriculum-cell";
 
-type ProgramCurriculumTableProps = {
+type ProgramAssignmentTableProps = {
   program: ProgramWithRelations;
   pendingAssignmentKey: string | null;
   onAssignTeacher: (input: {
@@ -30,22 +30,15 @@ type ProgramCurriculumTableProps = {
   }) => void;
 };
 
-export function ProgramCurriculumTable({
+export function ProgramAssignmentTable({
   program,
   pendingAssignmentKey,
   onAssignTeacher,
   onRemoveAssignment,
-}: ProgramCurriculumTableProps) {
+}: ProgramAssignmentTableProps) {
   const years = [...program.programYears].sort((a, b) => a.yearId - b.yearId);
   const sections = buildCurriculumSections(program);
 
-  const weeklyTotals = years.map((programYear) =>
-    sumHours(
-      program.programSubjects
-        .filter((item) => item.yearId === programYear.yearId)
-        .map((item) => item.requiredHours),
-    ),
-  );
 
   if (years.length === 0) {
     return (
@@ -186,19 +179,6 @@ export function ProgramCurriculumTable({
                   ))}
                 </Fragment>
               ))}
-              <tr className="border-t-2 bg-muted/30 font-medium">
-                <td className="sticky left-0 z-10 w-16 min-w-16 max-w-20 border-r bg-muted/30 px-2 py-2 text-xs">
-                  Skupaj ur / teden
-                </td>
-                {weeklyTotals.map((total, index) => (
-                  <td
-                    key={years[index].yearId}
-                    className="border-r px-2 py-2 text-center tabular-nums last:border-r-0"
-                  >
-                    {formatHours(total)}
-                  </td>
-                ))}
-              </tr>
             </tbody>
           </table>
         </CardContent>

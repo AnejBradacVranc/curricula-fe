@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { Loader2, X } from "lucide-react";
-import { getTeacherDragData } from "@/components/dashboard/drag";
+
 import { Button } from "@/components/ui/button";
 import { hasTeacherColor, teacherColorWithOpacity } from "@/lib/teacher-color";
 import { cn } from "@/lib/utils";
 import type { Teacher } from "@/types";
+import { getTeacherDragData } from "./drag";
 
 type SubjectTeacher = Omit<Teacher, "schoolId">;
 

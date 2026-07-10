@@ -11,7 +11,7 @@ export { getUsers, getUserByEmail } from "./users";
 
 export { getTeachers, getTeacher, createTeacher } from "./teachers";
 
-export { getPrograms, createProgram } from "./programs";
+export { getPrograms, getProgram, createProgram, deleteProgram } from "./programs";
 
 export { getSubjects, createSubject } from "./subjects";
 

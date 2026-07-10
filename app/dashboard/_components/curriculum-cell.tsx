@@ -1,10 +1,11 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { SubjectAssignmentSlot } from "@/components/dashboard/subject-assignment-slot";
+
 import { formatHours } from "@/lib/curriculum/format-hours";
 import { findAssignmentForClass } from "@/lib/curriculum/build-curriculum-rows";
 import type { ProgramClass, ProgramSubjectItem } from "@/types";
+import { SubjectAssignmentSlot } from "./subject-assignment-slot";
 
 type CurriculumCellProps = {
   programSubject?: ProgramSubjectItem;

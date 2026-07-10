@@ -7,7 +7,6 @@ export interface Program extends Timestamps {
   id: number;
   name: string;
   schoolId: number;
-  //availableHours: number;
 }
 
 export interface ProgramSubjectItem extends Timestamps {

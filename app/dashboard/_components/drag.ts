@@ -2,10 +2,7 @@ import type { Teacher } from "@/types";
 
 export const TEACHER_DRAG_MIME = "application/x-curricula-teacher";
 
-export type TeacherDragPayload = Pick<
-  Teacher,
-  "id" | "name" | "surname"
-> & {
+export type TeacherDragPayload = Pick<Teacher, "id" | "name" | "surname"> & {
   color?: string | null;
 };
 
