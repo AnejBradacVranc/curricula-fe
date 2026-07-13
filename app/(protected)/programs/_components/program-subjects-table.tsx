@@ -3,7 +3,7 @@
 import { Fragment, useState } from "react";
 import { Pencil, Plus } from "lucide-react";
 
-import { AssignSubjectDialog } from "@/app/programs/_components/assign-subject-dialog";
+import { AssignSubjectDialog } from "@/app/(protected)/programs/_components/assign-subject-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatHours, sumHours } from "@/lib/curriculum/format-hours";

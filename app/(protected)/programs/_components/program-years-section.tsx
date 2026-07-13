@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Pencil, Plus } from "lucide-react";
 
-import { ProgramYearDialog } from "@/app/programs/_components/program-year-dialog";
+import { ProgramYearDialog } from "@/app/(protected)/programs/_components/program-year-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

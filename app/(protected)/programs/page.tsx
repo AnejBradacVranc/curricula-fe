@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   BookOpen,
   ChevronRight,
@@ -12,9 +11,8 @@ import {
   Trash2,
 } from "lucide-react";
 
-import { CreateProgramDialog } from "@/app/programs/_components/create-program-dialog";
-import { DeleteProgramDialog } from "@/app/programs/_components/delete-program-dialog";
-import { useAuth } from "@/components/auth/auth-provider";
+import { CreateProgramDialog } from "@/app/(protected)/programs/_components/create-program-dialog";
+import { DeleteProgramDialog } from "@/app/(protected)/programs/_components/delete-program-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,8 +63,6 @@ function ProgramsSkeleton() {
 }
 
 export default function ProgramsPage() {
-  const router = useRouter();
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [programs, setPrograms] = useState<ProgramWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,16 +71,6 @@ export default function ProgramsPage() {
     useState<ProgramWithRelations | null>(null);
 
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) {
-      router.replace("/login");
-    }
-  }, [isAuthenticated, isAuthLoading, router]);
-
-  useEffect(() => {
-    if (isAuthLoading || !isAuthenticated) {
-      return;
-    }
-
     let cancelled = false;
 
     async function loadPrograms() {
@@ -113,9 +99,9 @@ export default function ProgramsPage() {
     return () => {
       cancelled = true;
     };
-  }, [isAuthLoading, isAuthenticated]);
+  }, []);
 
-  if (isAuthLoading || !isAuthenticated || isLoading) {
+  if (isLoading) {
     return (
       <div className="container py-8">
         <ProgramsSkeleton />
