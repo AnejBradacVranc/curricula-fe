@@ -15,13 +15,11 @@ function expandHex(hex: string): string {
   return hex;
 }
 
-export function hasTeacherColor(
-  color: string | null | undefined,
-): color is string {
+export function hasColor(color: string | null | undefined): color is string {
   return Boolean(color && isHexColor(color));
 }
 
-export function teacherColorWithOpacity(
+export function colorWithOpacity(
   color: string,
   opacity = 0.5,
   fallback = "var(--primary)",

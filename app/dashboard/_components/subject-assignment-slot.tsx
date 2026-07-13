@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Loader2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { hasTeacherColor, teacherColorWithOpacity } from "@/lib/teacher-color";
+import { hasColor, colorWithOpacity } from "@/lib/teacher-color";
 import { cn } from "@/lib/utils";
 import type { Teacher } from "@/types";
 import { getTeacherDragData } from "./drag";
@@ -63,7 +63,7 @@ export function SubjectAssignmentSlot({
   }
 
   if (teacher) {
-    const teacherColor = hasTeacherColor(teacher.color) ? teacher.color : null;
+    const teacherColor = hasColor(teacher.color) ? teacher.color : null;
 
     return (
       <div
@@ -72,7 +72,7 @@ export function SubjectAssignmentSlot({
         onDrop={handleDrop}
         style={
           teacherColor
-            ? { backgroundColor: teacherColorWithOpacity(teacherColor, 0.2) }
+            ? { backgroundColor: colorWithOpacity(teacherColor, 0.2) }
             : undefined
         }
         className={cn(
