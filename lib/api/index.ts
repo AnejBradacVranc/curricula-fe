@@ -17,6 +17,10 @@ export { getSubjects, createSubject } from "./subjects";
 
 export { getProgramSubjects, createProgramSubject } from "./program-subjects";
 
+export { getYears } from "./years";
+
+export { createProgramYear, updateProgramYear } from "./program-years";
+
 export { assignTeacher, unassignTeacher } from "./assignments";
 export {
   getAdditionalActivities,

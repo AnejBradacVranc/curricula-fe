@@ -6,8 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, GraduationCap } from "lucide-react";
 
 import { ProgramSubjectsTable } from "@/app/programs/_components/program-subjects-table";
+import { ProgramYearsSection } from "@/app/programs/_components/program-years-section";
 import { useAuth } from "@/components/auth/auth-provider";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -57,7 +57,6 @@ export default function ProgramPage() {
     if (Number.isNaN(programId)) {
       return;
     }
-    setIsLoading(true);
 
     try {
       const data = await getProgram(programId);
@@ -72,8 +71,6 @@ export default function ProgramPage() {
       setProgram(data);
     } catch {
       setError("Programa ni bilo mogoče naložiti.");
-    } finally {
-      setIsLoading(false)
     }
   }, [programId]);
 
@@ -170,51 +167,10 @@ export default function ProgramPage() {
           </p>
         </div>
 
-        {program.programYears.length > 0 && (
-          <Card className="overflow-hidden py-0">
-            <CardHeader className="border-b py-4">
-              <CardTitle className="text-base">Letniki</CardTitle>
-              <CardDescription>
-                Pregled letnikov in razredov v programu.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-3 p-4">
-              {[...program.programYears]
-                .sort((a, b) => a.yearId - b.yearId)
-                .map((programYear) => (
-                  <div
-                    key={programYear.yearId}
-                    className="min-w-[140px] flex-1 rounded-lg border bg-muted p-3"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 space-y-0.5">
-                        <p className="text-sm font-medium">
-                          {programYear.year.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {programYear.numWeeks} tednov
-                        </p>
-                      </div>
-                    </div>
-
-                    {programYear.classes.length > 0 && (
-                      <div className="mt-2.5 flex flex-wrap gap-1.5">
-                        {programYear.classes.map((programClass) => (
-                          <Badge
-                            key={programClass.id}
-                            variant="default"
-                            className="font-normal"
-                          >
-                            {programYear.year.name.slice(0, 1)}. {programClass.label.label.toUpperCase()}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-            </CardContent>
-          </Card>
-        )}
+        <ProgramYearsSection
+          program={program}
+          onProgramYearSaved={refreshProgram}
+        />
 
         <ProgramSubjectsTable
           program={program}

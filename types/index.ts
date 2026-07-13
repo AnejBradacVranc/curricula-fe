@@ -43,6 +43,10 @@ export type { CreateProgramRequest } from "./requests/program";
 export type { CreateSubjectRequest } from "./requests/subject";
 export type { CreateProgramSubjectRequest } from "./requests/program-subject";
 export type {
+  CreateProgramYearRequest,
+  UpdateProgramYearRequest,
+} from "./requests/program-year";
+export type {
   CreateAssignmentRequest,
   DeleteAssignmentRequest,
 } from "./requests/assignment";
