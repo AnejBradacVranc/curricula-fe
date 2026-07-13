@@ -8,6 +8,7 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -72,12 +73,11 @@ export function TeacherDetailDialog({
   const [teacher, setTeacher] = useState<TeacherDetail | null>(null);
   const [activities, setActivities] = useState<AdditionalActivity[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [selectedActivityId, setSelectedActivityId] = useState<number | null>(
     null,
   );
   const [hoursInput, setHoursInput] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [removingKey, setRemovingKey] = useState<string | null>(null);
 
@@ -97,11 +97,10 @@ export function TeacherDetailDialog({
 
     async function load() {
       setIsLoading(true);
-      setError(null);
-      setActionError(null);
       setTeacher(null);
       setSelectedActivityId(null);
       setHoursInput("");
+      setValidationError(null);
 
       try {
         const [teacherData, activitiesData] = await Promise.all([
@@ -115,7 +114,7 @@ export function TeacherDetailDialog({
         }
       } catch {
         if (!cancelled) {
-          setError("Podatkov o učitelju ni bilo mogoče naložiti.");
+          toast.error("Podatkov o učitelju ni bilo mogoče naložiti.");
         }
       } finally {
         if (!cancelled) {
@@ -133,18 +132,18 @@ export function TeacherDetailDialog({
 
   const handleAddAdditionalHours = async () => {
     if (!teacher || selectedActivityId === null) {
-      setActionError("Izberite dejavnost.");
+      setValidationError("Izberite dejavnost.");
       return;
     }
 
     const hoursAmount = Number(hoursInput);
     if (Number.isNaN(hoursAmount) || hoursAmount < 0) {
-      setActionError("Vnesite veljavno število ur.");
+      setValidationError("Vnesite veljavno število ur.");
       return;
     }
 
+    setValidationError(null);
     setIsSubmitting(true);
-    setActionError(null);
 
     try {
       await createAdditionalActivityAssignment({
@@ -156,8 +155,9 @@ export function TeacherDetailDialog({
       onTeacherUpdated?.();
       setSelectedActivityId(null);
       setHoursInput("");
+      toast.success("Dodatne ure so bile uspešno dodane.");
     } catch {
-      setActionError("Dodajanje dodatnih ur ni uspelo.");
+      toast.error("Dodajanje dodatnih ur ni uspelo.");
     } finally {
       setIsSubmitting(false);
     }
@@ -170,7 +170,6 @@ export function TeacherDetailDialog({
 
     const key = String(additionalActivityId);
     setRemovingKey(key);
-    setActionError(null);
 
     try {
       await deleteAdditionalActivityAssignment({
@@ -179,8 +178,9 @@ export function TeacherDetailDialog({
       });
       await loadTeacher(teacher.id);
       onTeacherUpdated?.();
+      toast.success("Dodatne ure so bile odstranjene.");
     } catch {
-      setActionError("Odstranitev dodatnih ur ni uspela.");
+      toast.error("Odstranitev dodatnih ur ni uspela.");
     } finally {
       setRemovingKey(null);
     }
@@ -200,13 +200,6 @@ export function TeacherDetailDialog({
                 <TeacherDetailSkeleton />
               </ScrollArea>
             </div>
-          </>
-        ) : error ? (
-          <>
-            <DialogHeader className="shrink-0 border-b px-4 pt-4 pb-3">
-              <DialogTitle>Napaka</DialogTitle>
-              <DialogDescription>{error}</DialogDescription>
-            </DialogHeader>
           </>
         ) : teacher ? (
           <>
@@ -248,12 +241,6 @@ export function TeacherDetailDialog({
             <div className="min-h-0 flex-1 overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="space-y-4 px-4 py-3">
-                  {actionError && (
-                    <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                      {actionError}
-                    </p>
-                  )}
-
                   <section className="space-y-3">
                     <div className="flex items-center gap-2 text-sm font-medium">
                       <BookOpen className="size-4 text-primary" />
@@ -353,6 +340,12 @@ export function TeacherDetailDialog({
                           disabled={isSubmitting}
                         />
                       </div>
+
+                      {validationError && (
+                        <p className="text-sm text-destructive" role="alert">
+                          {validationError}
+                        </p>
+                      )}
 
                       <Button
                         type="button"

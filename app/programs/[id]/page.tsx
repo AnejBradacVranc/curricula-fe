@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, GraduationCap } from "lucide-react";
@@ -52,6 +52,30 @@ export default function ProgramPage() {
       router.replace("/login");
     }
   }, [isAuthenticated, isAuthLoading, router]);
+
+  const refreshProgram = useCallback(async () => {
+    if (Number.isNaN(programId)) {
+      return;
+    }
+    setIsLoading(true);
+
+    try {
+      const data = await getProgram(programId);
+
+      if (!data) {
+        setError("Program ni bil najden.");
+        setProgram(null);
+        return;
+      }
+
+      setError(null);
+      setProgram(data);
+    } catch {
+      setError("Programa ni bilo mogoče naložiti.");
+    } finally {
+      setIsLoading(false)
+    }
+  }, [programId]);
 
   useEffect(() => {
     if (isAuthLoading || !isAuthenticated || Number.isNaN(programId)) {
@@ -160,7 +184,7 @@ export default function ProgramPage() {
                 .map((programYear) => (
                   <div
                     key={programYear.yearId}
-                    className="min-w-[140px] flex-1 rounded-lg border bg-muted p-3 "
+                    className="min-w-[140px] flex-1 rounded-lg border bg-muted p-3"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 space-y-0.5">
@@ -175,14 +199,13 @@ export default function ProgramPage() {
 
                     {programYear.classes.length > 0 && (
                       <div className="mt-2.5 flex flex-wrap gap-1.5">
-                        <p className="text-sm font-medium">Oddelki: </p>
                         {programYear.classes.map((programClass) => (
                           <Badge
                             key={programClass.id}
-                            variant="outline"
+                            variant="default"
                             className="font-normal"
                           >
-                            {programClass.label.label.toUpperCase()}
+                            {programYear.year.name.slice(0, 1)}. {programClass.label.label.toUpperCase()}
                           </Badge>
                         ))}
                       </div>
@@ -193,7 +216,10 @@ export default function ProgramPage() {
           </Card>
         )}
 
-        <ProgramSubjectsTable program={program} />
+        <ProgramSubjectsTable
+          program={program}
+          onSubjectAdded={refreshProgram}
+        />
       </div>
     </div>
   );

@@ -1,17 +1,25 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatHours, sumHours } from "@/lib/curriculum/format-hours";
 import type { ProgramWithRelations } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { AssignSubjectDialog } from "./assign-subject-dialog";
 
 type ProgramSubjectsTableProps = {
   program: ProgramWithRelations;
+  onSubjectAdded?: () => void | Promise<void>;
 };
 
-export function ProgramSubjectsTable({ program }: ProgramSubjectsTableProps) {
+export function ProgramSubjectsTable({ program, onSubjectAdded }: ProgramSubjectsTableProps) {
+
   const years = [...program.programYears].sort((a, b) => a.yearId - b.yearId);
+
+  const [isAssignSubjectDialOpen, setIsAssignSubjectDialOpen] = useState(false);
+
 
   const sections = years
     .map((programYear) => {
@@ -29,20 +37,33 @@ export function ProgramSubjectsTable({ program }: ProgramSubjectsTableProps) {
     })
     .filter((section) => section.subjects.length > 0);
 
-  if (sections.length === 0) {
-    return null;
-  }
-
   return (
-    <Card className="overflow-hidden py-0">
-      <CardHeader className="border-b py-4">
-        <CardTitle className="text-base">Predmeti</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Predmeti po letnikih z zahtevanimi urami na teden.
-        </p>
-      </CardHeader>
-      <CardContent className="overflow-x-auto p-0">
-        <table className="w-full min-w-[480px] border-collapse text-sm">
+    <>
+      <Card className="overflow-hidden py-0">
+        <CardHeader className="border-b py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Predmeti</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Predmeti po letnikih z zahtevanimi urami na teden.
+              </p>
+            </div>
+            <Button
+              type="button"
+              onClick={() => setIsAssignSubjectDialOpen(true)}
+            >
+              <Plus />
+              Dodaj
+            </Button>
+          </div>
+        </CardHeader>
+        {sections.length === 0 ? (
+          <CardContent className="px-4 py-8 text-center text-sm text-muted-foreground">
+            Ta program še nima dodeljenih predmetov.
+          </CardContent>
+        ) : (
+          <CardContent className="overflow-x-auto p-0">
+            <table className="w-full min-w-[480px] border-collapse text-sm">
           <thead>
             <tr className="border-b bg-muted/20">
               <th className="px-4 py-2.5 text-left text-xs font-medium">
@@ -114,9 +135,18 @@ export function ProgramSubjectsTable({ program }: ProgramSubjectsTableProps) {
                 )}
               </Fragment>
             ))}
-          </tbody>
-        </table>
-      </CardContent>
-    </Card>
+            </tbody>
+          </table>
+        </CardContent>
+        )}
+      </Card>
+      <AssignSubjectDialog
+        open={isAssignSubjectDialOpen}
+        onOpenChange={setIsAssignSubjectDialOpen}
+        programYears={program.programYears}
+        programId={program.id}
+        onSubjectAdded={onSubjectAdded}
+      />
+    </>
   );
 }
