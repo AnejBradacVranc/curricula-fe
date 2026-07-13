@@ -174,7 +174,7 @@ export default function ProgramPage() {
 
         <ProgramSubjectsTable
           program={program}
-          onSubjectAdded={refreshProgram}
+          onSubjectSaved={refreshProgram}
         />
       </div>
     </div>

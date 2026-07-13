@@ -15,7 +15,7 @@ export { getPrograms, getProgram, createProgram, deleteProgram } from "./program
 
 export { getSubjects, createSubject } from "./subjects";
 
-export { getProgramSubjects, createProgramSubject } from "./program-subjects";
+export { getProgramSubjects, createProgramSubject, updateProgramSubject } from "./program-subjects";
 
 export { getYears } from "./years";
 
