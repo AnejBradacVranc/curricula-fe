@@ -15,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { formatHours } from "@/lib/curriculum/format-hours";
-import { hasTeacherColor } from "@/lib/teacher-color";
+import { hasColor } from "@/lib/teacher-color";
 import type { Teacher } from "@/types";
 import { setTeacherDragData } from "./drag";
 import { TeacherDetailDialog } from "./teacher-detail-dialog";
@@ -94,7 +94,7 @@ export function TeachersPanel({
                       >
                         <div className="min-w-0 flex-1 overflow-hidden space-y-1">
                           <p className="flex min-w-0 items-center gap-2 truncate font-medium">
-                            {hasTeacherColor(teacher.color) ? (
+                            {hasColor(teacher.color) ? (
                               <span
                                 className="size-2.5 shrink-0 rounded-full ring-1 ring-border"
                                 style={{ backgroundColor: teacher.color }}

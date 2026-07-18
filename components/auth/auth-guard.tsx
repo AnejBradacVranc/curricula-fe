@@ -5,9 +5,8 @@ import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/components/auth/auth-provider";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ProgramDashboard } from "./_components/program-dashboard";
 
-export default function DashboardPage() {
+export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -29,9 +28,5 @@ export default function DashboardPage() {
     );
   }
 
-  return (
-    <div className="container py-8">
-      <ProgramDashboard />
-    </div>
-  );
+  return children;
 }

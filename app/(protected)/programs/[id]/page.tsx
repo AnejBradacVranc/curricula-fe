@@ -2,12 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ArrowLeft, GraduationCap } from "lucide-react";
 
-import { ProgramSubjectsTable } from "@/app/programs/_components/program-subjects-table";
-import { ProgramYearsSection } from "@/app/programs/_components/program-years-section";
-import { useAuth } from "@/components/auth/auth-provider";
+import { ProgramSubjectsTable } from "@/app/(protected)/programs/_components/program-subjects-table";
+import { ProgramYearsSection } from "@/app/(protected)/programs/_components/program-years-section";
 import {
   Card,
   CardDescription,
@@ -37,20 +36,12 @@ function ProgramDetailSkeleton() {
 }
 
 export default function ProgramPage() {
-  const router = useRouter();
   const params = useParams();
   const programId = Number(params.id);
 
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [program, setProgram] = useState<ProgramWithRelations | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) {
-      router.replace("/login");
-    }
-  }, [isAuthenticated, isAuthLoading, router]);
 
   const refreshProgram = useCallback(async () => {
     if (Number.isNaN(programId)) {
@@ -74,7 +65,7 @@ export default function ProgramPage() {
   }, [programId]);
 
   useEffect(() => {
-    if (isAuthLoading || !isAuthenticated || Number.isNaN(programId)) {
+    if (Number.isNaN(programId)) {
       return;
     }
 
@@ -111,9 +102,9 @@ export default function ProgramPage() {
     return () => {
       cancelled = true;
     };
-  }, [isAuthLoading, isAuthenticated, programId]);
+  }, [programId]);
 
-  if (isAuthLoading || !isAuthenticated || isLoading) {
+  if (isLoading) {
     return (
       <div className="container py-8">
         <ProgramDetailSkeleton />

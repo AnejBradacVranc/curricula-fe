@@ -3,9 +3,6 @@
 import { useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
-import { CreateClassDialog } from "@/app/programs/_components/create-class-dialog";
-import { DeleteClassDialog } from "@/app/programs/_components/delete-class-dialog";
-import { ProgramYearDialog } from "@/app/programs/_components/program-year-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +14,9 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { ProgramClass, ProgramWithRelations, ProgramYear } from "@/types";
+import { ProgramYearDialog } from "./program-year-dialog";
+import { CreateClassDialog } from "./create-class-dialog";
+import { DeleteClassDialog } from "./delete-class-dialog";
 
 type ProgramYearsSectionProps = {
   program: ProgramWithRelations;
