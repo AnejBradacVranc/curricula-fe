@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { login, register } from "@/lib/api";
 import { Role } from "@/types/enums/role";
+import { toast } from "sonner";
 
 function getErrorMessage(error: unknown) {
   if (
@@ -40,8 +41,6 @@ export function AuthForm() {
   const router = useRouter();
   const { markAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -54,8 +53,6 @@ export function AuthForm() {
 
   async function handleLogin(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setSuccess(null);
     setLoading(true);
 
     try {
@@ -66,7 +63,9 @@ export function AuthForm() {
       markAuthenticated();
       router.push("/dashboard");
     } catch (err) {
-      setError(getErrorMessage(err));
+      toast.error(getErrorMessage(err), {
+        description: "Prišlo je do napake. Poskusite znova.",
+      });
     } finally {
       setLoading(false);
     }
@@ -74,8 +73,6 @@ export function AuthForm() {
 
   async function handleRegister(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setSuccess(null);
     setLoading(true);
 
     try {
@@ -87,9 +84,13 @@ export function AuthForm() {
         schoolId: Number(registerSchoolId),
         role: Role.USER,
       });
-      setSuccess("Račun je ustvarjen. Zdaj se lahko prijavite.");
+      toast.success("Račun je bil uspešno ustvarjen.", {
+        description: "Zdaj se lahko prijavite.",
+      });
     } catch (err) {
-      setError(getErrorMessage(err));
+      toast.error(getErrorMessage(err), {
+        description: "Prišlo je do napake. Poskusite znova.",
+      });
     } finally {
       setLoading(false);
     }
@@ -199,17 +200,6 @@ export function AuthForm() {
             </form>
           </TabsContent>
         </Tabs>
-
-        {error && (
-          <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error}
-          </p>
-        )}
-        {success && (
-          <p className="mt-4 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
-            {success}
-          </p>
-        )}
       </CardContent>
     </Card>
   );

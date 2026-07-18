@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 
+import { CreateClassDialog } from "@/app/programs/_components/create-class-dialog";
+import { DeleteClassDialog } from "@/app/programs/_components/delete-class-dialog";
 import { ProgramYearDialog } from "@/app/programs/_components/program-year-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,11 +15,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { ProgramWithRelations, ProgramYear } from "@/types";
+import { cn } from "@/lib/utils";
+import type { ProgramClass, ProgramWithRelations, ProgramYear } from "@/types";
 
 type ProgramYearsSectionProps = {
   program: ProgramWithRelations;
   onProgramYearSaved?: () => void | Promise<void>;
+};
+
+type DeleteClassTarget = {
+  programYear: ProgramYear;
+  programClass: ProgramClass;
 };
 
 export function ProgramYearsSection({
@@ -27,6 +35,10 @@ export function ProgramYearsSection({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProgramYear, setEditingProgramYear] =
     useState<ProgramYear | null>(null);
+  const [addingProgramYear, setAddingProgramYear] =
+    useState<ProgramYear | null>(null);
+  const [deletingTarget, setDeletingTarget] =
+    useState<DeleteClassTarget | null>(null);
 
   const programYears = [...program.programYears].sort(
     (a, b) => a.yearId - b.yearId,
@@ -92,20 +104,68 @@ export function ProgramYearsSection({
                   </Button>
                 </div>
 
-                {programYear.classes.length > 0 && (
-                  <div className="mt-2.5 flex flex-wrap gap-1.5">
-                    {programYear.classes.map((programClass) => (
+                <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                  {programYear.classes.map((programClass) => {
+                    const label = `${programYear.year.name.slice(0, 1)}. ${programClass.label.toUpperCase()}`;
+
+                    return (
                       <Badge
                         key={programClass.id}
                         variant="default"
-                        className="font-normal"
+                        render={
+                          <button
+                            type="button"
+                            aria-label={`Izbriši razred ${label}`}
+                            onClick={() =>
+                              setDeletingTarget({ programYear, programClass })
+                            }
+                          />
+                        }
+                        className={cn(
+                          "cursor-pointer font-normal transition-[filter,opacity] duration-200",
+                          "hover:brightness-110",
+                        )}
                       >
-                        {programYear.year.name.slice(0, 1)}.{" "}
-                        {programClass.label.label.toUpperCase()}
+                        <span className="relative inline-flex items-center justify-center">
+                          <span
+                            className={cn(
+                              "transition-opacity duration-200",
+                              "group-hover/badge:opacity-0 group-focus-visible/badge:opacity-0",
+                            )}
+                          >
+                            {label}
+                          </span>
+                          <Trash2
+                            className={cn(
+                              "pointer-events-none absolute size-3! opacity-0 transition-opacity duration-200",
+                              "group-hover/badge:opacity-100 group-focus-visible/badge:opacity-100",
+                            )}
+                            aria-hidden
+                          />
+                        </span>
+                        <span className="sr-only">Izbriši</span>
                       </Badge>
-                    ))}
-                  </div>
-                )}
+                    );
+                  })}
+
+                  <Badge
+                    variant="outline"
+                    render={
+                      <button
+                        type="button"
+                        aria-label={`Dodaj razred v ${programYear.year.name}`}
+                        onClick={() => setAddingProgramYear(programYear)}
+                      />
+                    }
+                    className={cn(
+                      "min-w-8 cursor-pointer px-1.5 transition-[transform,background-color,border-color,color,box-shadow] duration-200",
+                      "hover:scale-[1.06] hover:border-primary/50 hover:bg-primary/5 hover:text-primary",
+                      "active:scale-[0.96]",
+                    )}
+                  >
+                    <Plus className="size-3!" />
+                  </Badge>
+                </div>
               </div>
             ))}
           </CardContent>
@@ -119,6 +179,30 @@ export function ProgramYearsSection({
         programYears={program.programYears}
         editingProgramYear={editingProgramYear}
         onProgramYearSaved={onProgramYearSaved}
+      />
+
+      <CreateClassDialog
+        open={addingProgramYear !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAddingProgramYear(null);
+          }
+        }}
+        programId={program.id}
+        programYear={addingProgramYear}
+        onCreated={onProgramYearSaved}
+      />
+
+      <DeleteClassDialog
+        open={deletingTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeletingTarget(null);
+          }
+        }}
+        programId={program.id}
+        target={deletingTarget}
+        onDeleted={onProgramYearSaved}
       />
     </>
   );

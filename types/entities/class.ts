@@ -1,16 +1,10 @@
 import type { Teacher } from "./teacher";
 
-export interface ClassLabel {
-  id: number;
-  label: string;
-}
-
 export interface ProgramClass {
   id: number;
   programId: number;
   yearId: number;
-  labelId: number;
-  label: ClassLabel;
+  label: string;
 }
 
 export interface ClassSubjectAssignment {

@@ -10,7 +10,6 @@ import { ProgramYearsSection } from "@/app/programs/_components/program-years-se
 import { useAuth } from "@/components/auth/auth-provider";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -162,9 +161,7 @@ export default function ProgramPage() {
               {program.name}
             </h1>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Urejanje programa
-          </p>
+          <p className="text-sm text-muted-foreground">Urejanje programa</p>
         </div>
 
         <ProgramYearsSection

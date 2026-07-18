@@ -3,7 +3,6 @@ export { Role } from "./enums/role";
 
 export type { Timestamps } from "./entities/common";
 export type {
-  ClassLabel,
   ClassSubjectAssignment,
   ProgramClass,
 } from "./entities/class";
@@ -46,6 +45,10 @@ export type {
   CreateProgramYearRequest,
   UpdateProgramYearRequest,
 } from "./requests/program-year";
+export type {
+  CreateClassRequest,
+  DeleteClassRequest,
+} from "./requests/class";
 export type {
   CreateAssignmentRequest,
   DeleteAssignmentRequest,
