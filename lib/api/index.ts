@@ -21,6 +21,8 @@ export { getYears } from "./years";
 
 export { createProgramYear, updateProgramYear } from "./program-years";
 
+export { createClass, deleteClass } from "./classes";
+
 export { assignTeacher, unassignTeacher } from "./assignments";
 export {
   getAdditionalActivities,

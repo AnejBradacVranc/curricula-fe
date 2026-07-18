@@ -59,7 +59,7 @@ export function CurriculumCell({
           return (
             <div key={programClass.id} className="space-y-0.5">
               <p className="px-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                {programSubject.programYear.year.name.slice(0, 1)} {programClass.label.label}
+                {programSubject.programYear.year.name.slice(0, 1)} {programClass.label}
               </p>
               {isPending ? (
                 <div className="flex items-center justify-center rounded-lg border border-dashed px-2 py-1">

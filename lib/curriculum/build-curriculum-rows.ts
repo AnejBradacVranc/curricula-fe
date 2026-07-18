@@ -69,9 +69,7 @@ export function getClassesForYear(
 ): ProgramClass[] {
   const programYear = program.programYears.find((item) => item.yearId === yearId);
 
-  return [...(programYear?.classes ?? [])].sort((a, b) =>
-    a.label.label.localeCompare(b.label.label, "sl"),
-  );
+  return programYear?.classes ?? [];
 }
 
 export function getAssignmentKey(

@@ -9,7 +9,6 @@ import { ProgramSubjectsTable } from "@/app/(protected)/programs/_components/pro
 import { ProgramYearsSection } from "@/app/(protected)/programs/_components/program-years-section";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -153,9 +152,7 @@ export default function ProgramPage() {
               {program.name}
             </h1>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Urejanje programa
-          </p>
+          <p className="text-sm text-muted-foreground">Urejanje programa</p>
         </div>
 
         <ProgramYearsSection

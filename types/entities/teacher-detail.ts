@@ -32,12 +32,8 @@ export interface TeacherDetailProgramYear {
   year: TeacherDetailYear;
 }
 
-export interface TeacherDetailClassLabel {
-  label: string;
-}
-
 export interface TeacherDetailClass {
-  label: TeacherDetailClassLabel;
+  label: string;
   programYear: TeacherDetailProgramYear;
 }
 

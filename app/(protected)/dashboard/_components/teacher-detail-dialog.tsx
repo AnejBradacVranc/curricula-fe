@@ -257,7 +257,7 @@ export function TeacherDetailDialog({
                           const { class: classRoom, programSubject } = assignment;
                           const assignmentKey = [
                             classRoom.programYear.year.name,
-                            classRoom.label.label,
+                            classRoom.label,
                             programSubject.subject.name,
                             index,
                           ].join("-");
@@ -277,7 +277,7 @@ export function TeacherDetailDialog({
                               </div>
                               <p className="text-xs text-muted-foreground">
                                 {classRoom.programYear.year.name} · razred{" "}
-                                {classRoom.label.label}
+                                {classRoom.label}
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {programSubject.subject.category.name}

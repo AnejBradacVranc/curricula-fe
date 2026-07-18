@@ -206,9 +206,7 @@ export function ProgramYearDialog({
                   value={selectedYearId}
                   onValueChange={setSelectedYearId}
                   disabled={
-                    isSubmitting ||
-                    isEditing ||
-                    selectableYears.length === 0
+                    isSubmitting || isEditing || selectableYears.length === 0
                   }
                   modal={false}
                   items={selectableYears.map((year) => ({
