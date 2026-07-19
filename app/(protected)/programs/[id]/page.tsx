@@ -14,8 +14,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getProgram } from "@/lib/api";
-import type { ProgramWithRelations } from "@/types";
+import { getProgram, getSubjects, getYears } from "@/lib/api";
+import type { ProgramWithRelations, Subject, Year } from "@/types";
 
 function ProgramDetailSkeleton() {
   return (
@@ -40,6 +40,8 @@ export default function ProgramPage() {
   const programId = Number(params.id);
 
   const [program, setProgram] = useState<ProgramWithRelations | null>(null);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [years, setYears] = useState<Year[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,13 +79,19 @@ export default function ProgramPage() {
       setProgram(null);
 
       try {
-        const data = await getProgram(programId);
+        const [data, subjectsData, yearsData] = await Promise.all([
+          getProgram(programId),
+          getSubjects(),
+          getYears(),
+        ]);
 
         if (!cancelled) {
           if (!data) {
             setError("Program ni bil najden.");
           } else {
             setProgram(data);
+            setSubjects(subjectsData);
+            setYears(yearsData);
           }
         }
       } catch {
@@ -157,11 +165,13 @@ export default function ProgramPage() {
 
         <ProgramYearsSection
           program={program}
+          years={years}
           onProgramYearSaved={refreshProgram}
         />
 
         <ProgramSubjectsTable
           program={program}
+          subjects={subjects}
           onSubjectSaved={refreshProgram}
         />
       </div>

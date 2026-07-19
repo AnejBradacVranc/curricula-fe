@@ -5,11 +5,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/auth-provider";
 import { cn } from "@/lib/utils";
+import { LogOut } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Domov" },
   { href: "/dashboard", label: "Dodeljevanje ur", auth: true },
-  { href: "/programs", label: "Urejanje programov", auth: true }
+  { href: "/programs", label: "Programi", auth: true },
+  { href: "/subjects", label: "Predmeti", auth: true },
 ];
 
 export function Navigation() {
@@ -40,7 +42,7 @@ export function Navigation() {
                 size="sm"
                 render={<Link href={link.href} />}
                 className={cn(
-                  pathname === link.href && "bg-muted text-foreground",
+                  pathname === link.href && "bg-primary text-foreground",
                 )}
               >
                 {link.label}
@@ -48,16 +50,22 @@ export function Navigation() {
             ))}
 
           {!isLoading && !isAuthenticated && (
-            <Button size="sm" nativeButton={false}
-              render={<Link href="/login" />}>
+            <Button
+              size="sm"
+              nativeButton={false}
+              render={<Link href="/login" />}
+            >
               Prijava
             </Button>
           )}
 
           {!isLoading && isAuthenticated && (
-            <Button nativeButton={false}
-              variant="outline" size="sm" onClick={handleLogout}>
-              Odjava
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+            >
+              <LogOut />
             </Button>
           )}
         </nav>

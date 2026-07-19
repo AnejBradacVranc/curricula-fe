@@ -13,13 +13,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { ProgramClass, ProgramWithRelations, ProgramYear } from "@/types";
+import type {
+  ProgramClass,
+  ProgramWithRelations,
+  ProgramYear,
+  Year,
+} from "@/types";
 import { ProgramYearDialog } from "./program-year-dialog";
 import { CreateClassDialog } from "./create-class-dialog";
 import { DeleteClassDialog } from "./delete-class-dialog";
 
 type ProgramYearsSectionProps = {
   program: ProgramWithRelations;
+  years: Year[];
   onProgramYearSaved?: () => void | Promise<void>;
 };
 
@@ -30,6 +36,7 @@ type DeleteClassTarget = {
 
 export function ProgramYearsSection({
   program,
+  years,
   onProgramYearSaved,
 }: ProgramYearsSectionProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -40,9 +47,7 @@ export function ProgramYearsSection({
   const [deletingTarget, setDeletingTarget] =
     useState<DeleteClassTarget | null>(null);
 
-  const programYears = [...program.programYears].sort(
-    (a, b) => a.yearId - b.yearId,
-  );
+  const programYears = program.programYears;
 
   function openCreateDialog() {
     setEditingProgramYear(null);
@@ -176,6 +181,7 @@ export function ProgramYearsSection({
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         programId={program.id}
+        years={years}
         programYears={program.programYears}
         editingProgramYear={editingProgramYear}
         onProgramYearSaved={onProgramYearSaved}

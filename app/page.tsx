@@ -1,11 +1,10 @@
-"use client"
+"use client";
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/auth-provider";
 
 export default function Home() {
-
   const { isAuthenticated } = useAuth();
 
   return (
@@ -17,14 +16,20 @@ export default function Home() {
         Aplikacija za beleženje ur učiteljev
       </p>
       <p className="mt-4 max-w-2xl text-muted-foreground">
-        Upravljajte dodeljene ure za učitelje. {!isAuthenticated && `Za
+        Upravljajte dodeljene ure za učitelje.{" "}
+        {!isAuthenticated &&
+          `Za
         dostop do nadzorne plošče se prijavite v svoj račun.`}
       </p>
       <div className="mt-8 flex gap-3">
-        {!isAuthenticated && <Button render={<Link href="/login" />}>Prijava</Button>}
-        <Button render={<Link href="/dashboard" />} variant="outline">
-          Dodeljevanje ur
-        </Button>
+        {!isAuthenticated && (
+          <Button render={<Link href="/login" />}>Prijava</Button>
+        )}
+        {isAuthenticated && (
+          <Button render={<Link href="/dashboard" />} variant="outline">
+            Dodeljevanje ur
+          </Button>
+        )}
       </div>
     </div>
   );

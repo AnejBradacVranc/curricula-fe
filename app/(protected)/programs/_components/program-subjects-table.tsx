@@ -7,18 +7,24 @@ import { AssignSubjectDialog } from "@/app/(protected)/programs/_components/assi
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatHours, sumHours } from "@/lib/curriculum/format-hours";
-import type { ProgramSubjectItem, ProgramWithRelations } from "@/types";
+import type {
+  ProgramSubjectItem,
+  ProgramWithRelations,
+  Subject,
+} from "@/types";
 
 type ProgramSubjectsTableProps = {
   program: ProgramWithRelations;
+  subjects: Subject[];
   onSubjectSaved?: () => void | Promise<void>;
 };
 
 export function ProgramSubjectsTable({
   program,
+  subjects,
   onSubjectSaved,
 }: ProgramSubjectsTableProps) {
-  const years = [...program.programYears].sort((a, b) => a.yearId - b.yearId);
+  const years = program.programYears;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProgramSubject, setEditingProgramSubject] =
@@ -61,7 +67,7 @@ export function ProgramSubjectsTable({
             </div>
             <Button type="button" onClick={openCreateDialog}>
               <Plus />
-              Dodaj
+              Dodaj predmet
             </Button>
           </div>
         </CardHeader>
@@ -176,6 +182,7 @@ export function ProgramSubjectsTable({
         }}
         programYears={program.programYears}
         programSubjects={program.programSubjects}
+        subjects={subjects}
         programId={program.id}
         editingProgramSubject={editingProgramSubject}
         onSubjectSaved={onSubjectSaved}

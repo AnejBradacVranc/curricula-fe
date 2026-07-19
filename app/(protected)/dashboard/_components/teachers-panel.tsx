@@ -16,12 +16,13 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { formatHours } from "@/lib/curriculum/format-hours";
 import { hasColor } from "@/lib/teacher-color";
-import type { Teacher } from "@/types";
+import type { AdditionalActivity, Teacher } from "@/types";
 import { setTeacherDragData } from "./drag";
 import { TeacherDetailDialog } from "./teacher-detail-dialog";
 
 type TeachersPanelProps = {
   teachers: Teacher[];
+  additionalActivities: AdditionalActivity[];
   draggingTeacherId: number | null;
   onDragStart: (teacherId: number) => void;
   onDragEnd: () => void;
@@ -30,6 +31,7 @@ type TeachersPanelProps = {
 
 export function TeachersPanel({
   teachers,
+  additionalActivities,
   draggingTeacherId,
   onDragStart,
   onDragEnd,
@@ -166,6 +168,7 @@ export function TeachersPanel({
       <TeacherDetailDialog
         teacherId={detailTeacherId}
         open={detailTeacherId !== null}
+        additionalActivities={additionalActivities}
         onOpenChange={(open) => {
           if (!open) {
             setDetailTeacherId(null);

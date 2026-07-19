@@ -33,7 +33,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   createAdditionalActivityAssignment,
   deleteAdditionalActivityAssignment,
-  getAdditionalActivities,
   getTeacher,
 } from "@/lib/api";
 import { formatHours } from "@/lib/curriculum/format-hours";
@@ -42,6 +41,7 @@ import type { AdditionalActivity, TeacherDetail } from "@/types";
 type TeacherDetailDialogProps = {
   teacherId: number | null;
   open: boolean;
+  additionalActivities: AdditionalActivity[];
   onOpenChange: (open: boolean) => void;
   onTeacherUpdated?: () => void;
 };
@@ -67,11 +67,11 @@ function TeacherDetailSkeleton() {
 export function TeacherDetailDialog({
   teacherId,
   open,
+  additionalActivities,
   onOpenChange,
   onTeacherUpdated,
 }: TeacherDetailDialogProps) {
   const [teacher, setTeacher] = useState<TeacherDetail | null>(null);
-  const [activities, setActivities] = useState<AdditionalActivity[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedActivityId, setSelectedActivityId] = useState<number | null>(
     null,
@@ -103,14 +103,10 @@ export function TeacherDetailDialog({
       setValidationError(null);
 
       try {
-        const [teacherData, activitiesData] = await Promise.all([
-          getTeacher(selectedTeacherId),
-          getAdditionalActivities(),
-        ]);
+        const teacherData = await getTeacher(selectedTeacherId);
 
         if (!cancelled) {
           setTeacher(teacherData);
-          setActivities(activitiesData);
         }
       } catch {
         if (!cancelled) {
@@ -303,9 +299,11 @@ export function TeacherDetailDialog({
                         <Select
                           value={selectedActivityId}
                           onValueChange={setSelectedActivityId}
-                          disabled={isSubmitting || activities.length === 0}
+                          disabled={
+                            isSubmitting || additionalActivities.length === 0
+                          }
                           modal={false}
-                          items={activities.map((activity) => ({
+                          items={additionalActivities.map((activity) => ({
                             value: activity.id,
                             label: activity.name,
                           }))}
@@ -317,7 +315,7 @@ export function TeacherDetailDialog({
                             <SelectValue placeholder="Izberite dejavnost …" />
                           </SelectTrigger>
                           <SelectContent>
-                            {activities.map((activity) => (
+                            {additionalActivities.map((activity) => (
                               <SelectItem key={activity.id} value={activity.id}>
                                 {activity.name}
                               </SelectItem>

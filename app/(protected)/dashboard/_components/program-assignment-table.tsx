@@ -36,7 +36,7 @@ export function ProgramAssignmentTable({
   onAssignTeacher,
   onRemoveAssignment,
 }: ProgramAssignmentTableProps) {
-  const years = [...program.programYears].sort((a, b) => a.yearId - b.yearId);
+  const years = program.programYears;
   const sections = buildCurriculumSections(program);
 
 

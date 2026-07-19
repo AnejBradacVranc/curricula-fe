@@ -20,11 +20,16 @@ import {
 } from "@/components/ui/tabs";
 import {
   assignTeacher,
+  getAdditionalActivities,
   getPrograms,
   getTeachers,
   unassignTeacher,
 } from "@/lib/api";
-import type { ProgramWithRelations, Teacher } from "@/types";
+import type {
+  AdditionalActivity,
+  ProgramWithRelations,
+  Teacher,
+} from "@/types";
 import { TeachersPanel } from "./teachers-panel";
 import { ProgramAssignmentTable } from "./program-assignment-table";
 
@@ -47,6 +52,9 @@ function DashboardSkeleton() {
 export function ProgramDashboard() {
   const [programs, setPrograms] = useState<ProgramWithRelations[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [additionalActivities, setAdditionalActivities] = useState<
+    AdditionalActivity[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -75,14 +83,16 @@ export function ProgramDashboard() {
       setError(null);
 
       try {
-        const [programsData, teachersData] = await Promise.all([
+        const [programsData, teachersData, activitiesData] = await Promise.all([
           getPrograms(),
           getTeachers(),
+          getAdditionalActivities(),
         ]);
 
         if (!cancelled) {
           setPrograms(programsData);
           setTeachers(teachersData);
+          setAdditionalActivities(activitiesData);
         }
       } catch {
         if (!cancelled) {
@@ -230,6 +240,7 @@ export function ProgramDashboard() {
         <CardContent>
           <TeachersPanel
             teachers={teachers}
+            additionalActivities={additionalActivities}
             draggingTeacherId={draggingTeacherId}
             onDragStart={setDraggingTeacherId}
             onDragEnd={() => setDraggingTeacherId(null)}
@@ -292,6 +303,7 @@ export function ProgramDashboard() {
 
         <TeachersPanel
           teachers={teachers}
+          additionalActivities={additionalActivities}
           draggingTeacherId={draggingTeacherId}
           onDragStart={setDraggingTeacherId}
           onDragEnd={() => setDraggingTeacherId(null)}
