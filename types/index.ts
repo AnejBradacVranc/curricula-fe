@@ -39,7 +39,10 @@ export type { CreateSchoolRequest } from "./requests/school";
 export type { FindUserByEmailRequest } from "./requests/user";
 export type { CreateTeacherRequest } from "./requests/teacher";
 export type { CreateProgramRequest } from "./requests/program";
-export type { CreateSubjectRequest } from "./requests/subject";
+export type {
+  CreateSubjectRequest,
+  UpdateSubjectRequest,
+} from "./requests/subject";
 export type { CreateProgramSubjectRequest, UpdateProgramSubjectRequest } from "./requests/program-subject";
 export type {
   CreateProgramYearRequest,

@@ -13,7 +13,9 @@ export { getTeachers, getTeacher, createTeacher } from "./teachers";
 
 export { getPrograms, getProgram, createProgram, deleteProgram } from "./programs";
 
-export { getSubjects, createSubject } from "./subjects";
+export { getSubjects, createSubject, updateSubject } from "./subjects";
+
+export { getCategories } from "./categories";
 
 export { getProgramSubjects, createProgramSubject, updateProgramSubject } from "./program-subjects";
 

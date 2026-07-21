@@ -13,7 +13,6 @@ import {
 
 import { CreateProgramDialog } from "@/app/(protected)/programs/_components/create-program-dialog";
 import { DeleteProgramDialog } from "@/app/(protected)/programs/_components/delete-program-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -127,52 +126,41 @@ export default function ProgramsPage() {
       <div className="space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">Programi</h1>
+            <div className="flex items-center gap-2">
+              <GraduationCap className="size-6 text-primary" />
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Programi
+              </h1>
+            </div>
             <p className="text-sm text-muted-foreground">
               Izberite program za ogled in urejanje izvedbenega predmetnika.
             </p>
           </div>
 
-          <Button onClick={() => setIsCreateOpen(true)} className="cursor-pointer">
+          <Button type="button" onClick={() => setIsCreateOpen(true)}>
             <Plus />
-            Nov program
+            Dodaj program
           </Button>
         </div>
 
         {programs.length === 0 ? (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <GraduationCap className="size-5 text-primary" />
-                Ni programov
-              </CardTitle>
+              <CardTitle>Ni programov</CardTitle>
               <CardDescription>
                 Ustvarite prvi program za vašo šolo. Nato boste lahko dodali
                 letnike, razrede in predmete.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => setIsCreateOpen(true)}>
+              <Button type="button" onClick={() => setIsCreateOpen(true)}>
                 <Plus />
                 Ustvari program
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader className="border-b">
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="size-4 text-primary" />
-                  Vsi programi
-                </CardTitle>
-                <Badge variant="secondary">{programs.length}</Badge>
-              </div>
-              <CardDescription>
-                Kliknite program za odprtje podrobnosti.
-              </CardDescription>
-            </CardHeader>
-
+          <Card className="overflow-hidden py-0">
             <CardContent className="p-0">
               <ul className="divide-y divide-border">
                 {programs.map((program) => {
@@ -238,10 +226,7 @@ export default function ProgramsPage() {
         )}
       </div>
 
-      <CreateProgramDialog
-        open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-      />
+      <CreateProgramDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
 
       <DeleteProgramDialog
         program={programToDelete}

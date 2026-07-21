@@ -72,7 +72,7 @@ export function CreateProgramDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nov program</DialogTitle>
+          <DialogTitle>Dodaj program</DialogTitle>
           <DialogDescription>
             Vnesite ime programa. Po ustvaritvi boste lahko dodali letnike,
             razrede in predmete.
@@ -107,7 +107,7 @@ export function CreateProgramDialog({
             >
               Prekliči
             </Button>
-            <Button type="submit" disabled={isSubmitting} >
+            <Button type="submit" disabled={isSubmitting}>
               <Plus />
               {isSubmitting ? "Ustvarjanje..." : "Ustvari program"}
             </Button>

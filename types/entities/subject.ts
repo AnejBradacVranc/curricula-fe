@@ -7,5 +7,5 @@ export interface Subject extends Timestamps {
   abbrevation: string;
   schoolId: number;
   categoryId: number;
-  category?: Category;
+  category: Category;
 }
