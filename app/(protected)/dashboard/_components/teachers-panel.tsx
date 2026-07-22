@@ -41,7 +41,7 @@ export function TeachersPanel({
 
   return (
     <>
-      <Card className="flex h-full min-h-0 flex-col lg:sticky lg:top-6 lg:max-h-[calc(100vh-7rem)]">
+      <Card className="flex h-full min-h-0 flex-col">
         <CardHeader className="border-b">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="flex items-center gap-2">
@@ -61,7 +61,7 @@ export function TeachersPanel({
               Ni registriranih učiteljev.
             </p>
           ) : (
-            <ScrollArea className="h-full max-h-[min(70vh,640px)]">
+            <ScrollArea className="h-full max-h-80">
               <ul className="divide-y divide-border">
                 {teachers.map((teacher) => (
                   <li key={teacher.id}>

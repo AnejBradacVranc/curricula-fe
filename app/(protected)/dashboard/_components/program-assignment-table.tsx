@@ -10,6 +10,7 @@ import {
 } from "@/lib/curriculum/build-curriculum-rows";
 import type { ProgramWithRelations } from "@/types";
 import { CurriculumCell } from "./curriculum-cell";
+import { CalendarClock } from "lucide-react";
 
 type ProgramAssignmentTableProps = {
   program: ProgramWithRelations;
@@ -28,6 +29,12 @@ type ProgramAssignmentTableProps = {
     classId: number;
     teacherId: number;
   }) => void;
+  onSelectSlot: (input: {
+    programId: number;
+    subjectId: number;
+    yearId: number;
+    classId: number;
+  }) => void;
 };
 
 export function ProgramAssignmentTable({
@@ -35,6 +42,7 @@ export function ProgramAssignmentTable({
   pendingAssignmentKey,
   onAssignTeacher,
   onRemoveAssignment,
+  onSelectSlot
 }: ProgramAssignmentTableProps) {
   const years = program.programYears;
   const sections = buildCurriculumSections(program);
@@ -56,28 +64,28 @@ export function ProgramAssignmentTable({
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Izvedbeni predmetnik
         </p>
-        <h2 className="text-lg font-semibold">{program.name}</h2>
+        <div className="flex items-center gap-2">
+          <CalendarClock className="size-6 text-primary" />
+          <h1 className="text-2xl font-semibold">{program.name}</h1>
+        </div>
         <p className="text-sm text-muted-foreground">
-          Število ur na teden po letnikih. Povlecite učitelja v celico razreda
-          za dodelitev.
+          Število ur na teden po letnikih. Kliknite celico ali povlecite
+          učitelja za dodelitev.
         </p>
       </div>
 
       <Card className="overflow-hidden py-0">
-        <CardHeader className="border-b bg-muted/30 py-3">
-          <CardTitle className="text-sm font-medium">Program</CardTitle>
-        </CardHeader>
         <CardContent className="overflow-x-auto p-0">
-          <table className="w-full min-w-[720px] border-collapse text-sm">
+          <table className="w-full min-w-180 border-collapse text-sm">
             <thead>
               <tr className="border-b bg-muted/20">
-                <th className="sticky left-0 z-10 w-16 min-w-16 max-w-20 border-r bg-muted/30 px-2 py-2 text-left text-xs font-medium">
+                <th className="min-w-35 border-r px-2 py-2 text-center text-xs font-medium">
                   Predmet
                 </th>
                 {years.map((programYear) => (
                   <th
                     key={programYear.yearId}
-                    className="min-w-[140px] border-r px-2 py-2 text-center text-xs font-medium last:border-r-0"
+                    className="min-w-35 border-r px-2 py-2 text-center text-xs font-medium last:border-r-0"
                   >
                     <div>{programYear.year.name}</div>
                     <div className="mt-0.5 font-normal text-muted-foreground">
@@ -93,7 +101,7 @@ export function ProgramAssignmentTable({
                   <tr className="border-b border-border bg-muted/40">
                     <td
                       colSpan={years.length + 1}
-                      className="px-3 py-2 text-xs font-semibold tracking-wide text-primary-foreground bg-primary uppercase"
+                      className="px-3 py-2 text-xs font-semibold tracking-wide text-primary-foreground bg-primary/50 uppercase"
                     >
                       {section.categoryName}
                     </td>
@@ -138,6 +146,14 @@ export function ProgramAssignmentTable({
                             <CurriculumCell
                               programSubject={programSubject}
                               classes={classes}
+                              onClick={(programClassId: number) => {
+                                onSelectSlot({
+                                  programId: program.id,
+                                  subjectId: row.subjectId,
+                                  yearId: programYear.yearId,
+                                  classId: programClassId,
+                                })
+                              }}
                               pendingClassId={
                                 classes.find(
                                   (programClass) =>

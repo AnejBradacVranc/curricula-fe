@@ -14,6 +14,7 @@ type CurriculumCellProps = {
   disabled?: boolean;
   onAssign: (classId: number, teacherId: number) => void;
   onRemove: (classId: number, teacherId: number) => void;
+  onClick: (classId: number) => void;
 };
 
 export function CurriculumCell({
@@ -23,6 +24,7 @@ export function CurriculumCell({
   disabled = false,
   onAssign,
   onRemove,
+  onClick
 }: CurriculumCellProps) {
   if (!programSubject) {
     return <span className="block text-center text-muted-foreground">—</span>;
@@ -74,6 +76,7 @@ export function CurriculumCell({
                     (pendingClassId !== null && pendingClassId !== programClass.id)
                   }
                   onAssign={(teacherId) => onAssign(programClass.id, teacherId)}
+                  onClick={() => { onClick(programClass.id) }}
                   onRemove={() => {
                     if (!assignment) {
                       return;

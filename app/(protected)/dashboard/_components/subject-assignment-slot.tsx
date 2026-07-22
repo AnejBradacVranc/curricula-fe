@@ -17,6 +17,7 @@ type SubjectAssignmentSlotProps = {
   disabled?: boolean;
   onAssign: (teacherId: number) => void;
   onRemove: () => void;
+  onClick: () => void;
 };
 
 export function SubjectAssignmentSlot({
@@ -25,6 +26,7 @@ export function SubjectAssignmentSlot({
   disabled = false,
   onAssign,
   onRemove,
+  onClick,
 }: SubjectAssignmentSlotProps) {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -119,12 +121,18 @@ export function SubjectAssignmentSlot({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      onClick={() => {
+        if (disabled || isPending) {
+          return;
+        }
+        onClick();
+      }}
       className={cn(
         "rounded-lg border border-dashed text-muted-foreground transition-colors",
         "px-2 py-1 text-[10px]",
         !disabled &&
-        !isPending &&
-        "cursor-copy hover:border-primary/40 hover:bg-primary/5",
+          !isPending &&
+          "cursor-pointer hover:border-primary/40 hover:bg-primary/5",
         isDragOver && "border-primary bg-primary/10 text-foreground",
         isPending && "opacity-60",
       )}
@@ -135,7 +143,7 @@ export function SubjectAssignmentSlot({
           Dodeljevanje...
         </span>
       ) : (
-        "Povleci"
+        "Klikni ali povleci"
       )}
     </div>
   );
