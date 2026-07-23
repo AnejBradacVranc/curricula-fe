@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BookOpen,
   Mail,
@@ -81,11 +81,11 @@ export function TeacherDetailDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [removingKey, setRemovingKey] = useState<string | null>(null);
 
-  const loadTeacher = useCallback(async (id: number) => {
+  const loadTeacher = async (id: number) => {
     const data = await getTeacher(id);
     setTeacher(data);
     return data;
-  }, []);
+  }
 
   useEffect(() => {
     if (!open || teacherId === null) {

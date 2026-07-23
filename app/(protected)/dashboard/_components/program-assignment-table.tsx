@@ -61,9 +61,6 @@ export function ProgramAssignmentTable({
   return (
     <div className="space-y-4">
       <div className="space-y-1 border-b border-border pb-4">
-        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Izvedbeni predmetnik
-        </p>
         <div className="flex items-center gap-2">
           <CalendarClock className="size-6 text-primary" />
           <h1 className="text-2xl font-semibold">{program.name}</h1>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ProgramAssignmentTable } from "@/app/(protected)/dashboard/_components/program-assignment-table";
 import { ProgramsPanel } from "@/app/(protected)/dashboard/_components/programs-panel";
@@ -110,7 +110,7 @@ export default function DashboardPage() {
     };
   }, []);
 
-  const refreshDashboard = useCallback(async () => {
+  const refreshDashboard = async () => {
     const [programsData, teachersData] = await Promise.all([
       getPrograms(),
       getTeachers(),
@@ -118,9 +118,9 @@ export default function DashboardPage() {
 
     setPrograms(programsData);
     setTeachers(teachersData);
-  }, []);
+  }
 
-  const handleAssignTeacher = useCallback(
+  const handleAssignTeacher =
     async ({
       programId,
       subjectId,
@@ -176,11 +176,9 @@ export default function DashboardPage() {
       } finally {
         setPendingAssignmentKey(null);
       }
-    },
-    [programs, pendingAssignmentKey, refreshDashboard],
-  );
+    }
 
-  const handleRemoveAssignment = useCallback(
+  const handleRemoveAssignment =
     async ({
       programId,
       subjectId,
@@ -213,11 +211,9 @@ export default function DashboardPage() {
       } finally {
         setPendingAssignmentKey(null);
       }
-    },
-    [refreshDashboard],
-  );
+    }
 
-  const handleSelectSlot = useCallback(
+  const handleSelectSlot =
     (slot: {
       programId: number;
       subjectId: number;
@@ -226,11 +222,10 @@ export default function DashboardPage() {
     }) => {
       setActionError(null);
       setSelectedSlot(slot);
-    },
-    [],
-  );
+    }
 
-  const handleTeacherSelected = useCallback(
+
+  const handleTeacherSelected =
     (teacherId: number) => {
       if (!selectedSlot) {
         return;
@@ -239,9 +234,7 @@ export default function DashboardPage() {
       const slot = selectedSlot;
       setSelectedSlot(null);
       void handleAssignTeacher({ ...slot, teacherId });
-    },
-    [selectedSlot, handleAssignTeacher],
-  );
+    }
 
   if (isLoading) {
     return (

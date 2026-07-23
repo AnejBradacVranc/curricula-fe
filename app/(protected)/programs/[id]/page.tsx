@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, GraduationCap } from "lucide-react";
@@ -45,7 +45,7 @@ export default function ProgramPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refreshProgram = useCallback(async () => {
+  const refreshProgram = async () => {
     if (Number.isNaN(programId)) {
       return;
     }
@@ -64,7 +64,7 @@ export default function ProgramPage() {
     } catch {
       setError("Programa ni bilo mogoče naložiti.");
     }
-  }, [programId]);
+  }
 
   useEffect(() => {
     if (Number.isNaN(programId)) {

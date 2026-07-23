@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BookOpen, Pencil, Plus } from "lucide-react";
 
 import { SubjectDialog } from "@/app/(protected)/subjects/_components/subject-dialog";
@@ -64,7 +64,7 @@ export default function SubjectsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
 
-  const refreshSubjects = useCallback(async () => {
+  const refreshSubjects = async () => {
     try {
       const subjectsData = await getSubjects();
       setSubjects(subjectsData);
@@ -72,7 +72,7 @@ export default function SubjectsPage() {
     } catch {
       setError("Podatkov ni bilo mogoče naložiti. Poskusite znova.");
     }
-  }, []);
+  }
 
   useEffect(() => {
     let cancelled = false;

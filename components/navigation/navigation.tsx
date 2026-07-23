@@ -2,16 +2,55 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/auth/auth-provider";
-import { cn } from "@/lib/utils";
-import { LogOut } from "lucide-react";
+import {
+  BookOpen,
+  CalendarClock,
+  GraduationCap,
+  Home,
+  LogOut,
+  type LucideIcon,
+} from "lucide-react";
 
-const navLinks = [
-  { href: "/", label: "Domov" },
-  { href: "/dashboard", label: "Dodeljevanje ur", auth: true },
-  { href: "/programs", label: "Programi", auth: true },
-  { href: "/subjects", label: "Predmeti", auth: true },
+import { useAuth } from "@/components/auth/auth-provider";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+export type NavLink = {
+  href: string;
+  label: string;
+  description: string;
+  icon: LucideIcon;
+  auth?: boolean;
+};
+
+export const navLinks: NavLink[] = [
+  {
+    href: "/",
+    label: "Domov",
+    description: "Začetna stran aplikacije.",
+    icon: Home,
+  },
+  {
+    href: "/dashboard",
+    label: "Dodeljevanje ur",
+    description: "Dodeli učitelje predmetom po letnikih in razredih.",
+    icon: CalendarClock,
+    auth: true,
+  },
+  {
+    href: "/programs",
+    label: "Programi",
+    description: "Upravljajte programe, letnike in predmetnike.",
+    icon: GraduationCap,
+    auth: true,
+  },
+  {
+    href: "/subjects",
+    label: "Predmeti",
+    description: "Urejajte predmete in njihove kratice.",
+    icon: BookOpen,
+    auth: true,
+  },
 ];
 
 export function Navigation() {
@@ -60,11 +99,7 @@ export function Navigation() {
           )}
 
           {!isLoading && isAuthenticated && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-            >
+            <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut />
             </Button>
           )}
