@@ -1,6 +1,7 @@
 import type {
   ApiResponse,
   CreateProgramSubjectRequest,
+  DeleteProgramSubjectRequest,
   ProgramSubject,
   ProgramSubjectWithRelations,
   UpdateProgramSubjectRequest,
@@ -27,3 +28,6 @@ export const updateProgramSubject = (data: UpdateProgramSubjectRequest) =>
       data,
     ),
   );
+
+export const deleteProgramSubject = (data: DeleteProgramSubjectRequest) =>
+  unwrap(api.delete<ApiResponse<null>>("/schools/subject-to-program", { data }));

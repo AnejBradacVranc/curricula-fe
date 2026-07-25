@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import { AssignSubjectDialog } from "@/app/(protected)/programs/_components/assign-subject-dialog";
+import { DeleteProgramSubjectDialog } from "@/app/(protected)/programs/_components/delete-program-subject-dialog";
 import {
   Accordion,
   AccordionContent,
@@ -34,6 +35,8 @@ export function ProgramSubjectsTable({
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProgramSubject, setEditingProgramSubject] =
+    useState<ProgramSubjectItem | null>(null);
+  const [deletingProgramSubject, setDeletingProgramSubject] =
     useState<ProgramSubjectItem | null>(null);
 
   const sections = years
@@ -121,7 +124,7 @@ export function ProgramSubjectsTable({
                             <th className="px-4 py-2.5 text-right text-xs font-medium">
                               Ure / teden
                             </th>
-                            <th className="w-12 px-2 py-2.5">
+                            <th className="w-20 px-2 py-2.5">
                               <span className="sr-only">Dejanja</span>
                             </th>
                           </tr>
@@ -149,16 +152,30 @@ export function ProgramSubjectsTable({
                                 {formatHours(item.requiredHours)}
                               </td>
                               <td className="px-2 py-2.5 text-right align-top">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon-sm"
-                                  className="text-muted-foreground"
-                                  aria-label={`Uredi ${item.subject.name}`}
-                                  onClick={() => openEditDialog(item)}
-                                >
-                                  <Pencil className="size-4" />
-                                </Button>
+                                <div className="flex items-center justify-end gap-0.5">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    className="text-muted-foreground"
+                                    aria-label={`Uredi ${item.subject.name}`}
+                                    onClick={() => openEditDialog(item)}
+                                  >
+                                    <Pencil className="size-4" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    className="text-muted-foreground hover:text-destructive"
+                                    aria-label={`Odstrani ${item.subject.name}`}
+                                    onClick={() =>
+                                      setDeletingProgramSubject(item)
+                                    }
+                                  >
+                                    <Trash2 className="size-4" />
+                                  </Button>
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -200,6 +217,18 @@ export function ProgramSubjectsTable({
         programId={program.id}
         editingProgramSubject={editingProgramSubject}
         onSubjectSaved={onSubjectSaved}
+      />
+
+      <DeleteProgramSubjectDialog
+        open={deletingProgramSubject !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeletingProgramSubject(null);
+          }
+        }}
+        programId={program.id}
+        programSubject={deletingProgramSubject}
+        onDeleted={onSubjectSaved}
       />
     </>
   );

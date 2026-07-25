@@ -43,7 +43,11 @@ export type {
   CreateSubjectRequest,
   UpdateSubjectRequest,
 } from "./requests/subject";
-export type { CreateProgramSubjectRequest, UpdateProgramSubjectRequest } from "./requests/program-subject";
+export type {
+  CreateProgramSubjectRequest,
+  UpdateProgramSubjectRequest,
+  DeleteProgramSubjectRequest,
+} from "./requests/program-subject";
 export type {
   CreateProgramYearRequest,
   UpdateProgramYearRequest,

@@ -233,7 +233,7 @@ export default function DashboardPage() {
 
       const slot = selectedSlot;
       setSelectedSlot(null);
-      void handleAssignTeacher({ ...slot, teacherId });
+      handleAssignTeacher({ ...slot, teacherId });
     }
 
   if (isLoading) {
