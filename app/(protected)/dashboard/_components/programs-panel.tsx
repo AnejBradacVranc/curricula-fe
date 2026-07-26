@@ -1,6 +1,7 @@
 "use client";
 
-import { GraduationCap } from "lucide-react";
+import { useMemo, useState } from "react";
+import { GraduationCap, Search } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { Program } from "@/types";
 
@@ -25,52 +26,87 @@ export function ProgramsPanel({
   selectedProgramId,
   onSelectProgram,
 }: ProgramsPanelProps) {
+  const [query, setQuery] = useState("");
+
+  const filteredPrograms = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+
+    if (!normalized) {
+      return programs;
+    }
+
+    return programs.filter((program) =>
+      program.name.toLowerCase().includes(normalized),
+    );
+  }, [programs, query]);
+
   return (
-    <Card className="flex w-full max-w-90 flex-col">
-      <CardHeader className="shrink-0 border-b py-3">
-        <div className="flex items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <GraduationCap className="size-4 text-primary" />
-            Programi
-          </CardTitle>
-          <Badge variant="secondary">{programs.length}</Badge>
+    <Card className="w-full max-w-90 shrink-0 gap-0 overflow-hidden py-0">
+      <CardHeader className="space-y-3 border-b py-3">
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <GraduationCap className="size-4 text-primary" />
+              Programi
+            </CardTitle>
+            <Badge variant="secondary">{filteredPrograms.length}</Badge>
+          </div>
+          <CardDescription>Izberite program za urejanje.</CardDescription>
         </div>
-        <CardDescription>Izberite program za urejanje.</CardDescription>
+
+        <div className="relative">
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Išči po imenu …"
+            className="pl-8"
+            aria-label="Išči programe"
+          />
+        </div>
       </CardHeader>
 
       <CardContent className="p-0">
-        <ScrollArea className="h-40">
-          <ul className="divide-y divide-border p-1">
-            {programs.map((program) => {
-              const isSelected = program.id === selectedProgramId;
+        {filteredPrograms.length === 0 ? (
+          <p className="px-(--card-spacing) py-8 text-center text-sm text-muted-foreground">
+            {programs.length === 0
+              ? "Ni programov."
+              : "Noben program ne ustreza iskanju."}
+          </p>
+        ) : (
+          <div className="h-60 overflow-y-auto overscroll-y-contain">
+            <ul className="divide-y divide-border p-1">
+              {filteredPrograms.map((program) => {
+                const isSelected = program.id === selectedProgramId;
 
-              return (
-                <li key={program.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (program.id === selectedProgramId) {
-                        return;
-                      }
-                      onSelectProgram(program.id);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    aria-current={isSelected ? "true" : undefined}
-                    className={cn(
-                      "w-full cursor-pointer rounded-md px-3 py-2.5 text-left text-sm transition-colors",
-                      "hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                      isSelected
-                        ? "bg-primary/10 font-medium text-foreground"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    <span className="line-clamp-2">{program.name}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </ScrollArea>
+                return (
+                  <li key={program.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (program.id === selectedProgramId) {
+                          return;
+                        }
+                        onSelectProgram(program.id);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      aria-current={isSelected ? "true" : undefined}
+                      className={cn(
+                        "w-full cursor-pointer rounded-md px-3 py-2.5 text-left text-sm transition-colors",
+                        "hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                        isSelected
+                          ? "bg-primary/10 font-medium text-foreground"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      <span className="line-clamp-2">{program.name}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

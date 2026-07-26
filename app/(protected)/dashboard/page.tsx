@@ -312,22 +312,20 @@ export default function DashboardPage() {
               />
             </div>
 
-            <aside className="flex w-full max-w-90 flex-col gap-4 lg:sticky lg:top-6 lg:max-h-[calc(100vh-7rem)]">
+            <aside className="flex w-full max-w-90 shrink-0 flex-col gap-4 lg:sticky lg:top-4">
               <ProgramsPanel
                 programs={programs}
                 selectedProgramId={selectedProgram.id}
                 onSelectProgram={setSelectedProgramId}
               />
-              <div className="min-h-0 flex-1">
-                <TeachersPanel
-                  teachers={teachers}
-                  additionalActivities={additionalActivities}
-                  draggingTeacherId={draggingTeacherId}
-                  onDragStart={setDraggingTeacherId}
-                  onDragEnd={() => setDraggingTeacherId(null)}
-                  onTeacherUpdated={refreshDashboard}
-                />
-              </div>
+              <TeachersPanel
+                teachers={teachers}
+                additionalActivities={additionalActivities}
+                draggingTeacherId={draggingTeacherId}
+                onDragStart={setDraggingTeacherId}
+                onDragEnd={() => setDraggingTeacherId(null)}
+                onTeacherUpdated={refreshDashboard}
+              />
             </aside>
           </div>
         </div>

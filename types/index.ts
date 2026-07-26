@@ -42,7 +42,15 @@ export type {
   CreateTeachersRequest,
   ExtractedTeacher,
 } from "./requests/teacher";
-export type { CreateProgramRequest } from "./requests/program";
+export type {
+  CreateProgramRequest,
+  ImportProgramRequest,
+  ImportProgramYearInput,
+  ImportProgramSubjectInput,
+  ResolvedExtractProgram,
+  ResolvedExtractProgramYear,
+  ResolvedExtractProgramSubject,
+} from "./requests/program";
 export type {
   CreateSubjectRequest,
   UpdateSubjectRequest,

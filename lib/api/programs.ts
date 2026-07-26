@@ -1,6 +1,7 @@
 import type {
   ApiResponse,
   CreateProgramRequest,
+  ImportProgramRequest,
   Program,
   ProgramWithRelations,
 } from "@/types";
@@ -15,6 +16,14 @@ export const getProgram = (id: number) =>
 
 export const createProgram = (data: CreateProgramRequest) =>
   unwrap(api.post<ApiResponse<Program>>("/schools/programs", data));
+
+export const importProgram = (data: ImportProgramRequest) =>
+  unwrap(
+    api.post<ApiResponse<ProgramWithRelations>>(
+      "/schools/programs/import",
+      data,
+    ),
+  );
 
 export const deleteProgram = (id: number) =>
   unwrap(api.delete<ApiResponse<Program>>(`/schools/programs/${id}`));

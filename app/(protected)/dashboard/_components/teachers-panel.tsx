@@ -1,18 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { Clock, GripVertical, Mail, Users } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Clock, GripVertical, Mail, Search, Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { formatHours } from "@/lib/curriculum/format-hours";
 import { hasColor } from "@/lib/teacher-color";
@@ -38,36 +38,74 @@ export function TeachersPanel({
   onTeacherUpdated,
 }: TeachersPanelProps) {
   const [detailTeacherId, setDetailTeacherId] = useState<number | null>(null);
+  const [query, setQuery] = useState("");
+
+  const filteredTeachers = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+
+    if (!normalized) {
+      return teachers;
+    }
+
+    return teachers.filter((teacher) => {
+      const fullName = `${teacher.name} ${teacher.surname}`.toLowerCase();
+      return (
+        fullName.includes(normalized) ||
+        teacher.email.toLowerCase().includes(normalized)
+      );
+    });
+  }, [teachers, query]);
+
+  const totalHours = teachers.reduce(
+    (sum, teacher) => sum + Number(teacher.totalHours),
+    0,
+  );
 
   return (
     <>
-      <Card className="flex w-full max-w-90 flex-col">
-        <CardHeader className="shrink-0 border-b py-3">
-          <div className="flex items-center justify-between gap-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="size-4 text-primary" />
-              Učitelji
-            </CardTitle>
-            <Badge variant="secondary">{teachers.length}</Badge>
+      <Card className="w-full max-w-90 shrink-0 gap-0 overflow-hidden py-0">
+        <CardHeader className="space-y-3 border-b py-3">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Users className="size-4 text-primary" />
+                Učitelji
+              </CardTitle>
+              <Badge variant="secondary">{filteredTeachers.length}</Badge>
+            </div>
+            <CardDescription>
+              Povlecite učitelja na predmet za dodelitev ali kliknite za
+              podrobnosti.
+            </CardDescription>
           </div>
-          <CardDescription>
-            Povlecite učitelja na predmet za dodelitev ali kliknite za podrobnosti.
-          </CardDescription>
+
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Išči po imenu ali e-pošti …"
+              className="pl-8"
+              aria-label="Išči učitelje"
+            />
+          </div>
         </CardHeader>
 
         <CardContent className="p-0">
-          {teachers.length === 0 ? (
+          {filteredTeachers.length === 0 ? (
             <p className="px-(--card-spacing) py-8 text-center text-sm text-muted-foreground">
-              Ni registriranih učiteljev.
+              {teachers.length === 0
+                ? "Ni registriranih učiteljev."
+                : "Noben učitelj ne ustreza iskanju."}
             </p>
           ) : (
-            <ScrollArea className="h-80">
-              <ul className="divide-y divide-border">
-                {teachers.map((teacher) => (
+            <div className="h-60 overflow-y-auto overscroll-y-contain">
+              <ul className="divide-y divide-border p-1">
+                {filteredTeachers.map((teacher) => (
                   <li key={teacher.id}>
                     <div
                       className={cn(
-                        "flex items-center  px-(--card-spacing) py-2 transition-opacity",
+                        "flex items-center rounded-md transition-opacity",
                         draggingTeacherId === teacher.id && "opacity-50",
                       )}
                     >
@@ -92,9 +130,9 @@ export function TeachersPanel({
                       <button
                         type="button"
                         onClick={() => setDetailTeacherId(teacher.id)}
-                        className="cursor-pointer flex min-w-0 flex-1 items-center justify-between gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                       >
-                        <div className="min-w-0 flex-1 overflow-hidden space-y-1">
+                        <div className="min-w-0 flex-1 space-y-1 overflow-hidden">
                           <p className="flex min-w-0 items-center gap-2 truncate font-medium">
                             {hasColor(teacher.color) ? (
                               <span
@@ -120,7 +158,7 @@ export function TeachersPanel({
                             </span>
                           </Badge>
 
-                          <div className="flex flex-col items-end gap-0.5 text-[11px] text-muted-foreground leading-tight">
+                          <div className="flex flex-col items-end gap-0.5 text-[11px] leading-tight text-muted-foreground">
                             <span className="whitespace-nowrap">
                               Predmeti{" "}
                               <span className="font-medium text-foreground tabular-nums">
@@ -132,37 +170,21 @@ export function TeachersPanel({
                               <span className="whitespace-nowrap">
                                 Dodatno{" "}
                                 <span className="font-medium text-foreground tabular-nums">
-                                  {formatHours(teacher.additionalActivityHours)}h
+                                  {formatHours(teacher.additionalActivityHours)}
+                                  h
                                 </span>
                               </span>
                             )}
                           </div>
                         </div>
-
                       </button>
                     </div>
                   </li>
                 ))}
               </ul>
-            </ScrollArea>
+            </div>
           )}
         </CardContent>
-
-        {teachers.length > 0 && (
-          <>
-            <Separator />
-            <div className="px-(--card-spacing) py-3 text-xs text-muted-foreground">
-              Skupaj ur:{" "}
-              <span className="font-medium text-foreground">
-                {teachers.reduce(
-                  (sum, teacher) => sum + Number(teacher.totalHours),
-                  0,
-                )}
-                h
-              </span>
-            </div>
-          </>
-        )}
       </Card>
 
       <TeacherDetailDialog

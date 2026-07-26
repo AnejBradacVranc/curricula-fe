@@ -14,6 +14,7 @@ import {
 
 import { CreateProgramDialog } from "@/app/(protected)/programs/_components/create-program-dialog";
 import { DeleteProgramDialog } from "@/app/(protected)/programs/_components/delete-program-dialog";
+import { ExtractProgramDialog } from "@/app/(protected)/programs/_components/extract-program-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,9 +25,9 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getPrograms } from "@/lib/api";
+import { getCategories, getPrograms } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import type { ProgramWithRelations } from "@/types";
+import type { Category, ProgramWithRelations } from "@/types";
 
 function ProgramsSkeleton() {
   return (
@@ -64,6 +65,7 @@ function ProgramsSkeleton() {
 
 export default function ProgramsPage() {
   const [programs, setPrograms] = useState<ProgramWithRelations[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -80,10 +82,14 @@ export default function ProgramsPage() {
       setError(null);
 
       try {
-        const programsData = await getPrograms();
+        const [programsData, categoriesData] = await Promise.all([
+          getPrograms(),
+          getCategories(),
+        ]);
 
         if (!cancelled) {
           setPrograms(programsData);
+          setCategories(categoriesData);
         }
       } catch {
         if (!cancelled) {
@@ -236,6 +242,19 @@ export default function ProgramsPage() {
       </div>
 
       <CreateProgramDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+
+      <ExtractProgramDialog
+        open={isExtractOpen}
+        onOpenChange={setIsExtractOpen}
+        categories={categories}
+        onImported={async () => {
+          try {
+            setPrograms(await getPrograms());
+          } catch {
+            setError("Podatkov ni bilo mogoče naložiti. Poskusite znova.");
+          }
+        }}
+      />
 
       <DeleteProgramDialog
         program={programToDelete}

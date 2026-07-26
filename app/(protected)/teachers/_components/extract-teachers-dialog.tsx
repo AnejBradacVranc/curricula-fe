@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FileUp, Loader2, Trash2, Upload } from "lucide-react";
+import { FileUp, Loader2, ScanText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,7 @@ export function ExtractTeachersDialog({
   const [preview, setPreview] = useState<ExtractedTeacher[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -40,7 +40,7 @@ export function ExtractTeachersDialog({
       setPreview(null);
       setError(null);
       setIsExtracting(false);
-      setIsSaving(false);
+      setIsImporting(false);
       if (inputRef.current) {
         inputRef.current.value = "";
       }
@@ -75,13 +75,13 @@ export function ExtractTeachersDialog({
     );
   }
 
-  async function handleSave() {
+  async function handleImport() {
     if (!preview?.length) {
-      setError("Ni učiteljev za shranjevanje.");
+      setError("Ni učiteljev za uvoz.");
       return;
     }
 
-    setIsSaving(true);
+    setIsImporting(true);
     setError(null);
 
     try {
@@ -91,31 +91,31 @@ export function ExtractTeachersDialog({
           assignedHours: 0,
         })),
       });
-      toast.success("Učitelji so bili uspešno shranjeni.", {
+      toast.success("Učitelji so bili uspešno uvoženi.", {
         description: `${preview.length} učiteljev`,
       });
       onOpenChange(false);
       await onExtracted?.();
     } catch {
       setError(
-        "Učiteljev ni bilo mogoče shraniti. Preverite, ali e-poštni naslovi že obstajajo.",
+        "Učiteljev ni bilo mogoče uvoziti. Preverite, ali e-poštni naslovi že obstajajo.",
       );
-      setIsSaving(false);
+      setIsImporting(false);
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="flex max-h-[min(90vh,800px)] flex-col overflow-hidden sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Uvoz učiteljev</DialogTitle>
           <DialogDescription>
             Naložite PDF, CSV, Excel ali Word datoteko. AI bo razbral ime,
-            priimek in e-pošto. Pred shranjevanjem lahko pregledate rezultate.
+            priimek in e-pošto. Pred uvozom lahko pregledate rezultate.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
           <div className="space-y-2">
             <input
               ref={inputRef}
@@ -137,45 +137,53 @@ export function ExtractTeachersDialog({
           </div>
 
           {preview && preview.length > 0 && (
-            <div className="max-h-64 overflow-y-auto rounded-md border">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="sticky top-0 border-b bg-muted/20 text-left text-xs text-muted-foreground">
-                    <th className="px-3 py-2 font-medium">Ime</th>
-                    <th className="px-3 py-2 font-medium">Priimek</th>
-                    <th className="px-3 py-2 font-medium">E-pošta</th>
-                    <th className="w-10 px-2 py-2">
-                      <span className="sr-only">Odstrani</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {preview.map((teacher, index) => (
-                    <tr
-                      key={`${teacher.email}-${index}`}
-                      className="border-b border-border/70 last:border-b-0"
-                    >
-                      <td className="px-3 py-2">{teacher.name}</td>
-                      <td className="px-3 py-2">{teacher.surname}</td>
-                      <td className="px-3 py-2 text-muted-foreground">
-                        {teacher.email}
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          className="text-muted-foreground hover:text-destructive"
-                          aria-label={`Odstrani ${teacher.name} ${teacher.surname}`}
-                          onClick={() => removePreviewRow(index)}
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
-                      </td>
+            <div className="overflow-hidden rounded-md border">
+              <div className="border-b bg-muted/20 px-3 py-2">
+                <p className="text-sm font-medium">
+                  {preview.length}{" "}
+                  {preview.length === 1 ? "učitelj" : "učiteljev"}
+                </p>
+              </div>
+              <div className="max-h-64 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="sticky top-0 border-b bg-muted/20 text-left text-xs text-muted-foreground">
+                      <th className="px-3 py-2 font-medium">Ime</th>
+                      <th className="px-3 py-2 font-medium">Priimek</th>
+                      <th className="px-3 py-2 font-medium">E-pošta</th>
+                      <th className="w-10 px-2 py-2">
+                        <span className="sr-only">Odstrani</span>
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {preview.map((teacher, index) => (
+                      <tr
+                        key={`${teacher.email}-${index}`}
+                        className="border-b border-border/70 last:border-b-0"
+                      >
+                        <td className="px-3 py-2 font-medium">{teacher.name}</td>
+                        <td className="px-3 py-2">{teacher.surname}</td>
+                        <td className="px-3 py-2 text-muted-foreground">
+                          {teacher.email}
+                        </td>
+                        <td className="px-2 py-2 text-right">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="text-muted-foreground hover:text-destructive"
+                            aria-label={`Odstrani ${teacher.name} ${teacher.surname}`}
+                            onClick={() => removePreviewRow(index)}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
@@ -197,7 +205,7 @@ export function ExtractTeachersDialog({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isExtracting || isSaving}
+            disabled={isExtracting || isImporting}
           >
             Prekliči
           </Button>
@@ -207,19 +215,25 @@ export function ExtractTeachersDialog({
               onClick={() => void handleExtract()}
               disabled={!file || isExtracting}
             >
-              {isExtracting ? <Loader2 className="animate-spin" /> : <Upload />}
+              {isExtracting ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <ScanText />
+              )}
               {isExtracting ? "Razbiranje..." : "Razberi iz datoteke"}
             </Button>
           ) : (
             <Button
               type="button"
-              onClick={() => void handleSave()}
-              disabled={!preview.length || isSaving}
+              onClick={() => void handleImport()}
+              disabled={!preview.length || isImporting}
             >
-              {isSaving ? <Loader2 className="animate-spin" /> : <FileUp />}
-              {isSaving
-                ? "Shranjevanje..."
-                : `Shrani`}
+              {isImporting ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <FileUp />
+              )}
+              {isImporting ? "Uvažanje..." : "Uvozi učitelje"}
             </Button>
           )}
         </DialogFooter>

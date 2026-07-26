@@ -11,12 +11,13 @@ export { getUsers, getUserByEmail } from "./users";
 
 export { getTeachers, getTeacher, createTeacher, createTeachers, deleteTeacher } from "./teachers";
 
-export { extractTeachers } from "./extract";
+export { extractTeachers, extractProgram } from "./extract";
 
 export {
   getPrograms,
   getProgram,
   createProgram,
+  importProgram,
   deleteProgram,
 } from "./programs";
 
