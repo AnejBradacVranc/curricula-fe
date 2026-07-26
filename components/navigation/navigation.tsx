@@ -45,13 +45,13 @@ export const navLinks: NavLink[] = [
     icon: GraduationCap,
     auth: true,
   },
-  /*{
+  {
     href: "/subjects",
     label: "Predmeti",
     description: "Urejajte predmete in njihove kratice.",
     icon: BookOpen,
     auth: true,
-  },*/
+  },
   {
     href: "/teachers",
     label: "Učitelji",

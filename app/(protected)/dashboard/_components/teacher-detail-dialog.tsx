@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   BookOpen,
+  ExternalLink,
   Mail,
   Plus,
   Sparkles,
@@ -37,6 +38,8 @@ import {
 } from "@/lib/api";
 import { formatHours } from "@/lib/curriculum/format-hours";
 import type { AdditionalActivity, TeacherDetail } from "@/types";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 type TeacherDetailDialogProps = {
   teacherId: number | null;
@@ -202,7 +205,14 @@ export function TeacherDetailDialog({
             <DialogHeader className="shrink-0 border-b px-4 pt-4 pb-3">
               <div className="space-y-1 pr-8">
                 <DialogTitle className="text-lg">
-                  {teacher.name} {teacher.surname}
+                  <div className="flex gap-4 items-center">
+                    <p>
+                      {teacher.name} {teacher.surname}
+                    </p>
+                    <Link href={`/teachers/${teacherId}`}>
+                      <ExternalLink className="text-primary size-5" />
+                    </Link>
+                  </div>
                 </DialogTitle>
                 <DialogDescription className="flex items-center gap-1.5">
                   <Mail className="size-3.5 shrink-0" />

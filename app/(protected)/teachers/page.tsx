@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, FileUp, Mail, Trash2, Users } from "lucide-react";
+import Link from "next/link";
+import { ChevronRight, Clock, FileUp, Mail, Trash2, Users } from "lucide-react";
 
 import { DeleteTeacherDialog } from "@/app/(protected)/teachers/_components/delete-teacher-dialog";
 import { ExtractTeachersDialog } from "@/app/(protected)/teachers/_components/extract-teachers-dialog";
@@ -18,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getTeachers } from "@/lib/api";
 import { formatHours } from "@/lib/curriculum/format-hours";
 import { hasColor } from "@/lib/teacher-color";
+import { cn } from "@/lib/utils";
 import type { Teacher } from "@/types";
 
 function TeachersSkeleton() {
@@ -106,7 +108,7 @@ export default function TeachersPage() {
   return (
     <div className="container py-8">
       <div className="space-y-6">
-        <div className="flex items-center justify-between  gap-4">
+        <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Users className="size-6 text-primary" />
@@ -135,31 +137,40 @@ export default function TeachersPage() {
                 {teachers.map((teacher) => (
                   <li
                     key={teacher.id}
-                    className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-muted/10"
+                    className="group flex items-center hover:bg-muted/50"
                   >
-                    <div className="min-w-0 space-y-1">
-                      <p className="flex min-w-0 items-center gap-2 truncate font-medium">
-                        {hasColor(teacher.color) ? (
-                          <span
-                            className="size-2.5 shrink-0 rounded-full ring-1 ring-border"
-                            style={{ backgroundColor: teacher.color! }}
-                            aria-hidden
-                          />
-                        ) : null}
-                        <span className="truncate">
-                          {teacher.name} {teacher.surname}
-                        </span>
-                      </p>
-                      <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                        <Mail className="size-3 shrink-0" />
-                        <span className="truncate">{teacher.email}</span>
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-1">
+                    <Link
+                      href={`/teachers/${teacher.id}`}
+                      className={cn(
+                        "flex min-w-0 flex-1 items-center gap-4 px-4 py-3 transition-colors",
+                        "focus-visible:bg-muted/50 focus-visible:outline-none",
+                      )}
+                    >
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <p className="flex min-w-0 items-center gap-2 truncate font-medium group-hover:text-primary">
+                          {hasColor(teacher.color) ? (
+                            <span
+                              className="size-2.5 shrink-0 rounded-full ring-1 ring-border"
+                              style={{ backgroundColor: teacher.color! }}
+                              aria-hidden
+                            />
+                          ) : null}
+                          <span className="truncate">
+                            {teacher.name} {teacher.surname}
+                          </span>
+                        </p>
+                        <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                          <Mail className="size-3 shrink-0" />
+                          <span className="truncate">{teacher.email}</span>
+                        </p>
+                      </div>
                       <Badge variant="secondary" className="gap-1.5">
                         <Clock className="size-3" />
                         {formatHours(teacher.totalHours)}h
                       </Badge>
+                      <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+                    </Link>
+                    <div className="shrink-0 pr-2">
                       <Button
                         type="button"
                         variant="ghost"

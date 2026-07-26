@@ -40,6 +40,7 @@ export type { FindUserByEmailRequest } from "./requests/user";
 export type {
   CreateTeacherRequest,
   CreateTeachersRequest,
+  UpdateTeacherRequest,
   ExtractedTeacher,
 } from "./requests/teacher";
 export type {
