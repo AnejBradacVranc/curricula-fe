@@ -86,7 +86,7 @@ export function ProgramYearsSection({
             {programYears.map((programYear) => (
               <div
                 key={programYear.yearId}
-                className="min-w-[160px] flex-1 rounded-lg border bg-muted p-3"
+                className="min-w-40 flex-1 rounded-lg border bg-muted p-3"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 space-y-0.5">

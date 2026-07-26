@@ -41,10 +41,10 @@ export function TeachersPanel({
 
   return (
     <>
-      <Card className="flex h-full min-h-0 flex-col">
-        <CardHeader className="border-b">
+      <Card className="flex w-full max-w-90 flex-col">
+        <CardHeader className="shrink-0 border-b py-3">
           <div className="flex items-center justify-between gap-2">
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <Users className="size-4 text-primary" />
               Učitelji
             </CardTitle>
@@ -55,13 +55,13 @@ export function TeachersPanel({
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="min-h-0 flex-1 p-0">
+        <CardContent className="p-0">
           {teachers.length === 0 ? (
             <p className="px-(--card-spacing) py-8 text-center text-sm text-muted-foreground">
               Ni registriranih učiteljev.
             </p>
           ) : (
-            <ScrollArea className="h-full max-h-80">
+            <ScrollArea className="h-80">
               <ul className="divide-y divide-border">
                 {teachers.map((teacher) => (
                   <li key={teacher.id}>

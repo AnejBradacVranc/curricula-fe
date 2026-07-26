@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   BookOpen,
   ChevronRight,
+  FileUp,
   GraduationCap,
   Layers,
   Plus,
@@ -66,6 +67,8 @@ export default function ProgramsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isExtractOpen, setIsExtractOpen] = useState(false);
+
   const [programToDelete, setProgramToDelete] =
     useState<ProgramWithRelations | null>(null);
 
@@ -124,7 +127,7 @@ export default function ProgramsPage() {
   return (
     <div className="container py-8">
       <div className="space-y-6">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <GraduationCap className="size-6 text-primary" />
@@ -137,10 +140,16 @@ export default function ProgramsPage() {
             </p>
           </div>
 
-          <Button type="button" onClick={() => setIsCreateOpen(true)}>
-            <Plus />
-            Dodaj program
-          </Button>
+          <div className="space-x-2">
+            <Button type="button" onClick={() => setIsCreateOpen(true)}>
+              <Plus />
+              Dodaj program
+            </Button>
+            <Button type="button" onClick={() => setIsExtractOpen(true)}>
+              <FileUp />
+              Uvoz
+            </Button>
+          </div>
         </div>
 
         {programs.length === 0 ? (

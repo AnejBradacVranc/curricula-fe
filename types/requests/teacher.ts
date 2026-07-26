@@ -5,3 +5,13 @@ export interface CreateTeacherRequest {
   assignedHours: number;
   color?: string;
 }
+
+export interface CreateTeachersRequest {
+  teachers: CreateTeacherRequest[];
+}
+
+export interface ExtractedTeacher {
+  name: string;
+  surname: string;
+  email: string;
+}

@@ -1,6 +1,7 @@
 import type {
   ApiResponse,
   CreateTeacherRequest,
+  CreateTeachersRequest,
   Teacher,
   TeacherDetail,
 } from "@/types";
@@ -15,3 +16,9 @@ export const getTeacher = (id: number) =>
 
 export const createTeacher = (data: CreateTeacherRequest) =>
   unwrap(api.post<ApiResponse<Teacher>>("/schools/teachers", data));
+
+export const createTeachers = (data: CreateTeachersRequest) =>
+  unwrap(api.post<ApiResponse<Teacher[]>>("/schools/teachers/bulk", data));
+
+export const deleteTeacher = (id: number) =>
+  unwrap(api.delete<ApiResponse<Teacher>>(`/schools/teachers/${id}`));

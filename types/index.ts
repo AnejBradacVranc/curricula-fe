@@ -37,7 +37,11 @@ export type {
 } from "./requests/auth";
 export type { CreateSchoolRequest } from "./requests/school";
 export type { FindUserByEmailRequest } from "./requests/user";
-export type { CreateTeacherRequest } from "./requests/teacher";
+export type {
+  CreateTeacherRequest,
+  CreateTeachersRequest,
+  ExtractedTeacher,
+} from "./requests/teacher";
 export type { CreateProgramRequest } from "./requests/program";
 export type {
   CreateSubjectRequest,

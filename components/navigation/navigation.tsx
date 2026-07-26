@@ -8,6 +8,7 @@ import {
   GraduationCap,
   Home,
   LogOut,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -49,6 +50,13 @@ export const navLinks: NavLink[] = [
     label: "Predmeti",
     description: "Urejajte predmete in njihove kratice.",
     icon: BookOpen,
+    auth: true,
+  },
+  {
+    href: "/teachers",
+    label: "Učitelji",
+    description: "Upravljajte učitelje in uvozite jih iz datoteke.",
+    icon: Users,
     auth: true,
   },
 ];
