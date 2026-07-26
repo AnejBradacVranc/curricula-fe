@@ -28,6 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getCategories, getPrograms } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { Category, ProgramWithRelations } from "@/types";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 function ProgramsSkeleton() {
   return (
@@ -73,6 +74,9 @@ export default function ProgramsPage() {
 
   const [programToDelete, setProgramToDelete] =
     useState<ProgramWithRelations | null>(null);
+
+  const isMobile = useIsMobile();
+
 
   useEffect(() => {
     let cancelled = false;
@@ -146,14 +150,14 @@ export default function ProgramsPage() {
             </p>
           </div>
 
-          <div className="space-x-2">
+          <div className={cn("space-x-2", isMobile && "flex self-end")}>
             <Button type="button" onClick={() => setIsCreateOpen(true)}>
               <Plus />
-              Dodaj program
+              {!isMobile && "Dodaj program"}
             </Button>
             <Button type="button" onClick={() => setIsExtractOpen(true)}>
               <FileUp />
-              Uvoz
+              {!isMobile && "Uvozi"}
             </Button>
           </div>
         </div>

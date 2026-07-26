@@ -19,7 +19,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { getCategories, getSubjects } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import type { Category, Subject } from "@/types";
 
 function SubjectsSkeleton() {
@@ -63,6 +65,7 @@ export default function SubjectsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
+  const isMobile = useIsMobile();
 
   const refreshSubjects = async () => {
     try {
@@ -158,10 +161,12 @@ export default function SubjectsPage() {
             </p>
           </div>
 
-          <Button type="button" onClick={openCreateDialog}>
-            <Plus />
-            Dodaj predmet
-          </Button>
+          <div className={cn("space-x-2", isMobile && "flex self-end")}>
+            <Button type="button" onClick={openCreateDialog}>
+              <Plus />
+              {!isMobile && "Dodaj predmet"}
+            </Button>
+          </div>
         </div>
 
         <Card className="overflow-hidden py-0">

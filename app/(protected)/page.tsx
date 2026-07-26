@@ -26,7 +26,7 @@ import type {
   ProgramWithRelations,
   Teacher,
 } from "@/types";
-import { TeacherSelectDialog } from "./_components/teacher-select-dialog";
+import { TeacherSelectDialog } from "@/app/(protected)/dashboard/_components/teacher-select-dialog";
 
 function DashboardSkeleton() {
   return (

@@ -61,7 +61,7 @@ export function AuthForm() {
         password: loginPassword,
       });
       markAuthenticated();
-      router.push("/dashboard");
+      router.push("/");
     } catch (err) {
       toast.error(getErrorMessage(err), {
         description: "Prišlo je do napake. Poskusite znova.",

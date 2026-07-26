@@ -18,6 +18,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { getTeachers } from "@/lib/api";
 import { formatHours } from "@/lib/curriculum/format-hours";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { hasColor } from "@/lib/teacher-color";
 import { cn } from "@/lib/utils";
 import type { Teacher } from "@/types";
@@ -43,6 +44,7 @@ export default function TeachersPage() {
   const [error, setError] = useState<string | null>(null);
   const [isExtractOpen, setIsExtractOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
+  const isMobile = useIsMobile();
 
   const refreshTeachers = async () => {
     try {
@@ -120,10 +122,12 @@ export default function TeachersPage() {
             </p>
           </div>
 
-          <Button type="button" onClick={() => setIsExtractOpen(true)}>
-            <FileUp />
-            Uvoz
-          </Button>
+          <div className={cn("space-x-2", isMobile && "flex self-end")}>
+            <Button type="button" onClick={() => setIsExtractOpen(true)}>
+              <FileUp />
+              {!isMobile && "Uvozi"}
+            </Button>
+          </div>
         </div>
 
         <Card className="overflow-hidden py-0">
