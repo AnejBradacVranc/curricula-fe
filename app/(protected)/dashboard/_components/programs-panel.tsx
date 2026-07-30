@@ -41,8 +41,8 @@ export function ProgramsPanel({
   }, [programs, query]);
 
   return (
-    <Card className="w-full max-w-90 shrink-0 gap-0 overflow-hidden py-0">
-      <CardHeader className="space-y-3 border-b py-3">
+    <Card className="flex min-h-0 w-full flex-1 flex-col gap-0 overflow-hidden py-0">
+      <CardHeader className="shrink-0 space-y-3 border-b py-3">
         <div className="space-y-1.5">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -66,7 +66,7 @@ export function ProgramsPanel({
         </div>
       </CardHeader>
 
-      <CardContent className="p-0">
+      <CardContent className="min-h-0 flex-1 overflow-hidden p-0">
         {filteredPrograms.length === 0 ? (
           <p className="px-(--card-spacing) py-8 text-center text-sm text-muted-foreground">
             {programs.length === 0
@@ -74,7 +74,7 @@ export function ProgramsPanel({
               : "Noben program ne ustreza iskanju."}
           </p>
         ) : (
-          <div className="h-60 overflow-y-auto overscroll-y-contain">
+          <div className="h-full overflow-y-auto overscroll-y-contain">
             <ul className="divide-y divide-border p-1">
               {filteredPrograms.map((program) => {
                 const isSelected = program.id === selectedProgramId;
@@ -92,10 +92,10 @@ export function ProgramsPanel({
                       }}
                       aria-current={isSelected ? "true" : undefined}
                       className={cn(
-                        "w-full cursor-pointer rounded-md px-3 py-2.5 text-left text-sm transition-colors",
+                        "w-full cursor-pointer px-3 py-2.5 text-left text-sm transition-colors",
                         "hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                         isSelected
-                          ? "bg-primary/10 font-medium text-foreground"
+                          ? "bg-primary/50 font-medium text-foreground hover:bg-primary/25"
                           : "text-muted-foreground",
                       )}
                     >

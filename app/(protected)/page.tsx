@@ -27,6 +27,7 @@ import type {
   Teacher,
 } from "@/types";
 import { TeacherSelectDialog } from "@/app/(protected)/dashboard/_components/teacher-select-dialog";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 function DashboardSkeleton() {
   return (
@@ -71,6 +72,7 @@ export default function DashboardPage() {
   const [draggingTeacherId, setDraggingTeacherId] = useState<number | null>(
     null,
   );
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     let cancelled = false;
@@ -301,6 +303,14 @@ export default function DashboardPage() {
             </Card>
           )}
 
+          {
+            isMobile && <ProgramsPanel
+              programs={programs}
+              selectedProgramId={selectedProgram.id}
+              onSelectProgram={setSelectedProgramId}
+            />
+          }
+
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             <div className="min-w-0">
               <ProgramAssignmentTable
@@ -312,7 +322,7 @@ export default function DashboardPage() {
               />
             </div>
 
-            <aside className="flex w-full max-w-90 shrink-0 flex-col gap-4 lg:sticky lg:top-4">
+            {!isMobile && <aside className="flex w-full max-w-90 shrink-0 flex-col gap-4 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:min-h-0">
               <ProgramsPanel
                 programs={programs}
                 selectedProgramId={selectedProgram.id}
@@ -326,7 +336,7 @@ export default function DashboardPage() {
                 onDragEnd={() => setDraggingTeacherId(null)}
                 onTeacherUpdated={refreshDashboard}
               />
-            </aside>
+            </aside>}
           </div>
         </div>
       </div>

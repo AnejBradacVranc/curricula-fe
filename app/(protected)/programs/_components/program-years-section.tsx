@@ -22,6 +22,7 @@ import type {
 import { ProgramYearDialog } from "./program-year-dialog";
 import { CreateClassDialog } from "./create-class-dialog";
 import { DeleteClassDialog } from "./delete-class-dialog";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 type ProgramYearsSectionProps = {
   program: ProgramWithRelations;
@@ -49,6 +50,9 @@ export function ProgramYearsSection({
 
   const programYears = program.programYears;
 
+  const isMobile = useIsMobile();
+
+
   function openCreateDialog() {
     setEditingProgramYear(null);
     setIsDialogOpen(true);
@@ -72,7 +76,7 @@ export function ProgramYearsSection({
             </div>
             <Button type="button" onClick={openCreateDialog}>
               <Plus />
-              Dodaj letnik
+              {!isMobile && "Dodaj letnik"}
             </Button>
           </div>
         </CardHeader>

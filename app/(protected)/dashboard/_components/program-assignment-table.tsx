@@ -2,7 +2,7 @@
 
 import { Fragment } from "react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   buildCurriculumSections,
   getAssignmentKey,
@@ -11,6 +11,7 @@ import {
 import type { ProgramWithRelations } from "@/types";
 import { CurriculumCell } from "./curriculum-cell";
 import { CalendarClock } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 type ProgramAssignmentTableProps = {
   program: ProgramWithRelations;
@@ -46,6 +47,7 @@ export function ProgramAssignmentTable({
 }: ProgramAssignmentTableProps) {
   const years = program.programYears;
   const sections = buildCurriculumSections(program);
+  const isMobile = useIsMobile();
 
 
   if (years.length === 0) {
@@ -76,8 +78,8 @@ export function ProgramAssignmentTable({
           <table className="w-full min-w-180 border-collapse text-sm">
             <thead>
               <tr className="border-b bg-muted/20">
-                <th className="min-w-35 border-r px-2 py-2 text-center text-xs font-medium">
-                  Predmet
+                <th className="sticky  left-0 z-10 w-10 min-w-10 max-w-10 border-r bg-muted px-1 py-2 text-center text-xs font-medium md:w-16 md:min-w-16 md:max-w-20 md:px-2">
+                  {isMobile ? "Pred." : "Predmet"}
                 </th>
                 {years.map((programYear) => (
                   <th
@@ -109,7 +111,7 @@ export function ProgramAssignmentTable({
                       className="border-b border-border/70 hover:bg-muted/10"
                     >
                       <td
-                        className="sticky left-0 z-10 w-16 min-w-16 max-w-20 border-r bg-card px-2 py-2 align-top text-xs font-semibold tracking-wide uppercase"
+                        className="sticky left-0 z-10 w-10 min-w-10 max-w-10 border-r bg-card px-1 py-2 align-top text-[10px] font-semibold tracking-wide uppercase md:w-16 md:min-w-16 md:max-w-20 md:px-2 md:text-xs"
                         title={row.subjectName}
                       >
                         <span className="line-clamp-2 break-all">

@@ -8,7 +8,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -56,15 +55,10 @@ export function TeachersPanel({
     });
   }, [teachers, query]);
 
-  const totalHours = teachers.reduce(
-    (sum, teacher) => sum + Number(teacher.totalHours),
-    0,
-  );
-
   return (
     <>
-      <Card className="w-full max-w-90 shrink-0 gap-0 overflow-hidden py-0">
-        <CardHeader className="space-y-3 border-b py-3">
+      <Card className="flex min-h-0 w-full flex-1 flex-col gap-0 overflow-hidden py-0">
+        <CardHeader className="shrink-0 space-y-3 border-b py-3">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between gap-2">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -91,7 +85,7 @@ export function TeachersPanel({
           </div>
         </CardHeader>
 
-        <CardContent className="p-0">
+        <CardContent className="min-h-0 flex-1 overflow-hidden p-0">
           {filteredTeachers.length === 0 ? (
             <p className="px-(--card-spacing) py-8 text-center text-sm text-muted-foreground">
               {teachers.length === 0
@@ -99,7 +93,7 @@ export function TeachersPanel({
                 : "Noben učitelj ne ustreza iskanju."}
             </p>
           ) : (
-            <div className="h-60 overflow-y-auto overscroll-y-contain">
+            <div className="h-full overflow-y-auto overscroll-y-contain">
               <ul className="divide-y divide-border p-1">
                 {filteredTeachers.map((teacher) => (
                   <li key={teacher.id}>
