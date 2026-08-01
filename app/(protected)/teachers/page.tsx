@@ -2,10 +2,18 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Clock, FileUp, Mail, Trash2, Users } from "lucide-react";
+import {
+  ChevronRight,
+  Clock,
+  FileUp,
+  Mail,
+  Trash2,
+  Users,
+} from "lucide-react";
 
 import { DeleteTeacherDialog } from "@/app/(protected)/teachers/_components/delete-teacher-dialog";
 import { ExtractTeachersDialog } from "@/app/(protected)/teachers/_components/extract-teachers-dialog";
+import { TeacherAvatar } from "@/app/(protected)/teachers/_components/teacher-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +27,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getTeachers } from "@/lib/api";
 import { formatHours } from "@/lib/curriculum/format-hours";
 import { useIsMobile } from "@/hooks/use-is-mobile";
-import { hasColor } from "@/lib/teacher-color";
 import { cn } from "@/lib/utils";
 import type { Teacher } from "@/types";
 
@@ -146,22 +153,19 @@ export default function TeachersPage() {
                     <Link
                       href={`/teachers/${teacher.id}`}
                       className={cn(
-                        "flex min-w-0 flex-1 items-center gap-4 px-4 py-3 transition-colors",
+                        "flex min-w-0 flex-1 items-center gap-4 px-4 py-4 transition-colors",
                         "focus-visible:bg-muted/50 focus-visible:outline-none",
                       )}
                     >
+                      <TeacherAvatar
+                        name={teacher.name}
+                        surname={teacher.surname}
+                        profileImage={teacher.profileImage}
+                        color={teacher.color}
+                      />
                       <div className="min-w-0 flex-1 space-y-1">
-                        <p className="flex min-w-0 items-center gap-2 truncate font-medium group-hover:text-primary">
-                          {hasColor(teacher.color) ? (
-                            <span
-                              className="size-2.5 shrink-0 rounded-full ring-1 ring-border"
-                              style={{ backgroundColor: teacher.color! }}
-                              aria-hidden
-                            />
-                          ) : null}
-                          <span className="truncate">
-                            {teacher.name} {teacher.surname}
-                          </span>
+                        <p className="truncate font-medium group-hover:text-primary">
+                          {teacher.name} {teacher.surname}
                         </p>
                         <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                           <Mail className="size-3 shrink-0" />

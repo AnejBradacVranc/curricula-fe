@@ -9,10 +9,11 @@ import {
   Clock,
   Mail,
   Sparkles,
-  User,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { TeacherAvatar } from "@/app/(protected)/teachers/_components/teacher-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getTeacher, updateTeacher } from "@/lib/api";
 import { formatHours } from "@/lib/curriculum/format-hours";
-import { hasColor, isHexColor } from "@/lib/teacher-color";
+import { isHexColor } from "@/lib/teacher-color";
 import { cn } from "@/lib/utils";
 import type { TeacherDetail } from "@/types";
 
@@ -60,6 +61,10 @@ export default function TeacherDetailPage() {
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [email, setEmail] = useState("");
+  const [profileImage, setProfileImage] = useState<File | null | undefined>(
+    undefined,
+  );
+  const [profileImageInputKey, setProfileImageInputKey] = useState(0);
   const [color, setColor] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,6 +74,8 @@ export default function TeacherDetailPage() {
     setSurname(data.surname);
     setEmail(data.email);
     setColor(data.color ?? "");
+    setProfileImage(undefined);
+    setProfileImageInputKey((key) => key + 1);
     setValidationError(null);
   }
 
@@ -149,19 +156,24 @@ export default function TeacherDetailPage() {
     setIsSubmitting(true);
 
     try {
-      const updated = await updateTeacher(teacher.id, {
-        name: trimmedName,
-        surname: trimmedSurname,
-        email: trimmedEmail,
-        color: trimmedColor || null,
-      });
+      const updated = await updateTeacher(
+        teacher.id,
+        {
+          name: trimmedName,
+          surname: trimmedSurname,
+          email: trimmedEmail,
+          color: trimmedColor || null,
+        },
+        profileImage,
+      );
       setTeacher(updated);
       syncForm(updated);
       toast.success("Podatki učitelja so posodobljeni.");
-    } catch {
+    } catch (error: any) {
       setValidationError(
-        "Podatkov ni bilo mogoče shraniti. Preverite, ali e-pošta že obstaja.",
+        "Podatkov ni bilo mogoče shraniti.",
       );
+      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -209,24 +221,24 @@ export default function TeacherDetailPage() {
         </Link>
 
         <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            {hasColor(teacher.color) ? (
-              <span
-                className="size-6 shrink-0 rounded-full ring-1 ring-border"
-                style={{ backgroundColor: teacher.color }}
-                aria-hidden
-              />
-            ) : (
-              <User className="size-6 text-primary" />
-            )}
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {teacher.name} {teacher.surname}
-            </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <TeacherAvatar
+              name={teacher.name}
+              surname={teacher.surname}
+              profileImage={teacher.profileImage}
+              color={teacher.color}
+              size="md"
+            />
+            <div className="min-w-0 space-y-1">
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {teacher.name} {teacher.surname}
+              </h1>
+              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Mail className="size-3.5 shrink-0" />
+                {teacher.email}
+              </p>
+            </div>
           </div>
-          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Mail className="size-3.5 shrink-0" />
-            {teacher.email}
-          </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
@@ -269,11 +281,72 @@ export default function TeacherDetailPage() {
           <CardHeader className="border-b">
             <CardTitle>Osnovni podatki</CardTitle>
             <CardDescription>
-              Uredite ime, priimek, e-pošto in barvo učitelja.
+              Uredite ime, priimek, e-pošto, barvo in profilno sliko učitelja.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)}>
+              <div className="space-y-2">
+                <Label htmlFor="teacher-profile-image">Slika</Label>
+                <div className="flex flex-wrap items-end gap-4">
+                  {teacher.profileImage && (
+                    <div className="group relative size-24 shrink-0">
+                      <TeacherAvatar
+                        name={teacher.name}
+                        surname={teacher.surname}
+                        profileImage={teacher.profileImage}
+                        color={teacher.color}
+                        size="lg"
+                      />
+
+                      {<button
+                        type="button"
+                        className={cn("absolute inset-0 flex text-white rounded-lg  cursor-pointer bg-black/65", profileImage === null ? "flex-col items-center justify-center gap-1" : "items-center justify-center rounded-lg opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 ")}
+                        disabled={isSubmitting}
+                        onClick={() => {
+
+                          if (profileImage === null) {
+                            setProfileImage(undefined)
+                          } else {
+                            setProfileImage(null);
+                            setProfileImageInputKey((key) => key + 1);
+                          }
+
+                        }}
+                        aria-label={profileImage === null ? `Prekliči odstranitev slike` : `Odstrani profilno sliko`}
+                      >
+                        <Trash2 className="size-6" />
+                      </button>}
+                    </div>
+                  )}
+                  <div className="space-y-1.5">
+                    <input
+                      key={profileImageInputKey}
+                      className="block w-full cursor-pointer text-sm file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground"
+                      id="teacher-profile-image"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                      onChange={(event) => {
+                        setProfileImage(event.target.files?.[0] ?? undefined);
+                      }}
+                      disabled={isSubmitting || profileImage === null}
+                    />
+                    {profileImage instanceof File ? (
+                      <p className="truncate text-xs text-muted-foreground">
+                        Izbrano: {profileImage.name}
+                      </p>
+                    ) : profileImage === null ? (
+                      <p className="text-xs text-muted-foreground">
+                        Slika bo odstranjena ob shranjevanju.
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        JPEG, PNG ali WebP, do 2&nbsp;MB.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="teacher-name">Ime</Label>
@@ -296,49 +369,49 @@ export default function TeacherDetailPage() {
                   />
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="teacher-email">E-pošta</Label>
-                <Input
-                  id="teacher-email"
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  disabled={isSubmitting}
-                  autoComplete="email"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="teacher-color">Barva</Label>
-                <div className="flex items-center gap-3">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="teacher-email">E-pošta</Label>
                   <Input
-                    id="teacher-color-picker"
-                    type="color"
-                    className="h-9 w-12 cursor-pointer p-1"
-                    value={isHexColor(color) ? color : "#64748b"}
-                    onChange={(event) => setColor(event.target.value)}
+                    id="teacher-email"
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
                     disabled={isSubmitting}
-                    aria-label="Izberi barvo"
+                    autoComplete="email"
                   />
-                  <Input
-                    id="teacher-color"
-                    value={color}
-                    onChange={(event) => setColor(event.target.value)}
-                    placeholder="#RRGGBB"
-                    disabled={isSubmitting}
-                    className="font-mono"
-                  />
-                  {color ? (
-                    <Button
-                      type="button"
-                      variant="outline"
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="teacher-color">Barva</Label>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      id="teacher-color-picker"
+                      type="color"
+                      className="h-9 w-12 cursor-pointer p-1"
+                      value={isHexColor(color) ? color : "#64748b"}
+                      onChange={(event) => setColor(event.target.value)}
                       disabled={isSubmitting}
-                      onClick={() => setColor("")}
-                    >
-                      Odstrani
-                    </Button>
-                  ) : null}
+                      aria-label="Izberi barvo"
+                    />
+                    <Input
+                      id="teacher-color"
+                      value={color}
+                      onChange={(event) => setColor(event.target.value)}
+                      placeholder="#RRGGBB"
+                      disabled={isSubmitting}
+                      className="font-mono"
+                    />
+                    {color ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isSubmitting}
+                        onClick={() => setColor("")}
+                      >
+                        Odstrani
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
 

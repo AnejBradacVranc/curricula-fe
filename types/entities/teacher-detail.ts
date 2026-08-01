@@ -48,6 +48,7 @@ export interface TeacherDetail {
   surname: string;
   email: string;
   color: string | null;
+  profileImage: string | null;
   schoolId: number;
   assignedHours: string | number;
   additionalActivityHours: string | number;

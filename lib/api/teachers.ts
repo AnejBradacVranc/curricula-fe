@@ -21,10 +21,39 @@ export const createTeacher = (data: CreateTeacherRequest) =>
 export const createTeachers = (data: CreateTeachersRequest) =>
   unwrap(api.post<ApiResponse<Teacher[]>>("/schools/teachers/bulk", data));
 
-export const updateTeacher = (id: number, data: UpdateTeacherRequest) =>
-  unwrap(
-    api.patch<ApiResponse<TeacherDetail>>(`/schools/teachers/${id}`, data),
+export const updateTeacher = (
+  id: number,
+  data: UpdateTeacherRequest,
+  profileImage?: File | null,
+) => {
+  if (profileImage instanceof File) {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("surname", data.surname);
+    formData.append("email", data.email);
+    if (data.color !== undefined) {
+      formData.append("color", data.color ?? "");
+    }
+    formData.append("file", profileImage);
+
+    return unwrap(
+      api.patch<ApiResponse<TeacherDetail>>(
+        `/schools/teachers/${id}`,
+        formData,
+        {
+          headers: { "Content-Type": undefined },
+        },
+      ),
+    );
+  }
+
+  return unwrap(
+    api.patch<ApiResponse<TeacherDetail>>(`/schools/teachers/${id}`, {
+      ...data,
+      ...(profileImage === null ? { removeProfileImage: true } : {}),
+    }),
   );
+};
 
 export const deleteTeacher = (id: number) =>
   unwrap(api.delete<ApiResponse<Teacher>>(`/schools/teachers/${id}`));

@@ -15,6 +15,7 @@ export interface UpdateTeacherRequest {
   surname: string;
   email: string;
   color?: string | null;
+  removeProfileImage?: boolean;
 }
 
 export interface ExtractedTeacher {
