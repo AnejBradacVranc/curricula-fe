@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   BookOpen,
   Clock,
+  Download,
   Mail,
   Plus,
   Sparkles,
@@ -27,7 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getTeacher, updateTeacher } from "@/lib/api";
+import { exportTeacherPdf, getTeacher, updateTeacher } from "@/lib/api";
 import { formatHours } from "@/lib/curriculum/format-hours";
 import { isHexColor } from "@/lib/teacher-color";
 import { cn } from "@/lib/utils";
@@ -69,6 +70,7 @@ export default function TeacherDetailPage() {
   const [color, setColor] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   function syncForm(data: TeacherDetail) {
     setName(data.name);
@@ -178,6 +180,29 @@ export default function TeacherDetailPage() {
     }
   }
 
+  async function handleExport() {
+    if (!teacher) {
+      return;
+    }
+
+    setIsExporting(true);
+
+    try {
+      const blob = await exportTeacherPdf(teacher.id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${teacher.surname}-${teacher.name}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success("Izvoz PDF je pripravljen.");
+    } catch {
+      toast.error("Izvoza PDF ni bilo mogoče ustvariti.");
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="container py-8">
@@ -220,23 +245,34 @@ export default function TeacherDetailPage() {
         </Link>
 
         <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-3">
-            <TeacherAvatar
-              name={teacher.name}
-              surname={teacher.surname}
-              profileImage={teacher.profileImage}
-              color={teacher.color}
-              size="md"
-            />
-            <div className="min-w-0 space-y-1">
-              <h1 className="text-2xl font-semibold tracking-tight">
-                {teacher.name} {teacher.surname}
-              </h1>
-              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Mail className="size-3.5 shrink-0" />
-                {teacher.email}
-              </p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-3">
+              <TeacherAvatar
+                name={teacher.name}
+                surname={teacher.surname}
+                profileImage={teacher.profileImage}
+                color={teacher.color}
+                size="md"
+              />
+              <div className="min-w-0 space-y-1">
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  {teacher.name} {teacher.surname}
+                </h1>
+                <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Mail className="size-3.5 shrink-0" />
+                  {teacher.email}
+                </p>
+              </div>
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isExporting}
+              onClick={() => void handleExport()}
+            >
+              <Download />
+              {isExporting ? "Izvažanje..." : "Izvozi PDF"}
+            </Button>
           </div>
         </div>
 

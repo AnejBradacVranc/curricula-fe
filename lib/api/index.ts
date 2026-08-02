@@ -13,6 +13,8 @@ export { getTeachers, getTeacher, createTeacher, createTeachers, updateTeacher, 
 
 export { extractTeachers, extractProgram } from "./extract";
 
+export { exportTeacherPdf } from "./export";
+
 export {
   getPrograms,
   getProgram,
