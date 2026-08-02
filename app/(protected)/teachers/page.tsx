@@ -2,14 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ChevronRight,
-  Clock,
-  FileUp,
-  Mail,
-  Trash2,
-  Users,
-} from "lucide-react";
+import { ChevronRight, Clock, FileUp, Mail, Trash2, Users } from "lucide-react";
 
 import { DeleteTeacherDialog } from "@/app/(protected)/teachers/_components/delete-teacher-dialog";
 import { ExtractTeachersDialog } from "@/app/(protected)/teachers/_components/extract-teachers-dialog";
@@ -121,7 +114,9 @@ export default function TeachersPage() {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Users className="size-6 text-primary" />
-              <h1 className="text-2xl font-semibold tracking-tight">Učitelji</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Učitelji
+              </h1>
             </div>
             <p className="text-sm text-muted-foreground">
               Seznam učiteljev na šoli. Uvozite jih iz datoteke ali jih dodajte
@@ -164,15 +159,25 @@ export default function TeachersPage() {
                         color={teacher.color}
                       />
                       <div className="min-w-0 flex-1 space-y-1">
-                        <p className="truncate font-medium group-hover:text-primary">
+                        <Badge
+                          variant="secondary"
+                          className="gap-1.5 md:hidden flex"
+                        >
+                          <Clock className="size-3" />
+                          {formatHours(teacher.totalHours)}h
+                        </Badge>
+                        <p className="font-medium group-hover:text-primary transition-colors">
                           {teacher.name} {teacher.surname}
                         </p>
                         <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                           <Mail className="size-3 shrink-0" />
-                          <span className="truncate">{teacher.email}</span>
+                          <span>{teacher.email}</span>
                         </p>
                       </div>
-                      <Badge variant="secondary" className="gap-1.5">
+                      <Badge
+                        variant="secondary"
+                        className="gap-1.5 hidden md:flex"
+                      >
                         <Clock className="size-3" />
                         {formatHours(teacher.totalHours)}h
                       </Badge>

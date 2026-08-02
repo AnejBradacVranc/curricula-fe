@@ -24,12 +24,11 @@ export function CurriculumCell({
   disabled = false,
   onAssign,
   onRemove,
-  onClick
+  onClick,
 }: CurriculumCellProps) {
   if (!programSubject) {
     return <span className="block text-center text-muted-foreground">—</span>;
   }
-
 
   if (classes.length === 0) {
     return (
@@ -61,7 +60,8 @@ export function CurriculumCell({
           return (
             <div key={programClass.id} className="space-y-0.5">
               <p className="px-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                {programSubject.programYear.year.name.slice(0, 1)} {programClass.label}
+                {programSubject.programYear.year.name.slice(0, 1)}{" "}
+                {programClass.label}
               </p>
               {isPending ? (
                 <div className="flex items-center justify-center rounded-lg border border-dashed px-2 py-1">
@@ -70,13 +70,16 @@ export function CurriculumCell({
               ) : (
                 <SubjectAssignmentSlot
                   teacher={assignment?.teacher}
-                  isPending={false}
+                  isPending={isPending}
                   disabled={
                     disabled ||
-                    (pendingClassId !== null && pendingClassId !== programClass.id)
+                    (pendingClassId !== null &&
+                      pendingClassId !== programClass.id)
                   }
                   onAssign={(teacherId) => onAssign(programClass.id, teacherId)}
-                  onClick={() => { onClick(programClass.id) }}
+                  onClick={() => {
+                    onClick(programClass.id);
+                  }}
                   onRemove={() => {
                     if (!assignment) {
                       return;

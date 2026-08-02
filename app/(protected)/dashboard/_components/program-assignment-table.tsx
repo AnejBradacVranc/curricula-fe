@@ -1,17 +1,16 @@
 "use client";
 
 import { Fragment } from "react";
+import { CalendarClock } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
   buildCurriculumSections,
   getAssignmentKey,
-  getClassesForYear,
 } from "@/lib/curriculum/build-curriculum-rows";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import type { ProgramWithRelations } from "@/types";
 import { CurriculumCell } from "./curriculum-cell";
-import { CalendarClock } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-is-mobile";
 
 type ProgramAssignmentTableProps = {
   program: ProgramWithRelations;
@@ -43,12 +42,11 @@ export function ProgramAssignmentTable({
   pendingAssignmentKey,
   onAssignTeacher,
   onRemoveAssignment,
-  onSelectSlot
+  onSelectSlot,
 }: ProgramAssignmentTableProps) {
   const years = program.programYears;
   const sections = buildCurriculumSections(program);
   const isMobile = useIsMobile();
-
 
   if (years.length === 0) {
     return (
@@ -78,7 +76,7 @@ export function ProgramAssignmentTable({
           <table className="w-full min-w-180 border-collapse text-sm">
             <thead>
               <tr className="border-b bg-muted/20">
-                <th className="sticky  left-0 z-10 w-10 min-w-10 max-w-10 border-r bg-muted px-1 py-2 text-center text-xs font-medium md:w-16 md:min-w-16 md:max-w-20 md:px-2">
+                <th className="sticky left-0 z-10 w-10 min-w-10 max-w-10 border-r bg-muted px-1 py-2 text-center text-xs font-medium md:w-16 md:min-w-16 md:max-w-20 md:px-2">
                   {isMobile ? "Pred." : "Predmet"}
                 </th>
                 {years.map((programYear) => (
@@ -100,11 +98,12 @@ export function ProgramAssignmentTable({
                   <tr className="border-b border-border bg-muted/40">
                     <td
                       colSpan={years.length + 1}
-                      className="px-3 py-2 text-xs font-semibold tracking-wide text-primary-foreground bg-primary/50 uppercase"
+                      className="bg-primary/50 px-3 py-2 text-xs font-semibold tracking-wide text-primary-foreground uppercase"
                     >
                       {section.categoryName}
                     </td>
                   </tr>
+
                   {section.rows.map((row) => (
                     <tr
                       key={row.subjectId}
@@ -118,15 +117,13 @@ export function ProgramAssignmentTable({
                           {row.subjectAbbrevation}
                         </span>
                       </td>
+
                       {years.map((programYear) => {
                         const programSubject = row.cellsByYearId.get(
                           programYear.yearId,
                         );
-                        const classes = getClassesForYear(
-                          program,
-                          programYear.yearId,
-                        );
-                        const cellHasPending = classes.some(
+                        const classes = programYear.classes;
+                        const cellIsPending = classes.some(
                           (programClass) =>
                             pendingAssignmentKey ===
                             getAssignmentKey(
@@ -151,7 +148,7 @@ export function ProgramAssignmentTable({
                                   subjectId: row.subjectId,
                                   yearId: programYear.yearId,
                                   classId: programClassId,
-                                })
+                                });
                               }}
                               pendingClassId={
                                 classes.find(
@@ -166,7 +163,7 @@ export function ProgramAssignmentTable({
                                 )?.id ?? null
                               }
                               disabled={
-                                pendingAssignmentKey !== null && !cellHasPending
+                                pendingAssignmentKey !== null && !cellIsPending
                               }
                               onAssign={(classId, teacherId) =>
                                 onAssignTeacher({

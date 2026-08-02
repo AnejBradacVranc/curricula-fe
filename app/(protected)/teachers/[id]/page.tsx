@@ -8,6 +8,7 @@ import {
   BookOpen,
   Clock,
   Mail,
+  Plus,
   Sparkles,
   Trash2,
 } from "lucide-react";
@@ -170,9 +171,7 @@ export default function TeacherDetailPage() {
       syncForm(updated);
       toast.success("Podatki učitelja so posodobljeni.");
     } catch (error: any) {
-      setValidationError(
-        "Podatkov ni bilo mogoče shraniti.",
-      );
+      setValidationError("Podatkov ni bilo mogoče shraniti.");
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -285,7 +284,10 @@ export default function TeacherDetailPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)}>
+            <form
+              className="space-y-4"
+              onSubmit={(event) => void handleSubmit(event)}
+            >
               <div className="space-y-2">
                 <Label htmlFor="teacher-profile-image">Slika</Label>
                 <div className="flex flex-wrap items-end gap-4">
@@ -299,24 +301,33 @@ export default function TeacherDetailPage() {
                         size="lg"
                       />
 
-                      {<button
-                        type="button"
-                        className={cn("absolute inset-0 flex text-white rounded-lg  cursor-pointer bg-black/65", profileImage === null ? "flex-col items-center justify-center gap-1" : "items-center justify-center rounded-lg opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 ")}
-                        disabled={isSubmitting}
-                        onClick={() => {
-
-                          if (profileImage === null) {
-                            setProfileImage(undefined)
-                          } else {
-                            setProfileImage(null);
-                            setProfileImageInputKey((key) => key + 1);
+                      {
+                        <button
+                          type="button"
+                          className={cn(
+                            "absolute inset-0 flex text-white rounded-lg  cursor-pointer bg-black/65",
+                            profileImage === null
+                              ? "flex-col items-center justify-center gap-1"
+                              : "items-center justify-center rounded-lg opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 ",
+                          )}
+                          disabled={isSubmitting}
+                          onClick={() => {
+                            if (profileImage === null) {
+                              setProfileImage(undefined);
+                            } else {
+                              setProfileImage(null);
+                              setProfileImageInputKey((key) => key + 1);
+                            }
+                          }}
+                          aria-label={
+                            profileImage === null
+                              ? `Prekliči odstranitev slike`
+                              : `Odstrani profilno sliko`
                           }
-
-                        }}
-                        aria-label={profileImage === null ? `Prekliči odstranitev slike` : `Odstrani profilno sliko`}
-                      >
-                        <Trash2 className="size-6" />
-                      </button>}
+                        >
+                          <Trash2 className="size-6" />
+                        </button>
+                      }
                     </div>
                   )}
                   <div className="space-y-1.5">
@@ -423,6 +434,7 @@ export default function TeacherDetailPage() {
 
               <div className="flex justify-end">
                 <Button type="submit" disabled={isSubmitting}>
+                  <Plus />
                   {isSubmitting ? "Shranjevanje..." : "Shrani spremembe"}
                 </Button>
               </div>
@@ -440,7 +452,9 @@ export default function TeacherDetailPage() {
               Predmeti, dodeljeni temu učitelju.
             </CardDescription>
           </CardHeader>
-          <CardContent className={cn(teacher.assignments.length === 0 && "pt-0")}>
+          <CardContent
+            className={cn(teacher.assignments.length === 0 && "pt-0")}
+          >
             {teacher.assignments.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 Ta učitelj še nima dodeljenih predmetov.
@@ -487,9 +501,7 @@ export default function TeacherDetailPage() {
               <Sparkles className="size-4 text-primary" />
               Dodatne ure ({teacher.additionalActivityAssignments.length})
             </CardTitle>
-            <CardDescription>
-              Dodatne dejavnosti učitelja.
-            </CardDescription>
+            <CardDescription>Dodatne dejavnosti učitelja.</CardDescription>
           </CardHeader>
           <CardContent
             className={cn(

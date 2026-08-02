@@ -120,123 +120,118 @@ export default function DashboardPage() {
 
     setPrograms(programsData);
     setTeachers(teachersData);
-  }
+  };
 
-  const handleAssignTeacher =
-    async ({
+  const handleAssignTeacher = async ({
+    programId,
+    subjectId,
+    yearId,
+    classId,
+    teacherId,
+  }: {
+    programId: number;
+    subjectId: number;
+    yearId: number;
+    classId: number;
+    teacherId: number;
+  }) => {
+    const assignmentKey = getAssignmentKey(
       programId,
       subjectId,
       yearId,
       classId,
-      teacherId,
-    }: {
-      programId: number;
-      subjectId: number;
-      yearId: number;
-      classId: number;
-      teacherId: number;
-    }) => {
-      const assignmentKey = getAssignmentKey(
+    );
+
+    if (pendingAssignmentKey === assignmentKey) {
+      return;
+    }
+
+    const program = programs.find((item) => item.id === programId);
+    const programSubject = program?.programSubjects.find(
+      (item) => item.subjectId === subjectId && item.yearId === yearId,
+    );
+    const existingAssignment = programSubject?.assignments.find(
+      (assignment) => assignment.classId === classId,
+    );
+
+    if (existingAssignment?.teacherId === teacherId) {
+      return;
+    }
+
+    setActionError(null);
+    setPendingAssignmentKey(assignmentKey);
+
+    try {
+      await assignTeacher({
         programId,
         subjectId,
         yearId,
         classId,
+        teacherId,
+      });
+      await refreshDashboard();
+    } catch {
+      setActionError(
+        "Dodelitev učitelja ni uspela. Preverite, ali je razred že zaseden ali poskusite znova.",
       );
+    } finally {
+      setPendingAssignmentKey(null);
+    }
+  };
 
-      if (pendingAssignmentKey === assignmentKey) {
-        return;
-      }
+  const handleRemoveAssignment = async ({
+    programId,
+    subjectId,
+    yearId,
+    classId,
+    teacherId,
+  }: {
+    programId: number;
+    subjectId: number;
+    yearId: number;
+    classId: number;
+    teacherId: number;
+  }) => {
+    setActionError(null);
+    setPendingAssignmentKey(
+      getAssignmentKey(programId, subjectId, yearId, classId),
+    );
 
-      const program = programs.find((item) => item.id === programId);
-      const programSubject = program?.programSubjects.find(
-        (item) => item.subjectId === subjectId && item.yearId === yearId,
-      );
-      const existingAssignment = programSubject?.assignments.find(
-        (assignment) => assignment.classId === classId,
-      );
+    try {
+      await unassignTeacher({
+        programId,
+        subjectId,
+        yearId,
+        classId,
+        teacherId,
+      });
+      await refreshDashboard();
+    } catch {
+      setActionError("Odstranitev dodelitve ni uspela. Poskusite znova.");
+    } finally {
+      setPendingAssignmentKey(null);
+    }
+  };
 
-      if (existingAssignment?.teacherId === teacherId) {
-        return;
-      }
+  const handleSelectSlot = (slot: {
+    programId: number;
+    subjectId: number;
+    yearId: number;
+    classId: number;
+  }) => {
+    setActionError(null);
+    setSelectedSlot(slot);
+  };
 
-      setActionError(null);
-      setPendingAssignmentKey(assignmentKey);
-
-      try {
-        await assignTeacher({
-          programId,
-          subjectId,
-          yearId,
-          classId,
-          teacherId,
-        });
-        await refreshDashboard();
-      } catch {
-        setActionError(
-          "Dodelitev učitelja ni uspela. Preverite, ali je razred že zaseden ali poskusite znova.",
-        );
-      } finally {
-        setPendingAssignmentKey(null);
-      }
+  const handleTeacherSelected = (teacherId: number) => {
+    if (!selectedSlot) {
+      return;
     }
 
-  const handleRemoveAssignment =
-    async ({
-      programId,
-      subjectId,
-      yearId,
-      classId,
-      teacherId,
-    }: {
-      programId: number;
-      subjectId: number;
-      yearId: number;
-      classId: number;
-      teacherId: number;
-    }) => {
-      setActionError(null);
-      setPendingAssignmentKey(
-        getAssignmentKey(programId, subjectId, yearId, classId),
-      );
-
-      try {
-        await unassignTeacher({
-          programId,
-          subjectId,
-          yearId,
-          classId,
-          teacherId,
-        });
-        await refreshDashboard();
-      } catch {
-        setActionError("Odstranitev dodelitve ni uspela. Poskusite znova.");
-      } finally {
-        setPendingAssignmentKey(null);
-      }
-    }
-
-  const handleSelectSlot =
-    (slot: {
-      programId: number;
-      subjectId: number;
-      yearId: number;
-      classId: number;
-    }) => {
-      setActionError(null);
-      setSelectedSlot(slot);
-    }
-
-
-  const handleTeacherSelected =
-    (teacherId: number) => {
-      if (!selectedSlot) {
-        return;
-      }
-
-      const slot = selectedSlot;
-      setSelectedSlot(null);
-      handleAssignTeacher({ ...slot, teacherId });
-    }
+    const slot = selectedSlot;
+    setSelectedSlot(null);
+    handleAssignTeacher({ ...slot, teacherId });
+  };
 
   if (isLoading) {
     return (
@@ -288,8 +283,7 @@ export default function DashboardPage() {
   }
 
   const selectedProgram =
-    programs.find((program) => program.id === selectedProgramId) ??
-    programs[0];
+    programs.find((program) => program.id === selectedProgramId) ?? programs[0];
 
   return (
     <>
@@ -303,13 +297,13 @@ export default function DashboardPage() {
             </Card>
           )}
 
-          {
-            isMobile && <ProgramsPanel
+          {isMobile && (
+            <ProgramsPanel
               programs={programs}
               selectedProgramId={selectedProgram.id}
               onSelectProgram={setSelectedProgramId}
             />
-          }
+          )}
 
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             <div className="min-w-0">
@@ -321,8 +315,7 @@ export default function DashboardPage() {
                 onSelectSlot={handleSelectSlot}
               />
             </div>
-
-            {!isMobile && <aside className="flex w-full max-w-90 shrink-0 flex-col gap-4 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:min-h-0">
+            <aside className="hidden md:flex w-full max-w-90 shrink-0 flex-col gap-4 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:min-h-0">
               <ProgramsPanel
                 programs={programs}
                 selectedProgramId={selectedProgram.id}
@@ -336,7 +329,7 @@ export default function DashboardPage() {
                 onDragEnd={() => setDraggingTeacherId(null)}
                 onTeacherUpdated={refreshDashboard}
               />
-            </aside>}
+            </aside>
           </div>
         </div>
       </div>

@@ -75,7 +75,7 @@ export default function SubjectsPage() {
     } catch {
       setError("Podatkov ni bilo mogoče naložiti. Poskusite znova.");
     }
-  }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -178,7 +178,9 @@ export default function SubjectsPage() {
             <CardContent className="p-0">
               <Accordion
                 multiple
-                defaultValue={sections.map((section) => section.categoryName)}
+                defaultValue={sections
+                  .slice(0, 1)
+                  .map((section) => section.categoryName)}
                 className="w-full"
               >
                 {sections.map((section) => (
@@ -187,13 +189,14 @@ export default function SubjectsPage() {
                     value={section.categoryName}
                     className="border-b px-4 last:border-b-0"
                   >
-                    <AccordionTrigger className="hover:no-underline cursor-pointer">
-                      <span className="flex items-baseline gap-2 w-full justify-between md:justify-normal">
+                    <AccordionTrigger className="hover:no-underline cursor-pointer items-center gap-4">
+                      <span className="flex items-center gap-2 w-full justify-between md:justify-normal">
                         <span className="text-md font-semibold tracking-wide text-primary uppercase max-w-48 md:max-w-none">
                           {section.categoryName}
                         </span>
                         <span className="text-xs font-normal overflow-hidden text-ellipsis text-nowrap text-muted-foreground/80">
-                          · {section.subjects.length}{" "}
+                          <span className="hidden md:inline">·</span>{" "}
+                          {section.subjects.length}{" "}
                           {section.subjects.length === 1
                             ? "predmet"
                             : "predmetov"}
