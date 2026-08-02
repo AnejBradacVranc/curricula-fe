@@ -266,7 +266,7 @@ export default function TeacherDetailPage() {
             </div>
             <Button
               type="button"
-              variant="outline"
+              variant="default"
               disabled={isExporting}
               onClick={() => void handleExport()}
             >
