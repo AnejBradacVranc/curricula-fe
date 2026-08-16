@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Clock, FileUp, Mail, Trash2, Users } from "lucide-react";
 
@@ -17,9 +17,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getTeachers } from "@/lib/api";
 import { formatHours } from "@/lib/curriculum/format-hours";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useTeachers } from "@/lib/queries/teachers/queries";
 import { cn } from "@/lib/utils";
 import type { Teacher } from "@/types";
 
@@ -39,52 +39,15 @@ function TeachersSkeleton() {
 }
 
 export default function TeachersPage() {
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isExtractOpen, setIsExtractOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
   const isMobile = useIsMobile();
 
-  const refreshTeachers = async () => {
-    try {
-      const teachersData = await getTeachers();
-      setTeachers(teachersData);
-      setError(null);
-    } catch {
-      setError("Podatkov ni bilo mogoče naložiti. Poskusite znova.");
-    }
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const teachersData = await getTeachers();
-        if (!cancelled) {
-          setTeachers(teachersData);
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Podatkov ni bilo mogoče naložiti. Poskusite znova.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const {
+    data: teachers = [],
+    isLoading,
+    isError,
+  } = useTeachers();
 
   if (isLoading) {
     return (
@@ -94,13 +57,15 @@ export default function TeachersPage() {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <div className="container py-8">
         <Card className="border-destructive/30">
           <CardHeader>
             <CardTitle>Napaka pri nalaganju</CardTitle>
-            <CardDescription>{error}</CardDescription>
+            <CardDescription>
+              Podatkov ni bilo mogoče naložiti. Poskusite znova.
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -206,7 +171,6 @@ export default function TeachersPage() {
       <ExtractTeachersDialog
         open={isExtractOpen}
         onOpenChange={setIsExtractOpen}
-        onExtracted={refreshTeachers}
       />
 
       <DeleteTeacherDialog
@@ -217,7 +181,6 @@ export default function TeachersPage() {
             setTeacherToDelete(null);
           }
         }}
-        onDeleted={refreshTeachers}
       />
     </div>
   );

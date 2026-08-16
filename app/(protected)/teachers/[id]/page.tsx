@@ -28,8 +28,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { exportTeacherPdf, getTeacher, updateTeacher } from "@/lib/api";
 import { formatHours } from "@/lib/curriculum/format-hours";
+import { useExportTeacherPdf } from "@/lib/queries/export/mutations";
+import { useUpdateTeacher } from "@/lib/queries/teachers/mutations";
+import { useTeacher } from "@/lib/queries/teachers/queries";
 import { isHexColor } from "@/lib/teacher-color";
 import { cn } from "@/lib/utils";
 import type { TeacherDetail } from "@/types";
@@ -56,9 +58,14 @@ export default function TeacherDetailPage() {
   const params = useParams();
   const teacherId = Number(params.id);
 
-  const [teacher, setTeacher] = useState<TeacherDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: teacher = null,
+    isLoading,
+    isError,
+  } = useTeacher(teacherId);
+
+  const updateTeacherMutation = useUpdateTeacher(teacherId);
+  const exportPdfMutation = useExportTeacherPdf();
 
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
@@ -69,8 +76,6 @@ export default function TeacherDetailPage() {
   const [profileImageInputKey, setProfileImageInputKey] = useState(0);
   const [color, setColor] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
 
   function syncForm(data: TeacherDetail) {
     setName(data.name);
@@ -83,45 +88,10 @@ export default function TeacherDetailPage() {
   }
 
   useEffect(() => {
-    if (Number.isNaN(teacherId)) {
-      return;
+    if (teacher) {
+      syncForm(teacher);
     }
-
-    let cancelled = false;
-
-    async function load() {
-      setIsLoading(true);
-      setError(null);
-      setTeacher(null);
-
-      try {
-        const data = await getTeacher(teacherId);
-
-        if (!cancelled) {
-          if (!data) {
-            setError("Učitelj ni bil najden.");
-          } else {
-            setTeacher(data);
-            syncForm(data);
-          }
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Učitelja ni bilo mogoče naložiti.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [teacherId]);
+  }, [teacher]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -156,27 +126,22 @@ export default function TeacherDetailPage() {
     }
 
     setValidationError(null);
-    setIsSubmitting(true);
 
     try {
-      const updated = await updateTeacher(
-        teacher.id,
-        {
+      const updated = await updateTeacherMutation.mutateAsync({
+        data: {
           name: trimmedName,
           surname: trimmedSurname,
           email: trimmedEmail,
           color: trimmedColor || null,
         },
         profileImage,
-      );
-      setTeacher(updated);
+      });
       syncForm(updated);
       toast.success("Podatki učitelja so posodobljeni.");
-    } catch (error: any) {
+    } catch (error: unknown) {
       setValidationError("Podatkov ni bilo mogoče shraniti.");
       console.error(error);
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
@@ -185,10 +150,8 @@ export default function TeacherDetailPage() {
       return;
     }
 
-    setIsExporting(true);
-
     try {
-      const blob = await exportTeacherPdf(teacher.id);
+      const blob = await exportPdfMutation.mutateAsync(teacher.id);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -198,10 +161,11 @@ export default function TeacherDetailPage() {
       toast.success("Izvoz PDF je pripravljen.");
     } catch {
       toast.error("Izvoza PDF ni bilo mogoče ustvariti.");
-    } finally {
-      setIsExporting(false);
     }
   }
+
+  const isSubmitting = updateTeacherMutation.isPending;
+  const isExporting = exportPdfMutation.isPending;
 
   if (isLoading) {
     return (
@@ -211,7 +175,7 @@ export default function TeacherDetailPage() {
     );
   }
 
-  if (error || !teacher) {
+  if (isError || !teacher) {
     return (
       <div className="container py-8">
         <Link
@@ -225,7 +189,9 @@ export default function TeacherDetailPage() {
           <CardHeader>
             <CardTitle>Učitelj ni na voljo</CardTitle>
             <CardDescription>
-              {error ?? "Učitelj ni bil najden."}
+              {isError
+                ? "Učitelja ni bilo mogoče naložiti."
+                : "Učitelj ni bil najden."}
             </CardDescription>
           </CardHeader>
         </Card>

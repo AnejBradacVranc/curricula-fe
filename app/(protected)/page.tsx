@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { TeachersPanel } from "@/app/(protected)/_components/teachers-panel";
 import {
@@ -13,36 +12,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAdditionalActivities } from "@/lib/queries/additional-activities/queries";
 import { usePrograms } from "@/lib/queries/programs/queries";
-import { teacherKeys } from "@/lib/queries/teachers/keys";
-import { useTeachers } from "@/lib/queries/teachers/queries";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const [draggingTeacherId, setDraggingTeacherId] = useState<number | null>(
-    null,
-  );
 
   const {
     data: programs = [],
     isLoading: programsLoading,
     isError: programsError,
   } = usePrograms();
-  const {
-    data: teachers = [],
-    isLoading: teachersLoading,
-    isError: teachersError,
-  } = useTeachers();
-  const {
-    data: additionalActivities = [],
-    isLoading: activitiesLoading,
-    isError: activitiesError,
-  } = useAdditionalActivities();
 
-  const isLoading = programsLoading || teachersLoading || activitiesLoading;
-  const isError = programsError || teachersError || activitiesError;
   const firstProgramId = programs[0]?.id;
 
   useEffect(() => {
@@ -53,7 +33,7 @@ export default function DashboardPage() {
     router.replace(`/${firstProgramId}`);
   }, [firstProgramId, programsLoading, router]);
 
-  if (isLoading || firstProgramId != null) {
+  if (programsLoading || firstProgramId != null) {
     return (
       <div className="container py-8">
         <Skeleton className="h-48 w-full rounded-xl" />
@@ -61,7 +41,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (isError) {
+  if (programsError) {
     return (
       <div className="container py-8">
         <Card className="border-destructive/30">
@@ -88,13 +68,7 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <TeachersPanel
-              teachers={teachers}
-              additionalActivities={additionalActivities}
-              draggingTeacherId={draggingTeacherId}
-              onDragStart={setDraggingTeacherId}
-              onDragEnd={() => setDraggingTeacherId(null)}
-            />
+            <TeachersPanel />
           </CardContent>
         </Card>
       </div>

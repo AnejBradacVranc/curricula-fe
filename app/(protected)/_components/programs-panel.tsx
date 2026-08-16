@@ -12,22 +12,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePrograms } from "@/lib/queries/programs/queries";
 import { cn } from "@/lib/utils";
-import type { Program } from "@/types";
-import { ProgramLean } from "@/types/entities/program";
 
 type ProgramsPanelProps = {
-  programs: ProgramLean[];
   selectedProgramId: number;
   onSelectProgram: (programId: number) => void;
 };
 
 export function ProgramsPanel({
-  programs,
   selectedProgramId,
   onSelectProgram,
 }: ProgramsPanelProps) {
   const [query, setQuery] = useState("");
+  const { data: programs = [], isLoading, isError } = usePrograms();
 
   const filteredPrograms = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -68,7 +67,17 @@ export function ProgramsPanel({
       </CardHeader>
 
       <CardContent className="min-h-0 flex-1 overflow-hidden p-0">
-        {filteredPrograms.length === 0 ? (
+        {isLoading ? (
+          <div className="space-y-2 p-3">
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+          </div>
+        ) : isError ? (
+          <p className="px-(--card-spacing) py-8 text-center text-sm text-destructive">
+            Programov ni bilo mogoče naložiti.
+          </p>
+        ) : filteredPrograms.length === 0 ? (
           <p className="px-(--card-spacing) py-8 text-center text-sm text-muted-foreground">
             {programs.length === 0
               ? "Ni programov."

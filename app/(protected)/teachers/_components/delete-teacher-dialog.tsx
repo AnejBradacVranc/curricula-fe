@@ -13,24 +13,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { deleteTeacher } from "@/lib/api";
+import { useDeleteTeacher } from "@/lib/queries/teachers/mutations";
 import type { Teacher } from "@/types";
 
 type DeleteTeacherDialogProps = {
   teacher: Teacher | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDeleted?: () => void | Promise<void>;
 };
 
 export function DeleteTeacherDialog({
   teacher,
   open,
   onOpenChange,
-  onDeleted,
 }: DeleteTeacherDialogProps) {
   const [error, setError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteTeacherMutation = useDeleteTeacher();
 
   const teacherLabel = teacher
     ? `${teacher.name} ${teacher.surname}`
@@ -39,7 +37,6 @@ export function DeleteTeacherDialog({
   useEffect(() => {
     if (!open) {
       setError(null);
-      setIsDeleting(false);
     }
   }, [open]);
 
@@ -48,21 +45,20 @@ export function DeleteTeacherDialog({
       return;
     }
 
-    setIsDeleting(true);
     setError(null);
 
     try {
-      await deleteTeacher(teacher.id);
+      await deleteTeacherMutation.mutateAsync(teacher.id);
       toast.success("Učitelj je bil uspešno izbrisan.", {
         description: teacherLabel ?? undefined,
       });
       onOpenChange(false);
-      await onDeleted?.();
     } catch {
       setError("Učitelja ni bilo mogoče izbrisati. Poskusite znova.");
-      setIsDeleting(false);
     }
   }
+
+  const isDeleting = deleteTeacherMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

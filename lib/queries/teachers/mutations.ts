@@ -46,8 +46,8 @@ export function useUpdateTeacher(id: number) {
       data: UpdateTeacherRequest;
       profileImage?: File | null;
     }) => updateTeacher(id, data, profileImage),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: teacherKeys.detail(id) });
+    onSuccess: (updated) => {
+      queryClient.setQueryData(teacherKeys.detail(id), updated);
       void queryClient.invalidateQueries({ queryKey: teacherKeys.list() });
     },
   });
