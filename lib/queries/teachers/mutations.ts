@@ -18,9 +18,8 @@ export function useCreateTeacher() {
 
   return useMutation({
     mutationFn: (data: CreateTeacherRequest) => createTeacher(data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: teacherKeys.list() });
-    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: teacherKeys.list() }),
   });
 }
 
@@ -29,9 +28,8 @@ export function useCreateTeachers() {
 
   return useMutation({
     mutationFn: (data: CreateTeachersRequest) => createTeachers(data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: teacherKeys.list() });
-    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: teacherKeys.list() }),
   });
 }
 
@@ -48,7 +46,7 @@ export function useUpdateTeacher(id: number) {
     }) => updateTeacher(id, data, profileImage),
     onSuccess: (updated) => {
       queryClient.setQueryData(teacherKeys.detail(id), updated);
-      void queryClient.invalidateQueries({ queryKey: teacherKeys.list() });
+      return queryClient.invalidateQueries({ queryKey: teacherKeys.list() });
     },
   });
 }
@@ -58,9 +56,10 @@ export function useDeleteTeacher() {
 
   return useMutation({
     mutationFn: (id: number) => deleteTeacher(id),
-    onSuccess: (_data, id) => {
-      void queryClient.invalidateQueries({ queryKey: teacherKeys.detail(id) });
-      void queryClient.invalidateQueries({ queryKey: teacherKeys.list() });
-    },
+    onSuccess: (_data, id) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: teacherKeys.detail(id) }),
+        queryClient.invalidateQueries({ queryKey: teacherKeys.list() }),
+      ]),
   });
 }

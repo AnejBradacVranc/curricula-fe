@@ -14,9 +14,8 @@ export function useCreateProgram() {
 
   return useMutation({
     mutationFn: (data: CreateProgramRequest) => createProgram(data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: programKeys.lists() });
-    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: programKeys.lists() }),
   });
 }
 
@@ -25,13 +24,14 @@ export function useImportProgram() {
 
   return useMutation({
     mutationFn: (data: ImportProgramRequest) => importProgram(data),
-    onSuccess: (program) => {
-      void queryClient.invalidateQueries({ queryKey: programKeys.lists() });
-      void queryClient.invalidateQueries({
-        queryKey: programKeys.detail(program.id),
-      });
-      void queryClient.invalidateQueries({ queryKey: subjectKeys.lists() });
-    },
+    onSuccess: (program) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: programKeys.lists() }),
+        queryClient.invalidateQueries({
+          queryKey: programKeys.detail(program.id),
+        }),
+        queryClient.invalidateQueries({ queryKey: subjectKeys.lists() }),
+      ]),
   });
 }
 
@@ -40,9 +40,10 @@ export function useDeleteProgram() {
 
   return useMutation({
     mutationFn: (id: number) => deleteProgram(id),
-    onSuccess: (_data, id) => {
-      void queryClient.invalidateQueries({ queryKey: programKeys.detail(id) });
-      void queryClient.invalidateQueries({ queryKey: programKeys.lists() });
-    },
+    onSuccess: (_data, id) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: programKeys.detail(id) }),
+        queryClient.invalidateQueries({ queryKey: programKeys.lists() }),
+      ]),
   });
 }

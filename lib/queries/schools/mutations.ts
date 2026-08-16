@@ -9,9 +9,10 @@ export function useCreateSchool() {
 
   return useMutation({
     mutationFn: (data: CreateSchoolRequest) => createSchool(data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: schoolKeys.lists() });
-      void queryClient.invalidateQueries({ queryKey: schoolKeys.me() });
-    },
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: schoolKeys.lists() }),
+        queryClient.invalidateQueries({ queryKey: schoolKeys.me() }),
+      ]),
   });
 }
