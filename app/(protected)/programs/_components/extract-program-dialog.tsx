@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, FileUp, Loader2, ScanText } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  FileUp,
+  Loader2,
+  ScanText,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,6 +53,7 @@ type ExtractProgramDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
+//TODO could be better
 function collectNewSubjects(
   preview: ResolvedExtractProgram,
 ): ResolvedExtractProgramSubject[] {
