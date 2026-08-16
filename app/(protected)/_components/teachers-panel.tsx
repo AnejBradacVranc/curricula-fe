@@ -25,7 +25,6 @@ type TeachersPanelProps = {
   draggingTeacherId: number | null;
   onDragStart: (teacherId: number) => void;
   onDragEnd: () => void;
-  onTeacherUpdated?: () => void;
 };
 
 export function TeachersPanel({
@@ -34,7 +33,6 @@ export function TeachersPanel({
   draggingTeacherId,
   onDragStart,
   onDragEnd,
-  onTeacherUpdated,
 }: TeachersPanelProps) {
   const [detailTeacherId, setDetailTeacherId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
@@ -190,7 +188,6 @@ export function TeachersPanel({
             setDetailTeacherId(null);
           }
         }}
-        onTeacherUpdated={onTeacherUpdated}
       />
     </>
   );
