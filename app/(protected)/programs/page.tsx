@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   BookOpen,
@@ -25,11 +25,10 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getCategories, getPrograms } from "@/lib/api";
-import { cn } from "@/lib/utils";
-import type { Category } from "@/types";
 import { useIsMobile } from "@/hooks/use-is-mobile";
-import { ProgramLean } from "@/types/entities/program";
+import { usePrograms } from "@/lib/queries/programs/queries";
+import { cn } from "@/lib/utils";
+import type { ProgramLean } from "@/types/entities/program";
 
 function ProgramsSkeleton() {
   return (
@@ -66,53 +65,18 @@ function ProgramsSkeleton() {
 }
 
 export default function ProgramsPage() {
-  const [programs, setPrograms] = useState<ProgramLean[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isExtractOpen, setIsExtractOpen] = useState(false);
-
   const [programToDelete, setProgramToDelete] =
     useState<ProgramLean | null>(null);
 
   const isMobile = useIsMobile();
 
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadPrograms() {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const [programsData, categoriesData] = await Promise.all([
-          getPrograms(),
-          getCategories(),
-        ]);
-
-        if (!cancelled) {
-          setPrograms(programsData);
-          setCategories(categoriesData);
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Podatkov ni bilo mogoče naložiti. Poskusite znova.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void loadPrograms();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const {
+    data: programs = [],
+    isLoading,
+    isError,
+  } = usePrograms();
 
   if (isLoading) {
     return (
@@ -122,13 +86,15 @@ export default function ProgramsPage() {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <div className="container py-8">
         <Card className="border-destructive/30">
           <CardHeader>
             <CardTitle>Napaka pri nalaganju</CardTitle>
-            <CardDescription>{error}</CardDescription>
+            <CardDescription>
+              Podatkov ni bilo mogoče naložiti. Poskusite znova.
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -251,14 +217,6 @@ export default function ProgramsPage() {
       <ExtractProgramDialog
         open={isExtractOpen}
         onOpenChange={setIsExtractOpen}
-        categories={categories}
-        onImported={async () => {
-          try {
-            setPrograms(await getPrograms());
-          } catch {
-            setError("Podatkov ni bilo mogoče naložiti. Poskusite znova.");
-          }
-        }}
       />
 
       <DeleteProgramDialog
@@ -268,12 +226,6 @@ export default function ProgramsPage() {
           if (!open) {
             setProgramToDelete(null);
           }
-        }}
-        onDeleted={(programId) => {
-          setPrograms((current) =>
-            current.filter((item) => item.id !== programId),
-          );
-          setProgramToDelete(null);
         }}
       />
     </div>

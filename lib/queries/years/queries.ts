@@ -3,9 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 
 import { yearKeys } from "./keys";
 
-export function useYears() {
+export function useYears(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: yearKeys.list(),
     queryFn: getYears,
+    enabled: options?.enabled ?? true,
   });
 }

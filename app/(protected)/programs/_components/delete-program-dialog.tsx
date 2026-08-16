@@ -13,29 +13,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { deleteProgram } from "@/lib/api";
-import { ProgramLean } from "@/types/entities/program";
+import { useDeleteProgram } from "@/lib/queries/programs/mutations";
+import type { ProgramLean } from "@/types/entities/program";
 
 type DeleteProgramDialogProps = {
   program: ProgramLean | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDeleted: (programId: number) => void;
 };
 
 export function DeleteProgramDialog({
   program,
   open,
   onOpenChange,
-  onDeleted,
 }: DeleteProgramDialogProps) {
   const [error, setError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteProgramMutation = useDeleteProgram();
 
   useEffect(() => {
     if (!open) {
       setError(null);
-      setIsDeleting(false);
     }
   }, [open]);
 
@@ -44,21 +41,20 @@ export function DeleteProgramDialog({
       return;
     }
 
-    setIsDeleting(true);
     setError(null);
 
     try {
-      await deleteProgram(program.id);
+      await deleteProgramMutation.mutateAsync(program.id);
       toast.success("Program je bil uspešno izbrisan.", {
         description: program.name,
       });
-      onDeleted(program.id);
       onOpenChange(false);
     } catch {
       setError("Programa ni bilo mogoče izbrisati. Poskusite znova.");
-      setIsDeleting(false);
     }
   }
+
+  const isDeleting = deleteProgramMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

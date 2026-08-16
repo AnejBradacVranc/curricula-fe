@@ -6,6 +6,7 @@ import {
 import type { CreateProgramRequest, ImportProgramRequest } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { subjectKeys } from "../subjects/keys";
 import { programKeys } from "./keys";
 
 export function useCreateProgram() {
@@ -29,6 +30,7 @@ export function useImportProgram() {
       void queryClient.invalidateQueries({
         queryKey: programKeys.detail(program.id),
       });
+      void queryClient.invalidateQueries({ queryKey: subjectKeys.lists() });
     },
   });
 }

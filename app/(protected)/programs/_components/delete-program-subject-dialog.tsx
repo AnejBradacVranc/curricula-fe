@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { deleteProgramSubject } from "@/lib/api";
+import { useDeleteProgramSubject } from "@/lib/queries/program-subjects/mutations";
 import type { ProgramSubjectItem } from "@/types";
 
 type DeleteProgramSubjectDialogProps = {
@@ -21,7 +21,6 @@ type DeleteProgramSubjectDialogProps = {
   onOpenChange: (open: boolean) => void;
   programId: number;
   programSubject: ProgramSubjectItem | null;
-  onDeleted?: () => void | Promise<void>;
 };
 
 export function DeleteProgramSubjectDialog({
@@ -29,10 +28,9 @@ export function DeleteProgramSubjectDialog({
   onOpenChange,
   programId,
   programSubject,
-  onDeleted,
 }: DeleteProgramSubjectDialogProps) {
   const [error, setError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteProgramSubjectMutation = useDeleteProgramSubject();
 
   const subjectLabel = programSubject
     ? `${programSubject.subject.name} (${programSubject.programYear.year.name})`
@@ -41,7 +39,6 @@ export function DeleteProgramSubjectDialog({
   useEffect(() => {
     if (!open) {
       setError(null);
-      setIsDeleting(false);
     }
   }, [open]);
 
@@ -50,11 +47,10 @@ export function DeleteProgramSubjectDialog({
       return;
     }
 
-    setIsDeleting(true);
     setError(null);
 
     try {
-      await deleteProgramSubject({
+      await deleteProgramSubjectMutation.mutateAsync({
         programId,
         subjectId: programSubject.subjectId,
         yearId: programSubject.yearId,
@@ -63,12 +59,12 @@ export function DeleteProgramSubjectDialog({
         description: subjectLabel ?? undefined,
       });
       onOpenChange(false);
-      await onDeleted?.();
     } catch {
       setError("Predmeta ni bilo mogoče odstraniti. Poskusite znova.");
-      setIsDeleting(false);
     }
   }
+
+  const isDeleting = deleteProgramSubjectMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

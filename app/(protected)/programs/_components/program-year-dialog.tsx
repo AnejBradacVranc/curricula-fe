@@ -22,34 +22,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createProgramYear, updateProgramYear } from "@/lib/api";
-import type { ProgramYear, Year } from "@/types";
+import {
+  useCreateProgramYear,
+  useUpdateProgramYear,
+} from "@/lib/queries/program-years/mutations";
+import { useProgram } from "@/lib/queries/programs/queries";
+import { useYears } from "@/lib/queries/years/queries";
+import type { ProgramYear } from "@/types";
 
 type ProgramYearDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   programId: number;
-  years: Year[];
-  programYears: ProgramYear[];
   editingProgramYear: ProgramYear | null;
-  onProgramYearSaved?: () => void | Promise<void>;
 };
 
 export function ProgramYearDialog({
   open,
   onOpenChange,
   programId,
-  years,
-  programYears,
   editingProgramYear,
-  onProgramYearSaved,
 }: ProgramYearDialogProps) {
+  const { data: program } = useProgram(programId);
+  const { data: years = [] } = useYears({ enabled: open });
+  const createProgramYearMutation = useCreateProgramYear();
+  const updateProgramYearMutation = useUpdateProgramYear();
+
+  const programYears = program?.programYears ?? [];
   const isEditing = editingProgramYear !== null;
 
   const [selectedYearId, setSelectedYearId] = useState<number | null>(null);
   const [numWeeks, setNumWeeks] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectableYears = useMemo(() => {
     if (isEditing) {
@@ -57,7 +61,6 @@ export function ProgramYearDialog({
     }
 
     const assignedYearIds = new Set(programYears.map((item) => item.yearId));
-
     return years.filter((year) => !assignedYearIds.has(year.id));
   }, [isEditing, programYears, years]);
 
@@ -67,7 +70,6 @@ export function ProgramYearDialog({
     }
 
     setValidationError(null);
-    setIsSubmitting(false);
     setSelectedYearId(editingProgramYear?.yearId ?? null);
     setNumWeeks(editingProgramYear ? String(editingProgramYear.numWeeks) : "");
   }, [open, editingProgramYear]);
@@ -75,7 +77,6 @@ export function ProgramYearDialog({
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
       setValidationError(null);
-      setIsSubmitting(false);
     }
 
     onOpenChange(nextOpen);
@@ -97,18 +98,17 @@ export function ProgramYearDialog({
     }
 
     setValidationError(null);
-    setIsSubmitting(true);
 
     try {
       if (isEditing) {
-        await updateProgramYear({
+        await updateProgramYearMutation.mutateAsync({
           programId,
           yearId: selectedYearId,
           numWeeks: weeks,
         });
         toast.success("Letnik je bil uspešno posodobljen.");
       } else {
-        await createProgramYear({
+        await createProgramYearMutation.mutateAsync({
           programId,
           yearId: selectedYearId,
           numWeeks: weeks,
@@ -117,16 +117,17 @@ export function ProgramYearDialog({
       }
 
       handleOpenChange(false);
-      await onProgramYearSaved?.();
     } catch {
       toast.error(
         isEditing
           ? "Letnika ni bilo mogoče posodobiti. Poskusite znova."
           : "Letnika ni bilo mogoče dodati. Poskusite znova.",
       );
-      setIsSubmitting(false);
     }
   }
+
+  const isSubmitting =
+    createProgramYearMutation.isPending || updateProgramYearMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>

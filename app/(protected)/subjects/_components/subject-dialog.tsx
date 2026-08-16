@@ -22,31 +22,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createSubject, updateSubject } from "@/lib/api";
-import type { Category, Subject } from "@/types";
+import { useCategories } from "@/lib/queries/categories/queries";
+import {
+  useCreateSubject,
+  useUpdateSubject,
+} from "@/lib/queries/subjects/mutations";
+import type { Subject } from "@/types";
 
 type SubjectDialogProps = {
   open: boolean;
-  categories: Category[];
   editingSubject: Subject | null;
   onOpenChange: (open: boolean) => void;
-  onSubjectSaved?: () => void | Promise<void>;
 };
 
 export function SubjectDialog({
   open,
-  categories,
   editingSubject,
   onOpenChange,
-  onSubjectSaved,
 }: SubjectDialogProps) {
   const isEditing = editingSubject !== null;
+
+  const { data: categories = [] } = useCategories({ enabled: open });
+  const createSubjectMutation = useCreateSubject();
+  const updateSubjectMutation = useUpdateSubject();
 
   const [name, setName] = useState("");
   const [abbrevation, setAbbrevation] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -54,7 +57,6 @@ export function SubjectDialog({
     }
 
     setValidationError(null);
-    setIsSubmitting(false);
     setName(editingSubject?.name ?? "");
     setAbbrevation(editingSubject?.abbrevation ?? "");
     setCategoryId(editingSubject?.categoryId ?? null);
@@ -63,7 +65,6 @@ export function SubjectDialog({
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
       setValidationError(null);
-      setIsSubmitting(false);
     }
 
     onOpenChange(nextOpen);
@@ -91,11 +92,10 @@ export function SubjectDialog({
     }
 
     setValidationError(null);
-    setIsSubmitting(true);
 
     try {
       if (isEditing && editingSubject) {
-        await updateSubject({
+        await updateSubjectMutation.mutateAsync({
           id: editingSubject.id,
           name: trimmedName,
           abbrevation: trimmedAbbrevation,
@@ -103,7 +103,7 @@ export function SubjectDialog({
         });
         toast.success("Predmet je bil uspešno posodobljen.");
       } else {
-        await createSubject({
+        await createSubjectMutation.mutateAsync({
           name: trimmedName,
           abbrevation: trimmedAbbrevation,
           categoryId,
@@ -112,16 +112,17 @@ export function SubjectDialog({
       }
 
       handleOpenChange(false);
-      await onSubjectSaved?.();
     } catch {
       toast.error(
         isEditing
           ? "Predmeta ni bilo mogoče posodobiti. Poskusite znova."
           : "Predmeta ni bilo mogoče ustvariti. Poskusite znova.",
       );
-      setIsSubmitting(false);
     }
   }
+
+  const isSubmitting =
+    createSubjectMutation.isPending || updateSubjectMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>

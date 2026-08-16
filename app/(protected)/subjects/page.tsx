@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BookOpen, Pencil, Plus } from "lucide-react";
 
 import { SubjectDialog } from "@/app/(protected)/subjects/_components/subject-dialog";
@@ -20,9 +20,9 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-is-mobile";
-import { getCategories, getSubjects } from "@/lib/api";
+import { useSubjects } from "@/lib/queries/subjects/queries";
 import { cn } from "@/lib/utils";
-import type { Category, Subject } from "@/types";
+import type { Subject } from "@/types";
 
 function SubjectsSkeleton() {
   return (
@@ -59,58 +59,15 @@ function groupSubjectsByCategory(subjects: Subject[]) {
 }
 
 export default function SubjectsPage() {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const isMobile = useIsMobile();
 
-  const refreshSubjects = async () => {
-    try {
-      const subjectsData = await getSubjects();
-      setSubjects(subjectsData);
-      setError(null);
-    } catch {
-      setError("Podatkov ni bilo mogoče naložiti. Poskusite znova.");
-    }
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const [subjectsData, categoriesData] = await Promise.all([
-          getSubjects(),
-          getCategories(),
-        ]);
-
-        if (!cancelled) {
-          setSubjects(subjectsData);
-          setCategories(categoriesData);
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Podatkov ni bilo mogoče naložiti. Poskusite znova.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const {
+    data: subjects = [],
+    isLoading,
+    isError,
+  } = useSubjects();
 
   function openCreateDialog() {
     setEditingSubject(null);
@@ -132,13 +89,15 @@ export default function SubjectsPage() {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <div className="container py-8">
         <Card className="border-destructive/30">
           <CardHeader>
             <CardTitle>Napaka pri nalaganju</CardTitle>
-            <CardDescription>{error}</CardDescription>
+            <CardDescription>
+              Podatkov ni bilo mogoče naložiti. Poskusite znova.
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -242,7 +201,6 @@ export default function SubjectsPage() {
 
       <SubjectDialog
         open={isDialogOpen}
-        categories={categories}
         editingSubject={editingSubject}
         onOpenChange={(open) => {
           setIsDialogOpen(open);
@@ -250,7 +208,6 @@ export default function SubjectsPage() {
             setEditingSubject(null);
           }
         }}
-        onSubjectSaved={refreshSubjects}
       />
     </div>
   );
