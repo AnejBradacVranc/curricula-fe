@@ -7,9 +7,10 @@ import type {
 } from "@/types";
 import { api } from "./axios";
 import { unwrap } from "./unwrap";
+import { ProgramLean } from "@/types/entities/program";
 
 export const getPrograms = () =>
-  unwrap(api.get<ApiResponse<ProgramWithRelations[]>>("/schools/programs"));
+  unwrap(api.get<ApiResponse<ProgramLean[]>>("/schools/programs"));
 
 export const getProgram = (id: number) =>
   unwrap(api.get<ApiResponse<ProgramWithRelations>>(`/schools/programs/${id}`));

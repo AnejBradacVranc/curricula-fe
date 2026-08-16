@@ -14,9 +14,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { Program } from "@/types";
+import { ProgramLean } from "@/types/entities/program";
 
 type ProgramsPanelProps = {
-  programs: Program[];
+  programs: ProgramLean[];
   selectedProgramId: number;
   onSelectProgram: (programId: number) => void;
 };

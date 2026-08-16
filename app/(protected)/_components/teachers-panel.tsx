@@ -16,8 +16,8 @@ import { cn } from "@/lib/utils";
 import { formatHours } from "@/lib/curriculum/format-hours";
 import { hasColor } from "@/lib/teacher-color";
 import type { AdditionalActivity, Teacher } from "@/types";
-import { setTeacherDragData } from "./drag";
 import { TeacherDetailDialog } from "./teacher-detail-dialog";
+import { setTeacherDragData } from "./drag";
 
 type TeachersPanelProps = {
   teachers: Teacher[];

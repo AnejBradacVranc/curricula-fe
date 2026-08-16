@@ -72,9 +72,7 @@ export function Navigation() {
   const { isAuthenticated, isLoading, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const visibleLinks = navLinks.filter(
-    (link) => !link.auth || isAuthenticated,
-  );
+  const visibleLinks = navLinks.filter((link) => !link.auth || isAuthenticated);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -88,8 +86,9 @@ export function Navigation() {
 
   function isActive(href: string) {
     if (href === "/") {
-      return pathname === "/";
+      return pathname === "/" || /^\/\d+$/.test(pathname);
     }
+
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
@@ -116,7 +115,10 @@ export function Navigation() {
             >
               <Menu />
             </SheetTrigger>
-            <SheetContent side="right" className="w-[min(100%,20rem)] gap-0 p-0">
+            <SheetContent
+              side="right"
+              className="w-[min(100%,20rem)] gap-0 p-0"
+            >
               <SheetHeader className="border-b">
                 <SheetTitle>Meni</SheetTitle>
                 <SheetDescription>
@@ -136,7 +138,7 @@ export function Navigation() {
                       className={cn(
                         "h-auto justify-start gap-3 px-3 py-3",
                         isActive(link.href) &&
-                        "bg-primary text-foreground hover:bg-primary/50",
+                          "bg-primary text-foreground hover:bg-primary/50",
                       )}
                       render={
                         <Link
@@ -148,7 +150,12 @@ export function Navigation() {
                       <Icon className="size-4 shrink-0" />
                       <span className="flex min-w-0 flex-col items-start gap-0.5">
                         <span className="font-medium">{link.label}</span>
-                        <span className={cn("text-xs font-normal text-muted-foreground text-wrap", isActive(link.href) && "text-primary-foreground")}>
+                        <span
+                          className={cn(
+                            "text-xs font-normal text-muted-foreground text-wrap",
+                            isActive(link.href) && "text-primary-foreground",
+                          )}
+                        >
                           {link.description}
                         </span>
                       </span>
@@ -197,7 +204,7 @@ export function Navigation() {
                 render={<Link href={link.href} />}
                 className={cn(
                   isActive(link.href) &&
-                  "bg-primary text-foreground hover:bg-primary/50",
+                    "bg-primary text-foreground hover:bg-primary/50",
                 )}
               >
                 {link.label}

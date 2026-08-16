@@ -14,10 +14,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { deleteProgram } from "@/lib/api";
-import type { ProgramWithRelations } from "@/types";
+import { ProgramLean } from "@/types/entities/program";
 
 type DeleteProgramDialogProps = {
-  program: ProgramWithRelations | null;
+  program: ProgramLean | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDeleted: (programId: number) => void;
@@ -67,9 +67,7 @@ export function DeleteProgramDialog({
           <DialogTitle>Izbriši program</DialogTitle>
           <DialogDescription>
             Ali ste prepričani, da želite izbrisati program{" "}
-            <span className="font-medium text-foreground">
-              {program?.name}
-            </span>
+            <span className="font-medium text-foreground">{program?.name}</span>
             ? Tega dejanja ni mogoče razveljaviti.
           </DialogDescription>
         </DialogHeader>

@@ -26,3 +26,11 @@ export interface ProgramWithRelations extends Program {
   programYears: ProgramYear[];
   programSubjects: ProgramSubjectItem[];
 }
+
+export interface ProgramLean extends Program {
+  programYears: { numWeeks: number }[];
+  programSubjects: {
+    requiredHours: string;
+    subject: { name: string; abbrevation: string };
+  }[];
+}

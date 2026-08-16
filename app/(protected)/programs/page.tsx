@@ -27,8 +27,9 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCategories, getPrograms } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import type { Category, ProgramWithRelations } from "@/types";
+import type { Category } from "@/types";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+import { ProgramLean } from "@/types/entities/program";
 
 function ProgramsSkeleton() {
   return (
@@ -65,7 +66,7 @@ function ProgramsSkeleton() {
 }
 
 export default function ProgramsPage() {
-  const [programs, setPrograms] = useState<ProgramWithRelations[]>([]);
+  const [programs, setPrograms] = useState<ProgramLean[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +74,7 @@ export default function ProgramsPage() {
   const [isExtractOpen, setIsExtractOpen] = useState(false);
 
   const [programToDelete, setProgramToDelete] =
-    useState<ProgramWithRelations | null>(null);
+    useState<ProgramLean | null>(null);
 
   const isMobile = useIsMobile();
 
@@ -185,7 +186,7 @@ export default function ProgramsPage() {
                 {programs.map((program) => {
                   const yearCount = program.programYears.length;
                   const subjectCount = new Set(
-                    program.programSubjects.map((item) => item.subjectId),
+                    program.programSubjects.map((item) => item.subject),
                   ).size;
 
                   return (
