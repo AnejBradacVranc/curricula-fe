@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClass } from "@/lib/api";
+import { useCreateClass } from "@/lib/queries/classes/mutations";
 import type { ProgramYear } from "@/types";
 
 type CreateClassDialogProps = {
@@ -23,7 +23,6 @@ type CreateClassDialogProps = {
   onOpenChange: (open: boolean) => void;
   programId: number;
   programYear: ProgramYear | null;
-  onCreated?: () => void | Promise<void>;
 };
 
 export function CreateClassDialog({
@@ -31,17 +30,15 @@ export function CreateClassDialog({
   onOpenChange,
   programId,
   programYear,
-  onCreated,
 }: CreateClassDialogProps) {
+  const createClassMutation = useCreateClass();
   const [label, setLabel] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!open) {
       setLabel("");
       setError(null);
-      setIsSubmitting(false);
     }
   }, [open]);
 
@@ -49,7 +46,6 @@ export function CreateClassDialog({
     if (!nextOpen) {
       setLabel("");
       setError(null);
-      setIsSubmitting(false);
     }
 
     onOpenChange(nextOpen);
@@ -79,10 +75,9 @@ export function CreateClassDialog({
     }
 
     setError(null);
-    setIsSubmitting(true);
 
     try {
-      const created = await createClass({
+      const created = await createClassMutation.mutateAsync({
         programId,
         yearId: programYear.yearId,
         label: trimmedLabel,
@@ -91,12 +86,12 @@ export function CreateClassDialog({
         description: `${programYear.year.name.slice(0, 1)}. ${created.label.toUpperCase()}`,
       });
       handleOpenChange(false);
-      await onCreated?.();
     } catch {
       setError("Razreda ni bilo mogoče dodati. Poskusite znova.");
-      setIsSubmitting(false);
     }
   }
+
+  const isSubmitting = createClassMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>

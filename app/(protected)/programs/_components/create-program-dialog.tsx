@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createProgram } from "@/lib/api";
+import { useCreateProgram } from "@/lib/queries/programs/mutations";
 
 type CreateProgramDialogProps = {
   open: boolean;
@@ -27,14 +27,13 @@ export function CreateProgramDialog({
   onOpenChange,
 }: CreateProgramDialogProps) {
   const router = useRouter();
+  const createProgramMutation = useCreateProgram();
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function resetForm() {
     setName("");
     setError(null);
-    setIsSubmitting(false);
   }
 
   function handleOpenChange(nextOpen: boolean) {
@@ -55,18 +54,20 @@ export function CreateProgramDialog({
       return;
     }
 
-    setIsSubmitting(true);
     setError(null);
 
     try {
-      const program = await createProgram({ name: trimmedName });
+      const program = await createProgramMutation.mutateAsync({
+        name: trimmedName,
+      });
       handleOpenChange(false);
       router.push(`/programs/${program.id}`);
     } catch {
       setError("Programa ni bilo mogoče ustvariti. Poskusite znova.");
-      setIsSubmitting(false);
     }
   }
+
+  const isSubmitting = createProgramMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>

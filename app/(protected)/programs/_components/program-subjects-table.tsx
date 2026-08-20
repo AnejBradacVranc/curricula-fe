@@ -13,26 +13,21 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatHours, sumHours } from "@/lib/curriculum/format-hours";
-import type {
-  ProgramSubjectItem,
-  ProgramWithRelations,
-  Subject,
-} from "@/types";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+import { formatHours, sumHours } from "@/lib/curriculum/format-hours";
+import { useProgram } from "@/lib/queries/programs/queries";
+import type { ProgramSubjectItem } from "@/types";
 
 type ProgramSubjectsTableProps = {
-  program: ProgramWithRelations;
-  subjects: Subject[];
-  onSubjectSaved?: () => void | Promise<void>;
+  programId: number;
 };
 
 export function ProgramSubjectsTable({
-  program,
-  subjects,
-  onSubjectSaved,
+  programId,
 }: ProgramSubjectsTableProps) {
-  const years = program.programYears;
+  const { data: program } = useProgram(programId);
+  const years = program?.programYears ?? [];
+  const programSubjects = program?.programSubjects ?? [];
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProgramSubject, setEditingProgramSubject] =
@@ -42,7 +37,7 @@ export function ProgramSubjectsTable({
 
   const sections = years
     .map((programYear) => {
-      const yearSubjects = program.programSubjects
+      const yearSubjects = programSubjects
         .filter((item) => item.yearId === programYear.yearId)
         .sort((a, b) => a.subject.name.localeCompare(b.subject.name, "sl"));
 
@@ -157,9 +152,7 @@ export function ProgramSubjectsTable({
                                 size="icon-sm"
                                 className="text-muted-foreground hover:text-destructive"
                                 aria-label={`Odstrani ${item.subject.name}`}
-                                onClick={() =>
-                                  setDeletingProgramSubject(item)
-                                }
+                                onClick={() => setDeletingProgramSubject(item)}
                               >
                                 <Trash2 className="size-4" />
                               </Button>
@@ -277,12 +270,8 @@ export function ProgramSubjectsTable({
             setEditingProgramSubject(null);
           }
         }}
-        programYears={program.programYears}
-        programSubjects={program.programSubjects}
-        subjects={subjects}
-        programId={program.id}
+        programId={programId}
         editingProgramSubject={editingProgramSubject}
-        onSubjectSaved={onSubjectSaved}
       />
 
       <DeleteProgramSubjectDialog
@@ -292,9 +281,8 @@ export function ProgramSubjectsTable({
             setDeletingProgramSubject(null);
           }
         }}
-        programId={program.id}
+        programId={programId}
         programSubject={deletingProgramSubject}
-        onDeleted={onSubjectSaved}
       />
     </>
   );

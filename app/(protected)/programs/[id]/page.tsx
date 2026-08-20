@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, GraduationCap } from "lucide-react";
@@ -14,8 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getProgram, getSubjects, getYears } from "@/lib/api";
-import type { ProgramWithRelations, Subject, Year } from "@/types";
+import { useProgram } from "@/lib/queries/programs/queries";
 
 function ProgramDetailSkeleton() {
   return (
@@ -39,78 +37,7 @@ export default function ProgramPage() {
   const params = useParams();
   const programId = Number(params.id);
 
-  const [program, setProgram] = useState<ProgramWithRelations | null>(null);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [years, setYears] = useState<Year[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const refreshProgram = async () => {
-    if (Number.isNaN(programId)) {
-      return;
-    }
-
-    try {
-      const data = await getProgram(programId);
-
-      if (!data) {
-        setError("Program ni bil najden.");
-        setProgram(null);
-        return;
-      }
-
-      setError(null);
-      setProgram(data);
-    } catch {
-      setError("Programa ni bilo mogoče naložiti.");
-    }
-  }
-
-  useEffect(() => {
-    if (Number.isNaN(programId)) {
-      return;
-    }
-
-    let cancelled = false;
-
-    async function load() {
-      setIsLoading(true);
-      setError(null);
-      setProgram(null);
-
-      try {
-        const [data, subjectsData, yearsData] = await Promise.all([
-          getProgram(programId),
-          getSubjects(),
-          getYears(),
-        ]);
-
-        if (!cancelled) {
-          if (!data) {
-            setError("Program ni bil najden.");
-          } else {
-            setProgram(data);
-            setSubjects(subjectsData);
-            setYears(yearsData);
-          }
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Programa ni bilo mogoče naložiti.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [programId]);
+  const { data: program, isLoading, isError } = useProgram(programId);
 
   if (isLoading) {
     return (
@@ -120,7 +47,7 @@ export default function ProgramPage() {
     );
   }
 
-  if (error || !program) {
+  if (isError || !program) {
     return (
       <div className="container py-8">
         <Link
@@ -134,7 +61,9 @@ export default function ProgramPage() {
           <CardHeader>
             <CardTitle>Program ni na voljo</CardTitle>
             <CardDescription>
-              {error ?? "Program ni bil najden."}
+              {isError
+                ? "Programa ni bilo mogoče naložiti."
+                : "Program ni bil najden."}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -163,17 +92,9 @@ export default function ProgramPage() {
           <p className="text-sm text-muted-foreground">Urejanje programa</p>
         </div>
 
-        <ProgramYearsSection
-          program={program}
-          years={years}
-          onProgramYearSaved={refreshProgram}
-        />
+        <ProgramYearsSection programId={programId} />
 
-        <ProgramSubjectsTable
-          program={program}
-          subjects={subjects}
-          onSubjectSaved={refreshProgram}
-        />
+        <ProgramSubjectsTable programId={programId} />
       </div>
     </div>
   );

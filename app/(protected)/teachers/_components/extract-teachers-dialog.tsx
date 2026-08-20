@@ -13,34 +13,32 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { createTeachers, extractTeachers } from "@/lib/api";
+import { useExtractTeachers } from "@/lib/queries/extract/mutations";
+import { useCreateTeachers } from "@/lib/queries/teachers/mutations";
 import type { ExtractedTeacher } from "@/types";
 
 type ExtractTeachersDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onExtracted?: () => void | Promise<void>;
 };
 
 export function ExtractTeachersDialog({
   open,
   onOpenChange,
-  onExtracted,
 }: ExtractTeachersDialogProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<ExtractedTeacher[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
+
+  const extractTeachersMutation = useExtractTeachers();
+  const createTeachersMutation = useCreateTeachers();
 
   useEffect(() => {
     if (!open) {
       setFile(null);
       setPreview(null);
       setError(null);
-      setIsExtracting(false);
-      setIsImporting(false);
       if (inputRef.current) {
         inputRef.current.value = "";
       }
@@ -53,19 +51,16 @@ export function ExtractTeachersDialog({
       return;
     }
 
-    setIsExtracting(true);
     setError(null);
     setPreview(null);
 
     try {
-      const teachers = await extractTeachers(file);
+      const teachers = await extractTeachersMutation.mutateAsync(file);
       setPreview(teachers);
     } catch {
       setError(
         "Učiteljev ni bilo mogoče razbrati iz datoteke. Poskusite znova.",
       );
-    } finally {
-      setIsExtracting(false);
     }
   }
 
@@ -81,11 +76,10 @@ export function ExtractTeachersDialog({
       return;
     }
 
-    setIsImporting(true);
     setError(null);
 
     try {
-      await createTeachers({
+      await createTeachersMutation.mutateAsync({
         teachers: preview.map((teacher) => ({
           ...teacher,
           assignedHours: 0,
@@ -95,14 +89,15 @@ export function ExtractTeachersDialog({
         description: `${preview.length} učiteljev`,
       });
       onOpenChange(false);
-      await onExtracted?.();
     } catch {
       setError(
         "Učiteljev ni bilo mogoče uvoziti. Preverite, ali e-poštni naslovi že obstajajo.",
       );
-      setIsImporting(false);
     }
   }
+
+  const isExtracting = extractTeachersMutation.isPending;
+  const isImporting = createTeachersMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

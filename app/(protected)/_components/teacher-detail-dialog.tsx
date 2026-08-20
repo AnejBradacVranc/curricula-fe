@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   BookOpen,
   ExternalLink,
@@ -10,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,21 +34,18 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  createAdditionalActivityAssignment,
-  deleteAdditionalActivityAssignment,
-  getTeacher,
-} from "@/lib/api";
+  useCreateAdditionalActivityAssignment,
+  useDeleteAdditionalActivityAssignment,
+} from "@/lib/queries/additional-activities/mutations";
+import { useTeacher } from "@/lib/queries/teachers/queries";
 import { formatHours } from "@/lib/curriculum/format-hours";
-import type { AdditionalActivity, TeacherDetail } from "@/types";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import type { AdditionalActivity } from "@/types";
 
 type TeacherDetailDialogProps = {
   teacherId: number | null;
   open: boolean;
   additionalActivities: AdditionalActivity[];
   onOpenChange: (open: boolean) => void;
-  onTeacherUpdated?: () => void;
 };
 
 function TeacherDetailSkeleton() {
@@ -72,62 +71,39 @@ export function TeacherDetailDialog({
   open,
   additionalActivities,
   onOpenChange,
-  onTeacherUpdated,
 }: TeacherDetailDialogProps) {
-  const [teacher, setTeacher] = useState<TeacherDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedActivityId, setSelectedActivityId] = useState<number | null>(
     null,
   );
   const [hoursInput, setHoursInput] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [removingKey, setRemovingKey] = useState<string | null>(null);
 
-  const loadTeacher = async (id: number) => {
-    const data = await getTeacher(id);
-    setTeacher(data);
-    return data;
-  }
+  const {
+    data: teacher,
+    isLoading,
+    isError,
+  } = useTeacher(teacherId ?? 0, {
+    enabled: open && teacherId != null,
+  });
+
+  const createAssignment = useCreateAdditionalActivityAssignment();
+  const deleteAssignment = useDeleteAdditionalActivityAssignment();
 
   useEffect(() => {
-    if (!open || teacherId === null) {
+    if (!open) {
       return;
     }
 
-    const selectedTeacherId = teacherId;
-    let cancelled = false;
-
-    async function load() {
-      setIsLoading(true);
-      setTeacher(null);
-      setSelectedActivityId(null);
-      setHoursInput("");
-      setValidationError(null);
-
-      try {
-        const teacherData = await getTeacher(selectedTeacherId);
-
-        if (!cancelled) {
-          setTeacher(teacherData);
-        }
-      } catch {
-        if (!cancelled) {
-          toast.error("Podatkov o učitelju ni bilo mogoče naložiti.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
+    setSelectedActivityId(null);
+    setHoursInput("");
+    setValidationError(null);
   }, [open, teacherId]);
+
+  useEffect(() => {
+    if (isError && open) {
+      toast.error("Podatkov o učitelju ni bilo mogoče naložiti.");
+    }
+  }, [isError, open]);
 
   const handleAddAdditionalHours = async () => {
     if (!teacher || selectedActivityId === null) {
@@ -142,23 +118,18 @@ export function TeacherDetailDialog({
     }
 
     setValidationError(null);
-    setIsSubmitting(true);
 
     try {
-      await createAdditionalActivityAssignment({
+      await createAssignment.mutateAsync({
         teacherId: teacher.id,
         additionalActivityId: selectedActivityId,
         hoursAmount,
       });
-      await loadTeacher(teacher.id);
-      onTeacherUpdated?.();
       setSelectedActivityId(null);
       setHoursInput("");
       toast.success("Dodatne ure so bile uspešno dodane.");
     } catch {
       toast.error("Dodajanje dodatnih ur ni uspelo.");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -167,23 +138,21 @@ export function TeacherDetailDialog({
       return;
     }
 
-    const key = String(additionalActivityId);
-    setRemovingKey(key);
-
     try {
-      await deleteAdditionalActivityAssignment({
+      await deleteAssignment.mutateAsync({
         teacherId: teacher.id,
         additionalActivityId,
       });
-      await loadTeacher(teacher.id);
-      onTeacherUpdated?.();
       toast.success("Dodatne ure so bile odstranjene.");
     } catch {
       toast.error("Odstranitev dodatnih ur ni uspela.");
-    } finally {
-      setRemovingKey(null);
     }
   };
+
+  const isSubmitting = createAssignment.isPending;
+  const removingActivityId = deleteAssignment.isPending
+    ? deleteAssignment.variables?.additionalActivityId
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -260,7 +229,8 @@ export function TeacherDetailDialog({
                     ) : (
                       <ul className="divide-y divide-border rounded-lg border">
                         {teacher.assignments.map((assignment, index) => {
-                          const { class: classRoom, programSubject } = assignment;
+                          const { class: classRoom, programSubject } =
+                            assignment;
                           const assignmentKey = [
                             classRoom.programYear.year.name,
                             classRoom.label,
@@ -278,7 +248,8 @@ export function TeacherDetailDialog({
                                   {programSubject.subject.name}
                                 </p>
                                 <Badge variant="outline" className="shrink-0">
-                                  {formatHours(programSubject.requiredHours)} h/teden
+                                  {formatHours(programSubject.requiredHours)}{" "}
+                                  h/teden
                                 </Badge>
                               </div>
                               <p className="text-xs text-muted-foreground">
@@ -300,7 +271,8 @@ export function TeacherDetailDialog({
                   <section className="space-y-3 pb-2">
                     <div className="flex items-center gap-2 text-sm font-medium">
                       <Sparkles className="size-4 text-primary" />
-                      Dodatne ure ({teacher.additionalActivityAssignments.length})
+                      Dodatne ure (
+                      {teacher.additionalActivityAssignments.length})
                     </div>
 
                     <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
@@ -344,7 +316,9 @@ export function TeacherDetailDialog({
                           inputMode="decimal"
                           placeholder="npr. 12"
                           value={hoursInput}
-                          onChange={(event) => setHoursInput(event.target.value)}
+                          onChange={(event) =>
+                            setHoursInput(event.target.value)
+                          }
                           disabled={isSubmitting}
                         />
                       </div>
@@ -359,7 +333,9 @@ export function TeacherDetailDialog({
                         type="button"
                         size="sm"
                         className="w-full"
-                        disabled={isSubmitting || !selectedActivityId || !hoursInput}
+                        disabled={
+                          isSubmitting || !selectedActivityId || !hoursInput
+                        }
                         onClick={() => void handleAddAdditionalHours()}
                       >
                         <Plus className="size-4" />
@@ -393,7 +369,7 @@ export function TeacherDetailDialog({
                                   variant="ghost"
                                   size="icon-sm"
                                   aria-label={`Odstrani ${assignment.additionalActivity.name}`}
-                                  disabled={removingKey !== null}
+                                  disabled={removingActivityId != null}
                                   onClick={() =>
                                     void handleRemoveAdditionalHours(
                                       assignment.additionalActivityId,

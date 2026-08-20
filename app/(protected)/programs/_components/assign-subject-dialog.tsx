@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Pencil, Plus } from "lucide-react";
-
 import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,20 +23,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  createProgramSubject,
-  updateProgramSubject,
-} from "@/lib/api";
-import type { ProgramSubjectItem, ProgramYear, Subject } from "@/types";
+  useCreateProgramSubject,
+  useUpdateProgramSubject,
+} from "@/lib/queries/program-subjects/mutations";
+import { useProgram } from "@/lib/queries/programs/queries";
+import { useSubjects } from "@/lib/queries/subjects/queries";
+import type { ProgramSubjectItem } from "@/types";
 
 type AssignSubjectDialogProps = {
   open: boolean;
   programId: number;
-  programYears: ProgramYear[];
-  programSubjects: ProgramSubjectItem[];
-  subjects: Subject[];
   editingProgramSubject: ProgramSubjectItem | null;
   onOpenChange: (open: boolean) => void;
-  onSubjectSaved?: () => void | Promise<void>;
 };
 
 function getAssignedYearIdsForSubject(
@@ -53,14 +51,18 @@ function getAssignedYearIdsForSubject(
 export function AssignSubjectDialog({
   open,
   programId,
-  programYears,
-  programSubjects,
-  subjects,
   editingProgramSubject,
   onOpenChange,
-  onSubjectSaved,
 }: AssignSubjectDialogProps) {
   const isEditing = editingProgramSubject !== null;
+
+  const { data: program } = useProgram(programId);
+  const { data: subjects = [] } = useSubjects();
+  const createProgramSubjectMutation = useCreateProgramSubject();
+  const updateProgramSubjectMutation = useUpdateProgramSubject();
+
+  const programYears = program?.programYears ?? [];
+  const programSubjects = program?.programSubjects ?? [];
 
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(
     null,
@@ -68,7 +70,6 @@ export function AssignSubjectDialog({
   const [selectedYearId, setSelectedYearId] = useState<number | null>(null);
   const [requiredHours, setRequiredHours] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -76,7 +77,6 @@ export function AssignSubjectDialog({
     }
 
     setValidationError(null);
-    setIsSubmitting(false);
     setSelectedSubjectId(editingProgramSubject?.subjectId ?? null);
     setSelectedYearId(editingProgramSubject?.yearId ?? null);
     setRequiredHours(
@@ -143,7 +143,6 @@ export function AssignSubjectDialog({
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
       setValidationError(null);
-      setIsSubmitting(false);
     }
 
     onOpenChange(nextOpen);
@@ -164,11 +163,10 @@ export function AssignSubjectDialog({
     }
 
     setValidationError(null);
-    setIsSubmitting(true);
 
     try {
       if (isEditing && editingProgramSubject) {
-        await updateProgramSubject({
+        await updateProgramSubjectMutation.mutateAsync({
           programId,
           subjectId: selectedSubjectId,
           yearId: editingProgramSubject.yearId,
@@ -176,7 +174,7 @@ export function AssignSubjectDialog({
         });
         toast.success("Predmet je bil uspešno posodobljen.");
       } else {
-        await createProgramSubject({
+        await createProgramSubjectMutation.mutateAsync({
           programId,
           subjectId: selectedSubjectId,
           yearId: selectedYearId,
@@ -186,16 +184,18 @@ export function AssignSubjectDialog({
       }
 
       handleOpenChange(false);
-      await onSubjectSaved?.();
     } catch {
       toast.error(
         isEditing
           ? "Predmeta ni bilo mogoče posodobiti. Poskusite znova."
           : "Predmeta ni bilo mogoče dodati programu. Poskusite znova.",
       );
-      setIsSubmitting(false);
     }
   }
+
+  const isSubmitting =
+    createProgramSubjectMutation.isPending ||
+    updateProgramSubjectMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>

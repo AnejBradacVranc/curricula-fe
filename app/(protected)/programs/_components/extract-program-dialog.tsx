@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, FileUp, Loader2, ScanText } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  FileUp,
+  Loader2,
+  ScanText,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,10 +28,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { extractProgram, importProgram } from "@/lib/api";
 import { formatHours } from "@/lib/curriculum/format-hours";
+import { useCategories } from "@/lib/queries/categories/queries";
+import { useExtractProgram } from "@/lib/queries/extract/mutations";
+import { useImportProgram } from "@/lib/queries/programs/mutations";
 import type {
-  Category,
   ImportProgramRequest,
   ResolvedExtractProgram,
   ResolvedExtractProgramSubject,
@@ -43,10 +51,9 @@ type NewSubjectDraft = {
 type ExtractProgramDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  categories: Category[];
-  onImported?: () => void | Promise<void>;
 };
 
+//TODO could be better
 function collectNewSubjects(
   preview: ResolvedExtractProgram,
 ): ResolvedExtractProgramSubject[] {
@@ -73,8 +80,6 @@ function collectNewSubjects(
 export function ExtractProgramDialog({
   open,
   onOpenChange,
-  categories,
-  onImported,
 }: ExtractProgramDialogProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<Step>("extract");
@@ -82,8 +87,10 @@ export function ExtractProgramDialog({
   const [preview, setPreview] = useState<ResolvedExtractProgram | null>(null);
   const [newSubjects, setNewSubjects] = useState<NewSubjectDraft[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
+
+  const { data: categories = [] } = useCategories({ enabled: open });
+  const extractProgramMutation = useExtractProgram();
+  const importProgramMutation = useImportProgram();
 
   useEffect(() => {
     if (!open) {
@@ -92,8 +99,6 @@ export function ExtractProgramDialog({
       setPreview(null);
       setNewSubjects([]);
       setError(null);
-      setIsExtracting(false);
-      setIsImporting(false);
       if (inputRef.current) {
         inputRef.current.value = "";
       }
@@ -120,21 +125,18 @@ export function ExtractProgramDialog({
       return;
     }
 
-    setIsExtracting(true);
     setError(null);
     setPreview(null);
     setNewSubjects([]);
     setStep("extract");
 
     try {
-      const program = await extractProgram(file);
+      const program = await extractProgramMutation.mutateAsync(file);
       setPreview(program);
     } catch {
       setError(
         "Programa ni bilo mogoče razbrati iz datoteke. Poskusite znova.",
       );
-    } finally {
-      setIsExtracting(false);
     }
   }
 
@@ -224,21 +226,21 @@ export function ExtractProgramDialog({
       return;
     }
 
-    setIsImporting(true);
     setError(null);
 
     try {
-      await importProgram(payload);
+      await importProgramMutation.mutateAsync(payload);
       toast.success("Program je bil uspešno uvožen.", {
         description: preview.name,
       });
       onOpenChange(false);
-      await onImported?.();
     } catch {
       setError("Programa ni bilo mogoče uvoziti. Poskusite znova.");
-      setIsImporting(false);
     }
   }
+
+  const isExtracting = extractProgramMutation.isPending;
+  const isImporting = importProgramMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -12,32 +12,28 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAdditionalActivities } from "@/lib/queries/additional-activities/queries";
+import { useTeachers } from "@/lib/queries/teachers/queries";
 import { cn } from "@/lib/utils";
 import { formatHours } from "@/lib/curriculum/format-hours";
 import { hasColor } from "@/lib/teacher-color";
-import type { AdditionalActivity, Teacher } from "@/types";
 import { TeacherDetailDialog } from "./teacher-detail-dialog";
 import { setTeacherDragData } from "./drag";
 
-type TeachersPanelProps = {
-  teachers: Teacher[];
-  additionalActivities: AdditionalActivity[];
-  draggingTeacherId: number | null;
-  onDragStart: (teacherId: number) => void;
-  onDragEnd: () => void;
-  onTeacherUpdated?: () => void;
-};
-
-export function TeachersPanel({
-  teachers,
-  additionalActivities,
-  draggingTeacherId,
-  onDragStart,
-  onDragEnd,
-  onTeacherUpdated,
-}: TeachersPanelProps) {
+export function TeachersPanel() {
   const [detailTeacherId, setDetailTeacherId] = useState<number | null>(null);
+  const [draggingTeacherId, setDraggingTeacherId] = useState<number | null>(
+    null,
+  );
   const [query, setQuery] = useState("");
+
+  const {
+    data: teachers = [],
+    isLoading: teachersLoading,
+    isError: teachersError,
+  } = useTeachers();
+  const { data: additionalActivities = [] } = useAdditionalActivities();
 
   const filteredTeachers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -86,7 +82,17 @@ export function TeachersPanel({
         </CardHeader>
 
         <CardContent className="min-h-0 flex-1 overflow-hidden p-0">
-          {filteredTeachers.length === 0 ? (
+          {teachersLoading ? (
+            <div className="space-y-2 p-3">
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-full" />
+            </div>
+          ) : teachersError ? (
+            <p className="px-(--card-spacing) py-8 text-center text-sm text-destructive">
+              Učiteljev ni bilo mogoče naložiti.
+            </p>
+          ) : filteredTeachers.length === 0 ? (
             <p className="px-(--card-spacing) py-8 text-center text-sm text-muted-foreground">
               {teachers.length === 0
                 ? "Ni registriranih učiteljev."
@@ -112,9 +118,9 @@ export function TeachersPanel({
                             surname: teacher.surname,
                             color: teacher.color,
                           });
-                          onDragStart(teacher.id);
+                          setDraggingTeacherId(teacher.id);
                         }}
-                        onDragEnd={onDragEnd}
+                        onDragEnd={() => setDraggingTeacherId(null)}
                         className="flex shrink-0 cursor-grab items-center self-stretch rounded-md px-1 text-primary hover:bg-primary/10 active:cursor-grabbing"
                         aria-label={`Povleci ${teacher.name} ${teacher.surname}`}
                       >
@@ -190,7 +196,6 @@ export function TeachersPanel({
             setDetailTeacherId(null);
           }
         }}
-        onTeacherUpdated={onTeacherUpdated}
       />
     </>
   );
