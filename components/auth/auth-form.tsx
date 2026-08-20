@@ -14,9 +14,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { login, register } from "@/lib/api";
 import { Role } from "@/types/enums/role";
 import { toast } from "sonner";
+import { useLogin, useRegister } from "@/lib/queries";
 
 function getErrorMessage(error: unknown) {
   if (
@@ -40,7 +40,6 @@ function getErrorMessage(error: unknown) {
 export function AuthForm() {
   const router = useRouter();
   const { markAuthenticated } = useAuth();
-  const [loading, setLoading] = useState(false);
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -51,39 +50,38 @@ export function AuthForm() {
   const [registerSurname, setRegisterSurname] = useState("");
   const [registerSchoolId, setRegisterSchoolId] = useState("1");
 
+  const { mutateAsync: loginUser, isPending: isPendingLogin } = useLogin()
+  const { mutateAsync: registerUser, isPending: isPendingRegister } = useRegister();
+
+  const loading = isPendingLogin || isPendingRegister
+
   async function handleLogin(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    setLoading(true);
 
     try {
-      await login({
-        email: loginEmail,
-        password: loginPassword,
-      });
+
+      await loginUser({ email: loginEmail, password: loginPassword })
       markAuthenticated();
       router.push("/");
     } catch (err) {
       toast.error(getErrorMessage(err), {
         description: "Prišlo je do napake. Poskusite znova.",
       });
-    } finally {
-      setLoading(false);
     }
   }
 
   async function handleRegister(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    setLoading(true);
 
     try {
-      await register({
+      await registerUser({
         email: registerEmail,
         password: registerPassword,
         name: registerName || undefined,
         surname: registerSurname || undefined,
         schoolId: Number(registerSchoolId),
         role: Role.USER,
-      });
+      })
       toast.success("Račun je bil uspešno ustvarjen.", {
         description: "Zdaj se lahko prijavite.",
       });
@@ -91,8 +89,6 @@ export function AuthForm() {
       toast.error(getErrorMessage(err), {
         description: "Prišlo je do napake. Poskusite znova.",
       });
-    } finally {
-      setLoading(false);
     }
   }
 

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
+import { useLogout } from "@/lib/queries";
 
 export type NavLink = {
   href: string;
@@ -138,7 +139,7 @@ export function Navigation() {
                       className={cn(
                         "h-auto justify-start gap-3 px-3 py-3",
                         isActive(link.href) &&
-                          "bg-primary text-foreground hover:bg-primary/50",
+                        "bg-primary text-foreground hover:bg-primary/50",
                       )}
                       render={
                         <Link
@@ -204,7 +205,7 @@ export function Navigation() {
                 render={<Link href={link.href} />}
                 className={cn(
                   isActive(link.href) &&
-                    "bg-primary text-foreground hover:bg-primary/50",
+                  "bg-primary text-foreground hover:bg-primary/50",
                 )}
               >
                 {link.label}
