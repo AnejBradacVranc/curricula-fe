@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+
 import { useAuth } from "@/components/auth/auth-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,13 +14,25 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Role } from "@/types/enums/role";
-import { toast } from "sonner";
 import { useLogin, useRegister } from "@/lib/queries";
+import {
+  type LoginFormValues,
+  type RegisterFormInput,
+  type RegisterFormValues,
+  loginSchema,
+  registerSchema,
+} from "@/lib/schemas/auth";
+import { Role } from "@/types/enums/role";
 
+//TODO better error message handling
 function getErrorMessage(error: unknown) {
   if (
     error &&
@@ -41,26 +56,31 @@ export function AuthForm() {
   const router = useRouter();
   const { markAuthenticated } = useAuth();
 
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
+  const { mutateAsync: loginUser, isPending: isPendingLogin } = useLogin();
+  const { mutateAsync: registerUser, isPending: isPendingRegister } =
+    useRegister();
 
-  const [registerEmail, setRegisterEmail] = useState("");
-  const [registerPassword, setRegisterPassword] = useState("");
-  const [registerName, setRegisterName] = useState("");
-  const [registerSurname, setRegisterSurname] = useState("");
-  const [registerSchoolId, setRegisterSchoolId] = useState("1");
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
-  const { mutateAsync: loginUser, isPending: isPendingLogin } = useLogin()
-  const { mutateAsync: registerUser, isPending: isPendingRegister } = useRegister();
+  const registerForm = useForm<RegisterFormInput, unknown, RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      surname: "",
+      email: "",
+      password: "",
+      schoolId: "1",
+    },
+  });
 
-  const loading = isPendingLogin || isPendingRegister
+  const loading = isPendingLogin || isPendingRegister;
 
-  async function handleLogin(event: React.SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function handleLogin(values: LoginFormValues) {
     try {
-
-      await loginUser({ email: loginEmail, password: loginPassword })
+      await loginUser(values);
       markAuthenticated();
       router.push("/");
     } catch (err) {
@@ -70,21 +90,17 @@ export function AuthForm() {
     }
   }
 
-  async function handleRegister(event: React.SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function handleRegister(values: RegisterFormValues) {
     try {
       await registerUser({
-        email: registerEmail,
-        password: registerPassword,
-        name: registerName || undefined,
-        surname: registerSurname || undefined,
-        schoolId: Number(registerSchoolId),
+        ...values,
+        schoolId: Number(values.schoolId),
         role: Role.USER,
-      })
+      });
       toast.success("Račun je bil uspešno ustvarjen.", {
         description: "Zdaj se lahko prijavite.",
       });
+      registerForm.reset();
     } catch (err) {
       toast.error(getErrorMessage(err), {
         description: "Prišlo je do napake. Poskusite znova.",
@@ -108,91 +124,180 @@ export function AuthForm() {
           </TabsList>
 
           <TabsContent value="login">
-            <form onSubmit={handleLogin} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="login-email">E-pošta</Label>
-                <Input
-                  id="login-email"
-                  type="email"
-                  autoComplete="email"
-                  value={loginEmail}
-                  onChange={(event) => setLoginEmail(event.target.value)}
-                  required
+            <form
+              id="auth-login-form"
+              onSubmit={loginForm.handleSubmit(handleLogin)}
+              className="pt-4"
+              noValidate
+            >
+              <FieldGroup>
+                <Controller
+                  name="email"
+                  control={loginForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="login-email">E-pošta</FieldLabel>
+                      <Input
+                        {...field}
+                        id="login-email"
+                        type="email"
+                        autoComplete="email"
+                        aria-invalid={fieldState.invalid}
+                        disabled={loading}
+                      />
+                      {fieldState.invalid ? (
+                        <FieldError errors={[fieldState.error]} />
+                      ) : null}
+                    </Field>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="login-password">Geslo</Label>
-                <Input
-                  id="login-password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={loginPassword}
-                  onChange={(event) => setLoginPassword(event.target.value)}
-                  required
+                <Controller
+                  name="password"
+                  control={loginForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="login-password">Geslo</FieldLabel>
+                      <Input
+                        {...field}
+                        id="login-password"
+                        type="password"
+                        autoComplete="current-password"
+                        aria-invalid={fieldState.invalid}
+                        disabled={loading}
+                      />
+                      {fieldState.invalid ? (
+                        <FieldError errors={[fieldState.error]} />
+                      ) : null}
+                    </Field>
+                  )}
                 />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Prijava..." : "Prijava"}
-              </Button>
+                <Field>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {isPendingLogin ? "Prijava..." : "Prijava"}
+                  </Button>
+                </Field>
+              </FieldGroup>
             </form>
           </TabsContent>
 
           <TabsContent value="register">
-            <form onSubmit={handleRegister} className="space-y-4 pt-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="register-name">Ime</Label>
-                  <Input
-                    id="register-name"
-                    value={registerName}
-                    onChange={(event) => setRegisterName(event.target.value)}
+            <form
+              id="auth-register-form"
+              onSubmit={registerForm.handleSubmit(handleRegister)}
+              className="pt-4"
+              noValidate
+            >
+              <FieldGroup>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Controller
+                    name="name"
+                    control={registerForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="register-name">Ime</FieldLabel>
+                        <Input
+                          {...field}
+                          id="register-name"
+                          value={field.value ?? ""}
+                          aria-invalid={fieldState.invalid}
+                          disabled={loading}
+                        />
+                        {fieldState.invalid ? (
+                          <FieldError errors={[fieldState.error]} />
+                        ) : null}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="surname"
+                    control={registerForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="register-surname">
+                          Priimek
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id="register-surname"
+                          value={field.value ?? ""}
+                          aria-invalid={fieldState.invalid}
+                          disabled={loading}
+                        />
+                        {fieldState.invalid ? (
+                          <FieldError errors={[fieldState.error]} />
+                        ) : null}
+                      </Field>
+                    )}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="register-surname">Priimek</Label>
-                  <Input
-                    id="register-surname"
-                    value={registerSurname}
-                    onChange={(event) => setRegisterSurname(event.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-email">E-pošta</Label>
-                <Input
-                  id="register-email"
-                  type="email"
-                  autoComplete="email"
-                  value={registerEmail}
-                  onChange={(event) => setRegisterEmail(event.target.value)}
-                  required
+                <Controller
+                  name="email"
+                  control={registerForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="register-email">E-pošta</FieldLabel>
+                      <Input
+                        {...field}
+                        id="register-email"
+                        type="email"
+                        autoComplete="email"
+                        aria-invalid={fieldState.invalid}
+                        disabled={loading}
+                      />
+                      {fieldState.invalid ? (
+                        <FieldError errors={[fieldState.error]} />
+                      ) : null}
+                    </Field>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-password">Geslo</Label>
-                <Input
-                  id="register-password"
-                  type="password"
-                  autoComplete="new-password"
-                  value={registerPassword}
-                  onChange={(event) => setRegisterPassword(event.target.value)}
-                  required
+                <Controller
+                  name="password"
+                  control={registerForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="register-password">Geslo</FieldLabel>
+                      <Input
+                        {...field}
+                        id="register-password"
+                        type="password"
+                        autoComplete="new-password"
+                        aria-invalid={fieldState.invalid}
+                        disabled={loading}
+                      />
+                      {fieldState.invalid ? (
+                        <FieldError errors={[fieldState.error]} />
+                      ) : null}
+                    </Field>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-school-id">ID šole</Label>
-                <Input
-                  id="register-school-id"
-                  type="number"
-                  min={1}
-                  value={registerSchoolId}
-                  onChange={(event) => setRegisterSchoolId(event.target.value)}
-                  required
+                <Controller
+                  name="schoolId"
+                  control={registerForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="register-school-id">
+                        ID šole
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id="register-school-id"
+                        type="number"
+                        min={1}
+                        aria-invalid={fieldState.invalid}
+                        disabled={loading}
+                      />
+                      {fieldState.invalid ? (
+                        <FieldError errors={[fieldState.error]} />
+                      ) : null}
+                    </Field>
+                  )}
                 />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Ustvarjanje..." : "Ustvari račun"}
-              </Button>
+                <Field>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {isPendingRegister ? "Ustvarjanje..." : "Ustvari račun"}
+                  </Button>
+                </Field>
+              </FieldGroup>
             </form>
           </TabsContent>
         </Tabs>
