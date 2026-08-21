@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil, Plus } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -13,8 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -27,6 +34,10 @@ import {
   useCreateSubject,
   useUpdateSubject,
 } from "@/lib/queries/subjects/mutations";
+import {
+  type SubjectFormValues,
+  subjectFormSchema,
+} from "@/lib/schemas/subjects";
 import type { Subject } from "@/types";
 
 type SubjectDialogProps = {
@@ -46,67 +57,57 @@ export function SubjectDialog({
   const createSubjectMutation = useCreateSubject();
   const updateSubjectMutation = useUpdateSubject();
 
-  const [name, setName] = useState("");
-  const [abbrevation, setAbbrevation] = useState("");
-  const [categoryId, setCategoryId] = useState<number | null>(null);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const form = useForm<SubjectFormValues>({
+    resolver: zodResolver(subjectFormSchema),
+    defaultValues: {
+      name: "",
+      abbrevation: "",
+      categoryId: "",
+    },
+  });
 
   useEffect(() => {
     if (!open) {
       return;
     }
 
-    setValidationError(null);
-    setName(editingSubject?.name ?? "");
-    setAbbrevation(editingSubject?.abbrevation ?? "");
-    setCategoryId(editingSubject?.categoryId ?? null);
-  }, [open, editingSubject]);
+    form.reset({
+      name: editingSubject?.name ?? "",
+      abbrevation: editingSubject?.abbrevation ?? "",
+      categoryId:
+        editingSubject?.categoryId != null
+          ? String(editingSubject.categoryId)
+          : "",
+    });
+  }, [open, editingSubject, form]);
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
-      setValidationError(null);
+      form.reset({
+        name: "",
+        abbrevation: "",
+        categoryId: "",
+      });
     }
 
     onOpenChange(nextOpen);
   }
 
-  async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const trimmedName = name.trim();
-    const trimmedAbbrevation = abbrevation.trim();
-
-    if (!trimmedName) {
-      setValidationError("Vnesite ime predmeta.");
-      return;
-    }
-
-    if (!trimmedAbbrevation) {
-      setValidationError("Vnesite kratico predmeta.");
-      return;
-    }
-
-    if (!categoryId) {
-      setValidationError("Izberite kategorijo.");
-      return;
-    }
-
-    setValidationError(null);
-
+  async function handleSubmit(values: SubjectFormValues) {
     try {
       if (isEditing && editingSubject) {
         await updateSubjectMutation.mutateAsync({
           id: editingSubject.id,
-          name: trimmedName,
-          abbrevation: trimmedAbbrevation,
-          categoryId,
+          name: values.name,
+          abbrevation: values.abbrevation,
+          categoryId: Number(values.categoryId),
         });
         toast.success("Predmet je bil uspešno posodobljen.");
       } else {
         await createSubjectMutation.mutateAsync({
-          name: trimmedName,
-          abbrevation: trimmedAbbrevation,
-          categoryId,
+          name: values.name,
+          abbrevation: values.abbrevation,
+          categoryId: Number(values.categoryId),
         });
         toast.success("Predmet je bil uspešno ustvarjen.");
       }
@@ -124,6 +125,11 @@ export function SubjectDialog({
   const isSubmitting =
     createSubjectMutation.isPending || updateSubjectMutation.isPending;
 
+  const categoryItems = categories.map((category) => ({
+    value: String(category.id),
+    label: category.name,
+  }));
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -138,63 +144,93 @@ export function SubjectDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="subject-category">Kategorija</Label>
-            <Select
-              value={categoryId}
-              onValueChange={setCategoryId}
-              disabled={isSubmitting || categories.length === 0}
-              modal={false}
-              items={categories.map((category) => ({
-                value: category.id,
-                label: category.name,
-              }))}
-            >
-              <SelectTrigger id="subject-category" className="w-full">
-                <SelectValue placeholder="Izberite kategorijo …" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem
-                    key={`category-${category.id}`}
-                    value={category.id}
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-4"
+          noValidate
+        >
+          <FieldGroup>
+            <Controller
+              name="categoryId"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="subject-category">Kategorija</FieldLabel>
+                  <Select
+                    value={field.value || null}
+                    onValueChange={(value) =>
+                      field.onChange(value == null ? "" : String(value))
+                    }
+                    disabled={isSubmitting || categories.length === 0}
+                    modal={false}
+                    items={categoryItems}
                   >
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="subject-name">Ime predmeta</Label>
-            <Input
-              id="subject-name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="npr. Matematika"
-              autoFocus
-              disabled={isSubmitting}
+                    <SelectTrigger
+                      id="subject-category"
+                      className="w-full"
+                      aria-invalid={fieldState.invalid}
+                    >
+                      <SelectValue placeholder="Izberite kategorijo …" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem
+                          key={`category-${category.id}`}
+                          value={String(category.id)}
+                        >
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : null}
+                </Field>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="subject-abbrevation">Kratica</Label>
-            <Input
-              id="subject-abbrevation"
-              value={abbrevation}
-              onChange={(event) => setAbbrevation(event.target.value)}
-              placeholder="npr. MAT"
-              disabled={isSubmitting}
+            <Controller
+              name="name"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="subject-name">Ime predmeta</FieldLabel>
+                  <Input
+                    {...field}
+                    id="subject-name"
+                    placeholder="npr. Matematika"
+                    autoFocus
+                    aria-invalid={fieldState.invalid}
+                    disabled={isSubmitting}
+                  />
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : null}
+                </Field>
+              )}
             />
-          </div>
 
-          {validationError && (
-            <p className="text-sm text-destructive" role="alert">
-              {validationError}
-            </p>
-          )}
+            <Controller
+              name="abbrevation"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="subject-abbrevation">Kratica</FieldLabel>
+                  <Input
+                    {...field}
+                    id="subject-abbrevation"
+                    placeholder="npr. MAT"
+                    aria-invalid={fieldState.invalid}
+                    disabled={isSubmitting}
+                  />
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : null}
+                </Field>
+              )}
+            />
+          </FieldGroup>
 
           <DialogFooter className="sm:justify-end">
             <Button

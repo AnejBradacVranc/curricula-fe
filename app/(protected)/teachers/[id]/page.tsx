@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
   BookOpen,
@@ -13,6 +14,7 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { TeacherAvatar } from "@/app/(protected)/teachers/_components/teacher-avatar";
@@ -25,13 +27,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatHours } from "@/lib/curriculum/format-hours";
 import { useExportTeacherPdf } from "@/lib/queries/export/mutations";
 import { useUpdateTeacher } from "@/lib/queries/teachers/mutations";
 import { useTeacher } from "@/lib/queries/teachers/queries";
+import {
+  type UpdateTeacherFormValues,
+  updateTeacherSchema,
+} from "@/lib/schemas/teachers";
 import { isHexColor } from "@/lib/teacher-color";
 import { cn } from "@/lib/utils";
 import type { TeacherDetail } from "@/types";
@@ -67,80 +78,64 @@ export default function TeacherDetailPage() {
   const updateTeacherMutation = useUpdateTeacher(teacherId);
   const exportPdfMutation = useExportTeacherPdf();
 
-  const [name, setName] = useState("");
-  const [surname, setSurname] = useState("");
-  const [email, setEmail] = useState("");
   const [profileImage, setProfileImage] = useState<File | null | undefined>(
     undefined,
   );
   const [profileImageInputKey, setProfileImageInputKey] = useState(0);
-  const [color, setColor] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const form = useForm<UpdateTeacherFormValues>({
+    resolver: zodResolver(updateTeacherSchema),
+    defaultValues: {
+      name: "",
+      surname: "",
+      email: "",
+      color: "",
+    },
+  });
+
+  const color = useWatch({ control: form.control, name: "color" });
 
   function syncForm(data: TeacherDetail) {
-    setName(data.name);
-    setSurname(data.surname);
-    setEmail(data.email);
-    setColor(data.color ?? "");
+    form.reset({
+      name: data.name,
+      surname: data.surname,
+      email: data.email,
+      color: data.color ?? "",
+    });
     setProfileImage(undefined);
     setProfileImageInputKey((key) => key + 1);
-    setValidationError(null);
+    setSubmitError(null);
   }
 
   useEffect(() => {
     if (teacher) {
       syncForm(teacher);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync when teacher payload changes
   }, [teacher]);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function handleSubmit(values: UpdateTeacherFormValues) {
     if (!teacher) {
       return;
     }
 
-    const trimmedName = name.trim();
-    const trimmedSurname = surname.trim();
-    const trimmedEmail = email.trim();
-    const trimmedColor = color.trim();
-
-    if (!trimmedName) {
-      setValidationError("Vnesite ime.");
-      return;
-    }
-
-    if (!trimmedSurname) {
-      setValidationError("Vnesite priimek.");
-      return;
-    }
-
-    if (!trimmedEmail) {
-      setValidationError("Vnesite e-pošto.");
-      return;
-    }
-
-    if (trimmedColor && !isHexColor(trimmedColor)) {
-      setValidationError("Barva mora biti v obliki #RGB ali #RRGGBB.");
-      return;
-    }
-
-    setValidationError(null);
+    setSubmitError(null);
 
     try {
       const updated = await updateTeacherMutation.mutateAsync({
         data: {
-          name: trimmedName,
-          surname: trimmedSurname,
-          email: trimmedEmail,
-          color: trimmedColor || null,
+          name: values.name,
+          surname: values.surname,
+          email: values.email,
+          color: values.color || null,
         },
         profileImage,
       });
       syncForm(updated);
       toast.success("Podatki učitelja so posodobljeni.");
     } catch (error: unknown) {
-      setValidationError("Podatkov ni bilo mogoče shraniti.");
+      setSubmitError("Podatkov ni bilo mogoče shraniti.");
       console.error(error);
     }
   }
@@ -288,12 +283,13 @@ export default function TeacherDetailPage() {
           <CardContent>
             <form
               className="space-y-4"
-              onSubmit={(event) => void handleSubmit(event)}
+              onSubmit={form.handleSubmit(handleSubmit)}
+              noValidate
             >
               <div className="space-y-2">
-                <Label htmlFor="teacher-profile-image">Slika</Label>
+                <FieldLabel htmlFor="teacher-profile-image">Slika</FieldLabel>
                 <div className="flex flex-wrap items-end gap-4">
-                  {teacher.profileImage && (
+                  {teacher.profileImage ? (
                     <div className="group relative size-24 shrink-0">
                       <TeacherAvatar
                         name={teacher.name}
@@ -302,36 +298,33 @@ export default function TeacherDetailPage() {
                         color={teacher.color}
                         size="lg"
                       />
-
-                      {
-                        <button
-                          type="button"
-                          className={cn(
-                            "absolute inset-0 flex text-white rounded-lg  cursor-pointer bg-black/65",
-                            profileImage === null
-                              ? "flex-col items-center justify-center gap-1"
-                              : "items-center justify-center rounded-lg opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 ",
-                          )}
-                          disabled={isSubmitting}
-                          onClick={() => {
-                            if (profileImage === null) {
-                              setProfileImage(undefined);
-                            } else {
-                              setProfileImage(null);
-                              setProfileImageInputKey((key) => key + 1);
-                            }
-                          }}
-                          aria-label={
-                            profileImage === null
-                              ? `Prekliči odstranitev slike`
-                              : `Odstrani profilno sliko`
+                      <button
+                        type="button"
+                        className={cn(
+                          "absolute inset-0 flex cursor-pointer rounded-lg bg-black/65 text-white",
+                          profileImage === null
+                            ? "flex-col items-center justify-center gap-1"
+                            : "items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100",
+                        )}
+                        disabled={isSubmitting}
+                        onClick={() => {
+                          if (profileImage === null) {
+                            setProfileImage(undefined);
+                          } else {
+                            setProfileImage(null);
+                            setProfileImageInputKey((key) => key + 1);
                           }
-                        >
-                          <Trash2 className="size-6" />
-                        </button>
-                      }
+                        }}
+                        aria-label={
+                          profileImage === null
+                            ? "Prekliči odstranitev slike"
+                            : "Odstrani profilno sliko"
+                        }
+                      >
+                        <Trash2 className="size-6" />
+                      </button>
                     </div>
-                  )}
+                  ) : null}
                   <div className="space-y-1.5">
                     <input
                       key={profileImageInputKey}
@@ -360,77 +353,123 @@ export default function TeacherDetailPage() {
                   </div>
                 </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="teacher-name">Ime</Label>
-                  <Input
-                    id="teacher-name"
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    disabled={isSubmitting}
-                    autoComplete="given-name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="teacher-surname">Priimek</Label>
-                  <Input
-                    id="teacher-surname"
-                    value={surname}
-                    onChange={(event) => setSurname(event.target.value)}
-                    disabled={isSubmitting}
-                    autoComplete="family-name"
-                  />
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="teacher-email">E-pošta</Label>
-                  <Input
-                    id="teacher-email"
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    disabled={isSubmitting}
-                    autoComplete="email"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="teacher-color">Barva</Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      id="teacher-color-picker"
-                      type="color"
-                      className="h-9 w-12 cursor-pointer p-1"
-                      value={isHexColor(color) ? color : "#64748b"}
-                      onChange={(event) => setColor(event.target.value)}
-                      disabled={isSubmitting}
-                      aria-label="Izberi barvo"
-                    />
-                    <Input
-                      id="teacher-color"
-                      value={color}
-                      onChange={(event) => setColor(event.target.value)}
-                      placeholder="#RRGGBB"
-                      disabled={isSubmitting}
-                      className="font-mono"
-                    />
-                    {color ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={isSubmitting}
-                        onClick={() => setColor("")}
-                      >
-                        Odstrani
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
 
-              {validationError ? (
+              <FieldGroup>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Controller
+                    name="name"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="teacher-name">Ime</FieldLabel>
+                        <Input
+                          {...field}
+                          id="teacher-name"
+                          aria-invalid={fieldState.invalid}
+                          disabled={isSubmitting}
+                          autoComplete="given-name"
+                        />
+                        {fieldState.invalid ? (
+                          <FieldError errors={[fieldState.error]} />
+                        ) : null}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="surname"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="teacher-surname">
+                          Priimek
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id="teacher-surname"
+                          aria-invalid={fieldState.invalid}
+                          disabled={isSubmitting}
+                          autoComplete="family-name"
+                        />
+                        {fieldState.invalid ? (
+                          <FieldError errors={[fieldState.error]} />
+                        ) : null}
+                      </Field>
+                    )}
+                  />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Controller
+                    name="email"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="teacher-email">E-pošta</FieldLabel>
+                        <Input
+                          {...field}
+                          id="teacher-email"
+                          type="email"
+                          aria-invalid={fieldState.invalid}
+                          disabled={isSubmitting}
+                          autoComplete="email"
+                        />
+                        {fieldState.invalid ? (
+                          <FieldError errors={[fieldState.error]} />
+                        ) : null}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="color"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="teacher-color">Barva</FieldLabel>
+                        <div className="flex items-center gap-3">
+                          <Input
+                            id="teacher-color-picker"
+                            type="color"
+                            className="h-9 w-12 cursor-pointer p-1"
+                            value={
+                              isHexColor(field.value) ? field.value : "#64748b"
+                            }
+                            onChange={(event) =>
+                              field.onChange(event.target.value)
+                            }
+                            disabled={isSubmitting}
+                            aria-label="Izberi barvo"
+                          />
+                          <Input
+                            {...field}
+                            id="teacher-color"
+                            placeholder="#RRGGBB"
+                            aria-invalid={fieldState.invalid}
+                            disabled={isSubmitting}
+                            className="font-mono"
+                          />
+                          {color ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={isSubmitting}
+                              onClick={() => field.onChange("")}
+                            >
+                              Odstrani
+                            </Button>
+                          ) : null}
+                        </div>
+                        {fieldState.invalid ? (
+                          <FieldError errors={[fieldState.error]} />
+                        ) : null}
+                      </Field>
+                    )}
+                  />
+                </div>
+              </FieldGroup>
+
+              {submitError ? (
                 <p className="text-sm text-destructive" role="alert">
-                  {validationError}
+                  {submitError}
                 </p>
               ) : null}
 
