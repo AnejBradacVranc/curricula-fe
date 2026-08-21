@@ -51,6 +51,7 @@ export function CurriculumCell({
 
       <div className="space-y-1">
         {classes.map((programClass) => {
+          //TODO maybe not find but something else ?
           const assignment = findAssignmentForClass(
             programSubject,
             programClass.id,
