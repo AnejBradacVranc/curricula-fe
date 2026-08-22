@@ -7,3 +7,13 @@ export async function exportTeacherPdf(id: number): Promise<Blob> {
 
   return data;
 }
+
+export async function exportTeachersPdf(ids?: number[]): Promise<Blob> {
+  const { data } = await api.post<Blob>(
+    "/schools/export/teachers",
+    { ids: ids?.length ? ids : undefined },
+    { responseType: "blob" },
+  );
+
+  return data;
+}
