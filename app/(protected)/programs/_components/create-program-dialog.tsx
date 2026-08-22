@@ -14,8 +14,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useCreateProgram } from "@/lib/queries/programs/mutations";
+import { Controller, useForm } from "react-hook-form";
+import { createProgramSchema, CreateProgramValues } from "@/lib/schemas/programs";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 
 type CreateProgramDialogProps = {
   open: boolean;
@@ -28,12 +31,15 @@ export function CreateProgramDialog({
 }: CreateProgramDialogProps) {
   const router = useRouter();
   const createProgramMutation = useCreateProgram();
-  const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const createProgramForm = useForm<CreateProgramValues>({
+    resolver: zodResolver(createProgramSchema),
+    defaultValues: { name: "" },
+  });
+
   function resetForm() {
-    setName("");
-    setError(null);
+    createProgramForm.reset();
   }
 
   function handleOpenChange(nextOpen: boolean) {
@@ -44,22 +50,10 @@ export function CreateProgramDialog({
     onOpenChange(nextOpen);
   }
 
-  async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const trimmedName = name.trim();
-
-    if (!trimmedName) {
-      setError("Vnesite ime programa.");
-      return;
-    }
-
-    setError(null);
+  async function handleSubmit(values: CreateProgramValues) {
 
     try {
-      const program = await createProgramMutation.mutateAsync({
-        name: trimmedName,
-      });
+      const program = await createProgramMutation.mutateAsync(values);
       handleOpenChange(false);
       router.push(`/programs/${program.id}`);
     } catch {
@@ -80,18 +74,27 @@ export function CreateProgramDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="program-name">Ime programa</Label>
-            <Input
-              id="program-name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="npr. Gradbeni tehnik"
-              autoFocus
-              disabled={isSubmitting}
-            />
-          </div>
+        <form onSubmit={createProgramForm.handleSubmit(handleSubmit)} className="space-y-4">
+          <Controller
+            name="name"
+            control={createProgramForm.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid} className="space-y-2">
+                <FieldLabel htmlFor="program-name">Ime programa</FieldLabel>
+                <Input
+                  {...field}
+                  id="program-name"
+                  type="text"
+                  autoComplete="name"
+                  aria-invalid={fieldState.invalid}
+                  disabled={isSubmitting}
+                />
+                {fieldState.invalid ? (
+                  <FieldError errors={[fieldState.error]} />
+                ) : null}
+              </Field>
+            )}
+          />
 
           {error && (
             <p className="text-sm text-destructive" role="alert">

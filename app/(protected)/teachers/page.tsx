@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Clock, FileUp, Mail, Trash2, Users } from "lucide-react";
+import { ChevronRight, Clock, FileDown, FileUp, Mail, Trash2, Users } from "lucide-react";
+import { toast } from "sonner";
 
 import { DeleteTeacherDialog } from "@/app/(protected)/teachers/_components/delete-teacher-dialog";
 import { ExtractTeachersDialog } from "@/app/(protected)/teachers/_components/extract-teachers-dialog";
@@ -22,6 +23,7 @@ import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useTeachers } from "@/lib/queries/teachers/queries";
 import { cn } from "@/lib/utils";
 import type { Teacher } from "@/types";
+import { useExportTeachersPdf } from "@/lib/queries/export/mutations";
 
 function TeachersSkeleton() {
   return (
@@ -42,6 +44,24 @@ export default function TeachersPage() {
   const [isExtractOpen, setIsExtractOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
   const isMobile = useIsMobile();
+
+  const { mutateAsync: exportTeachersPdf, isPending: isExporting } =
+    useExportTeachersPdf();
+
+  async function handleExport() {
+    try {
+      const blob = await exportTeachersPdf(undefined);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "ucitelji.pdf";
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success("Izvoz PDF je pripravljen.");
+    } catch {
+      toast.error("Izvoza PDF ni bilo mogoče ustvariti.");
+    }
+  }
 
   const {
     data: teachers = [],
@@ -93,6 +113,14 @@ export default function TeachersPage() {
             <Button type="button" onClick={() => setIsExtractOpen(true)}>
               <FileUp />
               {!isMobile && "Uvozi"}
+            </Button>
+            <Button
+              type="button"
+              disabled={isExporting}
+              onClick={handleExport}
+            >
+              <FileDown />
+              {!isMobile && "Izvozi"}
             </Button>
           </div>
         </div>
