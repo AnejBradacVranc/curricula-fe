@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { getAccessToken, logout as clearToken } from "@/lib/api";
+import { isAccessTokenValid, setUnauthorizedHandler } from "@/lib/api/axios";
 
 type AuthContextValue = {
   isAuthenticated: boolean;
@@ -24,8 +25,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setIsAuthenticated(!!getAccessToken());
+    setIsAuthenticated(isAccessTokenValid());
     setIsLoading(false);
+
+    setUnauthorizedHandler(() => {
+      setIsAuthenticated(false);
+    });
   }, []);
 
   const markAuthenticated = useCallback(() => {

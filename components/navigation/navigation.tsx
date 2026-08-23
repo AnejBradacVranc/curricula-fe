@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
-import { useLogout } from "@/lib/queries";
 
 export type NavLink = {
   href: string;

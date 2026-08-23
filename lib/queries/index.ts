@@ -58,7 +58,7 @@ export { useCreateSchool } from "./schools/mutations";
 export { userKeys } from "./users/keys";
 export { useUserByEmail, useUsers } from "./users/queries";
 
-export { useLogin, useLogout, useRegister } from "./auth/mutations";
+export { useLogin, useRegister } from "./auth/mutations";
 
 export { useExtractProgram, useExtractTeachers } from "./extract/mutations";
 
