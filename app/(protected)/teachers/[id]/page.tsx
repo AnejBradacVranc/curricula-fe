@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
   BookOpen,
+  Check,
   Clock,
   Download,
   Mail,
@@ -34,11 +35,27 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatHours } from "@/lib/curriculum/format-hours";
+import {
+  useCreateAdditionalActivityAssignment,
+  useDeleteAdditionalActivityAssignment,
+} from "@/lib/queries/additional-activities/mutations";
+import { useAdditionalActivities } from "@/lib/queries/additional-activities/queries";
 import { useExportTeacherPdf } from "@/lib/queries/export/mutations";
 import { useUpdateTeacher } from "@/lib/queries/teachers/mutations";
 import { useTeacher } from "@/lib/queries/teachers/queries";
+import {
+  type CreateAdditionalActivityAssignmentFormValues,
+  createAdditionalActivityAssignmentSchema,
+} from "@/lib/schemas/additional-activities";
 import {
   type UpdateTeacherFormValues,
   updateTeacherSchema,
@@ -77,11 +94,16 @@ export default function TeacherDetailPage() {
 
   const updateTeacherMutation = useUpdateTeacher(teacherId);
   const exportPdfMutation = useExportTeacherPdf();
+  const { data: additionalActivities = [] } = useAdditionalActivities();
+  const createAdditionalActivityAssignment =
+    useCreateAdditionalActivityAssignment();
+  const deleteAdditionalActivityAssignment =
+    useDeleteAdditionalActivityAssignment();
 
   const [profileImage, setProfileImage] = useState<File | null | undefined>(
     undefined,
   );
-  const [profileImageInputKey, setProfileImageInputKey] = useState(0);
+  //const [profileImageInputKey, setProfileImageInputKey] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const form = useForm<UpdateTeacherFormValues>({
@@ -94,9 +116,18 @@ export default function TeacherDetailPage() {
     },
   });
 
+  const additionalHoursForm =
+    useForm<CreateAdditionalActivityAssignmentFormValues>({
+      resolver: zodResolver(createAdditionalActivityAssignmentSchema),
+      defaultValues: {
+        additionalActivityId: "",
+        hoursAmount: "",
+      },
+    });
+
   const color = useWatch({ control: form.control, name: "color" });
 
-  function syncForm(data: TeacherDetail) {
+  function prefillForm(data: TeacherDetail) {
     form.reset({
       name: data.name,
       surname: data.surname,
@@ -104,16 +135,55 @@ export default function TeacherDetailPage() {
       color: data.color ?? "",
     });
     setProfileImage(undefined);
-    setProfileImageInputKey((key) => key + 1);
+    //setProfileImageInputKey((key) => key + 1);
     setSubmitError(null);
   }
 
   useEffect(() => {
     if (teacher) {
-      syncForm(teacher);
+      prefillForm(teacher);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sync when teacher payload changes
   }, [teacher]);
+
+  async function handleAddAdditionalHours(
+    values: CreateAdditionalActivityAssignmentFormValues,
+  ) {
+    if (!teacher) {
+      return;
+    }
+
+    try {
+      await createAdditionalActivityAssignment.mutateAsync({
+        teacherId: teacher.id,
+        additionalActivityId: Number(values.additionalActivityId),
+        hoursAmount: Number(values.hoursAmount),
+      });
+      additionalHoursForm.reset({
+        additionalActivityId: "",
+        hoursAmount: "",
+      });
+      toast.success("Dodatne ure so bile uspešno dodane.");
+    } catch {
+      toast.error("Dodajanje dodatnih ur ni uspelo.");
+    }
+  }
+
+  async function handleRemoveAdditionalHours(additionalActivityId: number) {
+    if (!teacher) {
+      return;
+    }
+
+    try {
+      await deleteAdditionalActivityAssignment.mutateAsync({
+        teacherId: teacher.id,
+        additionalActivityId,
+      });
+      toast.success("Dodatne ure so bile odstranjene.");
+    } catch {
+      toast.error("Odstranitev dodatnih ur ni uspela.");
+    }
+  }
 
   async function handleSubmit(values: UpdateTeacherFormValues) {
     if (!teacher) {
@@ -132,7 +202,7 @@ export default function TeacherDetailPage() {
         },
         profileImage,
       });
-      syncForm(updated);
+      prefillForm(updated);
       toast.success("Podatki učitelja so posodobljeni.");
     } catch (error: unknown) {
       setSubmitError("Podatkov ni bilo mogoče shraniti.");
@@ -161,6 +231,16 @@ export default function TeacherDetailPage() {
 
   const isSubmitting = updateTeacherMutation.isPending;
   const isExporting = exportPdfMutation.isPending;
+  const isAddingAdditionalHours = createAdditionalActivityAssignment.isPending;
+  const removingAdditionalActivityId =
+    deleteAdditionalActivityAssignment.isPending
+      ? deleteAdditionalActivityAssignment.variables?.additionalActivityId
+      : null;
+
+  const activityItems = additionalActivities.map((activity) => ({
+    value: String(activity.id),
+    label: activity.name,
+  }));
 
   if (isLoading) {
     return (
@@ -312,7 +392,7 @@ export default function TeacherDetailPage() {
                             setProfileImage(undefined);
                           } else {
                             setProfileImage(null);
-                            setProfileImageInputKey((key) => key + 1);
+                            //setProfileImageInputKey((key) => key + 1);
                           }
                         }}
                         aria-label={
@@ -327,7 +407,7 @@ export default function TeacherDetailPage() {
                   ) : null}
                   <div className="space-y-1.5">
                     <input
-                      key={profileImageInputKey}
+                      //key={profileImageInputKey}
                       className="block w-full cursor-pointer text-sm file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground"
                       id="teacher-profile-image"
                       type="file"
@@ -475,7 +555,7 @@ export default function TeacherDetailPage() {
 
               <div className="flex justify-end">
                 <Button type="submit" disabled={isSubmitting}>
-                  <Plus />
+                  <Check />
                   {isSubmitting ? "Shranjevanje..." : "Shrani spremembe"}
                 </Button>
               </div>
@@ -544,11 +624,100 @@ export default function TeacherDetailPage() {
             </CardTitle>
             <CardDescription>Dodatne dejavnosti učitelja.</CardDescription>
           </CardHeader>
-          <CardContent
-            className={cn(
-              teacher.additionalActivityAssignments.length === 0 && "pt-0",
-            )}
-          >
+          <CardContent className="space-y-4">
+            <form
+              className="rounded-lg border bg-muted/20 p-4"
+              onSubmit={additionalHoursForm.handleSubmit(
+                handleAddAdditionalHours,
+              )}
+              noValidate
+            >
+              <FieldGroup>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Controller
+                    name="additionalActivityId"
+                    control={additionalHoursForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="teacher-additional-activity">
+                          Dejavnost
+                        </FieldLabel>
+                        <Select
+                          value={field.value || null}
+                          onValueChange={(value) =>
+                            field.onChange(value == null ? "" : String(value))
+                          }
+                          disabled={
+                            isAddingAdditionalHours ||
+                            additionalActivities.length === 0
+                          }
+                          items={activityItems}
+                        >
+                          <SelectTrigger
+                            id="teacher-additional-activity"
+                            className="w-full"
+                            aria-invalid={fieldState.invalid}
+                          >
+                            <SelectValue placeholder="Izberite dejavnost …" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {additionalActivities.map((activity) => (
+                              <SelectItem
+                                key={activity.id}
+                                value={String(activity.id)}
+                              >
+                                {activity.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {fieldState.invalid ? (
+                          <FieldError errors={[fieldState.error]} />
+                        ) : null}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="hoursAmount"
+                    control={additionalHoursForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="teacher-additional-hours">
+                          Število ur
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id="teacher-additional-hours"
+                          type="number"
+                          min={0}
+                          step="0.0001"
+                          inputMode="decimal"
+                          placeholder="npr. 12"
+                          aria-invalid={fieldState.invalid}
+                          disabled={isAddingAdditionalHours}
+                        />
+                        {fieldState.invalid ? (
+                          <FieldError errors={[fieldState.error]} />
+                        ) : null}
+                      </Field>
+                    )}
+                  />
+                </div>
+
+                <Field>
+                  <Button
+                    type="submit"
+                    disabled={isAddingAdditionalHours}
+                    className="sm:w-auto"
+                  >
+                    <Plus />
+                    {isAddingAdditionalHours ? "Dodajanje..." : "Dodaj"}
+                  </Button>
+                </Field>
+              </FieldGroup>
+            </form>
+
             {teacher.additionalActivityAssignments.length === 0 ? (
               <p className="text-sm text-muted-foreground">Ni dodatnih ur.</p>
             ) : (
@@ -561,9 +730,25 @@ export default function TeacherDetailPage() {
                     <p className="font-medium">
                       {assignment.additionalActivity.name}
                     </p>
-                    <Badge variant="outline">
-                      {formatHours(assignment.hoursAmount)}h
-                    </Badge>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Badge variant="outline">
+                        {formatHours(assignment.hoursAmount)}h
+                      </Badge>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Odstrani ${assignment.additionalActivity.name}`}
+                        disabled={removingAdditionalActivityId != null}
+                        onClick={() =>
+                          void handleRemoveAdditionalHours(
+                            assignment.additionalActivityId,
+                          )
+                        }
+                      >
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>
