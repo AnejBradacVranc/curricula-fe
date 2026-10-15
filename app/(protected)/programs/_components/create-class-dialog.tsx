@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -13,9 +15,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { createClass } from "@/lib/api";
+import { useCreateClass } from "@/lib/queries/classes/mutations";
+import {
+  type CreateClassFormValues,
+  createClassFormSchema,
+} from "@/lib/schemas/programs";
 import type { ProgramYear } from "@/types";
 
 type CreateClassDialogProps = {
@@ -23,7 +34,6 @@ type CreateClassDialogProps = {
   onOpenChange: (open: boolean) => void;
   programId: number;
   programYear: ProgramYear | null;
-  onCreated?: () => void | Promise<void>;
 };
 
 export function CreateClassDialog({
@@ -31,58 +41,48 @@ export function CreateClassDialog({
   onOpenChange,
   programId,
   programYear,
-  onCreated,
 }: CreateClassDialogProps) {
-  const [label, setLabel] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const createClassMutation = useCreateClass();
+
+  const form = useForm<CreateClassFormValues>({
+    resolver: zodResolver(createClassFormSchema),
+    defaultValues: { label: "" },
+  });
 
   useEffect(() => {
     if (!open) {
-      setLabel("");
-      setError(null);
-      setIsSubmitting(false);
+      form.reset({ label: "" });
     }
-  }, [open]);
+  }, [open, form]);
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
-      setLabel("");
-      setError(null);
-      setIsSubmitting(false);
+      form.reset({ label: "" });
     }
 
     onOpenChange(nextOpen);
   }
 
-  async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function handleSubmit(values: CreateClassFormValues) {
     if (!programYear) {
       return;
     }
 
-    const trimmedLabel = label.trim().toLowerCase();
-
-    if (!trimmedLabel) {
-      setError("Vnesite oznako razreda.");
-      return;
-    }
+    const trimmedLabel = values.label.trim().toLowerCase();
 
     if (
       programYear.classes.some(
         (item) => item.label.toLowerCase() === trimmedLabel,
       )
     ) {
-      setError("Razred s to oznako že obstaja.");
+      form.setError("label", {
+        message: "Razred s to oznako že obstaja.",
+      });
       return;
     }
 
-    setError(null);
-    setIsSubmitting(true);
-
     try {
-      const created = await createClass({
+      const created = await createClassMutation.mutateAsync({
         programId,
         yearId: programYear.yearId,
         label: trimmedLabel,
@@ -91,12 +91,15 @@ export function CreateClassDialog({
         description: `${programYear.year.name.slice(0, 1)}. ${created.label.toUpperCase()}`,
       });
       handleOpenChange(false);
-      await onCreated?.();
     } catch {
-      setError("Razreda ni bilo mogoče dodati. Poskusite znova.");
-      setIsSubmitting(false);
+      form.setError("root", {
+        message: "Razreda ni bilo mogoče dodati. Poskusite znova.",
+      });
     }
   }
+
+  const isSubmitting = createClassMutation.isPending;
+  const labelValue = form.watch("label");
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -110,24 +113,39 @@ export function CreateClassDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="class-label">Oznaka</Label>
-            <Input
-              id="class-label"
-              placeholder="npr. a"
-              value={label}
-              onChange={(event) => setLabel(event.target.value)}
-              disabled={isSubmitting}
-              autoFocus
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-4"
+          noValidate
+        >
+          <FieldGroup>
+            <Controller
+              name="label"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="class-label">Oznaka</FieldLabel>
+                  <Input
+                    {...field}
+                    id="class-label"
+                    placeholder="npr. a"
+                    aria-invalid={fieldState.invalid}
+                    disabled={isSubmitting}
+                    autoFocus
+                  />
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : null}
+                </Field>
+              )}
             />
-          </div>
+          </FieldGroup>
 
-          {error && (
+          {form.formState.errors.root ? (
             <p className="text-sm text-destructive" role="alert">
-              {error}
+              {form.formState.errors.root.message}
             </p>
-          )}
+          ) : null}
 
           <DialogFooter className="sm:justify-end">
             <Button
@@ -138,7 +156,10 @@ export function CreateClassDialog({
             >
               Prekliči
             </Button>
-            <Button type="submit" disabled={isSubmitting || !label.trim()}>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !labelValue.trim()}
+            >
               <Plus />
               {isSubmitting ? "Dodajanje..." : "Dodaj razred"}
             </Button>

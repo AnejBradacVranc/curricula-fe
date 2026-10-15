@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   BookOpen,
   ChevronRight,
+  FileUp,
   GraduationCap,
   Layers,
   Plus,
@@ -13,7 +14,7 @@ import {
 
 import { CreateProgramDialog } from "@/app/(protected)/programs/_components/create-program-dialog";
 import { DeleteProgramDialog } from "@/app/(protected)/programs/_components/delete-program-dialog";
-import { Badge } from "@/components/ui/badge";
+import { ExtractProgramDialog } from "@/app/(protected)/programs/_components/extract-program-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,9 +25,10 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getPrograms } from "@/lib/api";
+import { useIsMobile } from "@/hooks/use-is-mobile";
+import { usePrograms } from "@/lib/queries/programs/queries";
 import { cn } from "@/lib/utils";
-import type { ProgramWithRelations } from "@/types";
+import type { ProgramLean } from "@/types/entities/program";
 
 function ProgramsSkeleton() {
   return (
@@ -63,43 +65,18 @@ function ProgramsSkeleton() {
 }
 
 export default function ProgramsPage() {
-  const [programs, setPrograms] = useState<ProgramWithRelations[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isExtractOpen, setIsExtractOpen] = useState(false);
   const [programToDelete, setProgramToDelete] =
-    useState<ProgramWithRelations | null>(null);
+    useState<ProgramLean | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const isMobile = useIsMobile();
 
-    async function loadPrograms() {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const programsData = await getPrograms();
-
-        if (!cancelled) {
-          setPrograms(programsData);
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Podatkov ni bilo mogoče naložiti. Poskusite znova.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void loadPrograms();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const {
+    data: programs = [],
+    isLoading,
+    isError,
+  } = usePrograms();
 
   if (isLoading) {
     return (
@@ -109,13 +86,15 @@ export default function ProgramsPage() {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <div className="container py-8">
         <Card className="border-destructive/30">
           <CardHeader>
             <CardTitle>Napaka pri nalaganju</CardTitle>
-            <CardDescription>{error}</CardDescription>
+            <CardDescription>
+              Podatkov ni bilo mogoče naložiti. Poskusite znova.
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -125,60 +104,55 @@ export default function ProgramsPage() {
   return (
     <div className="container py-8">
       <div className="space-y-6">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">Programi</h1>
+            <div className="flex items-center gap-2">
+              <GraduationCap className="size-6 text-primary" />
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Programi
+              </h1>
+            </div>
             <p className="text-sm text-muted-foreground">
               Izberite program za ogled in urejanje izvedbenega predmetnika.
             </p>
           </div>
 
-          <Button onClick={() => setIsCreateOpen(true)} className="cursor-pointer">
-            <Plus />
-            Nov program
-          </Button>
+          <div className={cn("space-x-2", isMobile && "flex self-end")}>
+            <Button type="button" onClick={() => setIsCreateOpen(true)}>
+              <Plus />
+              {!isMobile && "Dodaj program"}
+            </Button>
+            <Button type="button" onClick={() => setIsExtractOpen(true)}>
+              <FileUp />
+              {!isMobile && "Uvozi"}
+            </Button>
+          </div>
         </div>
 
         {programs.length === 0 ? (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <GraduationCap className="size-5 text-primary" />
-                Ni programov
-              </CardTitle>
+              <CardTitle>Ni programov</CardTitle>
               <CardDescription>
                 Ustvarite prvi program za vašo šolo. Nato boste lahko dodali
                 letnike, razrede in predmete.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => setIsCreateOpen(true)}>
+              <Button type="button" onClick={() => setIsCreateOpen(true)}>
                 <Plus />
                 Ustvari program
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader className="border-b">
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="size-4 text-primary" />
-                  Vsi programi
-                </CardTitle>
-                <Badge variant="secondary">{programs.length}</Badge>
-              </div>
-              <CardDescription>
-                Kliknite program za odprtje podrobnosti.
-              </CardDescription>
-            </CardHeader>
-
+          <Card className="overflow-hidden py-0">
             <CardContent className="p-0">
               <ul className="divide-y divide-border">
                 {programs.map((program) => {
                   const yearCount = program.programYears.length;
                   const subjectCount = new Set(
-                    program.programSubjects.map((item) => item.subjectId),
+                    program.programSubjects.map((item) => item.subject),
                   ).size;
 
                   return (
@@ -238,9 +212,11 @@ export default function ProgramsPage() {
         )}
       </div>
 
-      <CreateProgramDialog
-        open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
+      <CreateProgramDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+
+      <ExtractProgramDialog
+        open={isExtractOpen}
+        onOpenChange={setIsExtractOpen}
       />
 
       <DeleteProgramDialog
@@ -250,12 +226,6 @@ export default function ProgramsPage() {
           if (!open) {
             setProgramToDelete(null);
           }
-        }}
-        onDeleted={(programId) => {
-          setPrograms((current) =>
-            current.filter((item) => item.id !== programId),
-          );
-          setProgramToDelete(null);
         }}
       />
     </div>

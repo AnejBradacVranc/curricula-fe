@@ -11,3 +11,9 @@ export interface UpdateProgramSubjectRequest {
   yearId: number;
   requiredHours: number;
 }
+
+export interface DeleteProgramSubjectRequest {
+  programId: number;
+  subjectId: number;
+  yearId: number;
+}

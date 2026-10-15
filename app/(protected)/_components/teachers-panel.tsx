@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Clock, GripVertical, Mail, Users } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Clock, GripVertical, Mail, Search, Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,61 +11,101 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAdditionalActivities } from "@/lib/queries/additional-activities/queries";
+import { useTeachers } from "@/lib/queries/teachers/queries";
 import { cn } from "@/lib/utils";
 import { formatHours } from "@/lib/curriculum/format-hours";
 import { hasColor } from "@/lib/teacher-color";
-import type { Teacher } from "@/types";
-import { setTeacherDragData } from "./drag";
 import { TeacherDetailDialog } from "./teacher-detail-dialog";
+import { setTeacherDragData } from "./drag";
 
-type TeachersPanelProps = {
-  teachers: Teacher[];
-  draggingTeacherId: number | null;
-  onDragStart: (teacherId: number) => void;
-  onDragEnd: () => void;
-  onTeacherUpdated?: () => void;
-};
-
-export function TeachersPanel({
-  teachers,
-  draggingTeacherId,
-  onDragStart,
-  onDragEnd,
-  onTeacherUpdated,
-}: TeachersPanelProps) {
+export function TeachersPanel() {
   const [detailTeacherId, setDetailTeacherId] = useState<number | null>(null);
+  const [draggingTeacherId, setDraggingTeacherId] = useState<number | null>(
+    null,
+  );
+  const [query, setQuery] = useState("");
+
+  const {
+    data: teachers = [],
+    isLoading: teachersLoading,
+    isError: teachersError,
+  } = useTeachers();
+  const { data: additionalActivities = [] } = useAdditionalActivities();
+
+  const filteredTeachers = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+
+    if (!normalized) {
+      return teachers;
+    }
+
+    return teachers.filter((teacher) => {
+      const fullName = `${teacher.name} ${teacher.surname}`.toLowerCase();
+      return (
+        fullName.includes(normalized) ||
+        teacher.email.toLowerCase().includes(normalized)
+      );
+    });
+  }, [teachers, query]);
 
   return (
     <>
-      <Card className="flex h-full min-h-0 flex-col lg:sticky lg:top-6 lg:max-h-[calc(100vh-7rem)]">
-        <CardHeader className="border-b">
-          <div className="flex items-center justify-between gap-2">
-            <CardTitle className="flex items-center gap-2">
-              <Users className="size-4 text-primary" />
-              Učitelji
-            </CardTitle>
-            <Badge variant="secondary">{teachers.length}</Badge>
+      <Card className="flex min-h-0 w-full flex-1 flex-col gap-0 overflow-hidden py-0">
+        <CardHeader className="shrink-0 space-y-3 border-b py-3">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Users className="size-4 text-primary" />
+                Učitelji
+              </CardTitle>
+              <Badge variant="secondary">{filteredTeachers.length}</Badge>
+            </div>
+            <CardDescription>
+              Povlecite učitelja na predmet za dodelitev ali kliknite za
+              podrobnosti.
+            </CardDescription>
           </div>
-          <CardDescription>
-            Povlecite učitelja na predmet za dodelitev ali kliknite za podrobnosti.
-          </CardDescription>
+
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Išči po imenu ali e-pošti …"
+              className="pl-8"
+              aria-label="Išči učitelje"
+            />
+          </div>
         </CardHeader>
 
-        <CardContent className="min-h-0 flex-1 p-0">
-          {teachers.length === 0 ? (
+        <CardContent className="min-h-0 flex-1 overflow-hidden p-0">
+          {teachersLoading ? (
+            <div className="space-y-2 p-3">
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-full" />
+            </div>
+          ) : teachersError ? (
+            <p className="px-(--card-spacing) py-8 text-center text-sm text-destructive">
+              Učiteljev ni bilo mogoče naložiti.
+            </p>
+          ) : filteredTeachers.length === 0 ? (
             <p className="px-(--card-spacing) py-8 text-center text-sm text-muted-foreground">
-              Ni registriranih učiteljev.
+              {teachers.length === 0
+                ? "Ni registriranih učiteljev."
+                : "Noben učitelj ne ustreza iskanju."}
             </p>
           ) : (
-            <ScrollArea className="h-full max-h-[min(70vh,640px)]">
-              <ul className="divide-y divide-border">
-                {teachers.map((teacher) => (
+            <div className="h-full overflow-y-auto overscroll-y-contain">
+              <ul className="divide-y divide-border p-1">
+                {filteredTeachers.map((teacher) => (
                   <li key={teacher.id}>
                     <div
                       className={cn(
-                        "flex items-center  px-(--card-spacing) py-2 transition-opacity",
+                        "flex items-center rounded-md transition-opacity",
                         draggingTeacherId === teacher.id && "opacity-50",
                       )}
                     >
@@ -78,9 +118,9 @@ export function TeachersPanel({
                             surname: teacher.surname,
                             color: teacher.color,
                           });
-                          onDragStart(teacher.id);
+                          setDraggingTeacherId(teacher.id);
                         }}
-                        onDragEnd={onDragEnd}
+                        onDragEnd={() => setDraggingTeacherId(null)}
                         className="flex shrink-0 cursor-grab items-center self-stretch rounded-md px-1 text-primary hover:bg-primary/10 active:cursor-grabbing"
                         aria-label={`Povleci ${teacher.name} ${teacher.surname}`}
                       >
@@ -90,9 +130,9 @@ export function TeachersPanel({
                       <button
                         type="button"
                         onClick={() => setDetailTeacherId(teacher.id)}
-                        className="cursor-pointer flex min-w-0 flex-1 items-center justify-between gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                       >
-                        <div className="min-w-0 flex-1 overflow-hidden space-y-1">
+                        <div className="min-w-0 flex-1 space-y-1 overflow-hidden">
                           <p className="flex min-w-0 items-center gap-2 truncate font-medium">
                             {hasColor(teacher.color) ? (
                               <span
@@ -118,7 +158,7 @@ export function TeachersPanel({
                             </span>
                           </Badge>
 
-                          <div className="flex flex-col items-end gap-0.5 text-[11px] text-muted-foreground leading-tight">
+                          <div className="flex flex-col items-end gap-0.5 text-[11px] leading-tight text-muted-foreground">
                             <span className="whitespace-nowrap">
                               Predmeti{" "}
                               <span className="font-medium text-foreground tabular-nums">
@@ -130,48 +170,32 @@ export function TeachersPanel({
                               <span className="whitespace-nowrap">
                                 Dodatno{" "}
                                 <span className="font-medium text-foreground tabular-nums">
-                                  {formatHours(teacher.additionalActivityHours)}h
+                                  {formatHours(teacher.additionalActivityHours)}
+                                  h
                                 </span>
                               </span>
                             )}
                           </div>
                         </div>
-
                       </button>
                     </div>
                   </li>
                 ))}
               </ul>
-            </ScrollArea>
+            </div>
           )}
         </CardContent>
-
-        {teachers.length > 0 && (
-          <>
-            <Separator />
-            <div className="px-(--card-spacing) py-3 text-xs text-muted-foreground">
-              Skupaj ur:{" "}
-              <span className="font-medium text-foreground">
-                {teachers.reduce(
-                  (sum, teacher) => sum + Number(teacher.totalHours),
-                  0,
-                )}
-                h
-              </span>
-            </div>
-          </>
-        )}
       </Card>
 
       <TeacherDetailDialog
         teacherId={detailTeacherId}
         open={detailTeacherId !== null}
+        additionalActivities={additionalActivities}
         onOpenChange={(open) => {
           if (!open) {
             setDetailTeacherId(null);
           }
         }}
-        onTeacherUpdated={onTeacherUpdated}
       />
     </>
   );

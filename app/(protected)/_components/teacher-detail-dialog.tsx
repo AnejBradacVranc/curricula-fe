@@ -1,14 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
+import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   BookOpen,
+  ExternalLink,
   Mail,
   Plus,
   Sparkles,
   Trash2,
 } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,8 +23,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -31,19 +41,22 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  createAdditionalActivityAssignment,
-  deleteAdditionalActivityAssignment,
-  getAdditionalActivities,
-  getTeacher,
-} from "@/lib/api";
+  useCreateAdditionalActivityAssignment,
+  useDeleteAdditionalActivityAssignment,
+} from "@/lib/queries/additional-activities/mutations";
+import { useTeacher } from "@/lib/queries/teachers/queries";
 import { formatHours } from "@/lib/curriculum/format-hours";
-import type { AdditionalActivity, TeacherDetail } from "@/types";
+import {
+  type CreateAdditionalActivityAssignmentFormValues,
+  createAdditionalActivityAssignmentSchema,
+} from "@/lib/schemas/additional-activities";
+import type { AdditionalActivity } from "@/types";
 
 type TeacherDetailDialogProps = {
   teacherId: number | null;
   open: boolean;
+  additionalActivities: AdditionalActivity[];
   onOpenChange: (open: boolean) => void;
-  onTeacherUpdated?: () => void;
 };
 
 function TeacherDetailSkeleton() {
@@ -67,124 +80,93 @@ function TeacherDetailSkeleton() {
 export function TeacherDetailDialog({
   teacherId,
   open,
+  additionalActivities,
   onOpenChange,
-  onTeacherUpdated,
 }: TeacherDetailDialogProps) {
-  const [teacher, setTeacher] = useState<TeacherDetail | null>(null);
-  const [activities, setActivities] = useState<AdditionalActivity[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedActivityId, setSelectedActivityId] = useState<number | null>(
-    null,
-  );
-  const [hoursInput, setHoursInput] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [removingKey, setRemovingKey] = useState<string | null>(null);
+  const {
+    data: teacher,
+    isLoading,
+    isError,
+  } = useTeacher(teacherId ?? 0, {
+    enabled: open && teacherId != null,
+  });
 
-  const loadTeacher = useCallback(async (id: number) => {
-    const data = await getTeacher(id);
-    setTeacher(data);
-    return data;
-  }, []);
+  const createAssignment = useCreateAdditionalActivityAssignment();
+  const deleteAssignment = useDeleteAdditionalActivityAssignment();
+
+  const form = useForm<CreateAdditionalActivityAssignmentFormValues>({
+    resolver: zodResolver(createAdditionalActivityAssignmentSchema),
+    defaultValues: {
+      additionalActivityId: "",
+      hoursAmount: "",
+    },
+  });
 
   useEffect(() => {
-    if (!open || teacherId === null) {
+    if (!open) {
       return;
     }
 
-    const selectedTeacherId = teacherId;
-    let cancelled = false;
+    form.reset({
+      additionalActivityId: "",
+      hoursAmount: "",
+    });
+  }, [open, teacherId, form]);
 
-    async function load() {
-      setIsLoading(true);
-      setTeacher(null);
-      setSelectedActivityId(null);
-      setHoursInput("");
-      setValidationError(null);
-
-      try {
-        const [teacherData, activitiesData] = await Promise.all([
-          getTeacher(selectedTeacherId),
-          getAdditionalActivities(),
-        ]);
-
-        if (!cancelled) {
-          setTeacher(teacherData);
-          setActivities(activitiesData);
-        }
-      } catch {
-        if (!cancelled) {
-          toast.error("Podatkov o učitelju ni bilo mogoče naložiti.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
+  useEffect(() => {
+    if (isError && open) {
+      toast.error("Podatkov o učitelju ni bilo mogoče naložiti.");
     }
+  }, [isError, open]);
 
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open, teacherId]);
-
-  const handleAddAdditionalHours = async () => {
-    if (!teacher || selectedActivityId === null) {
-      setValidationError("Izberite dejavnost.");
-      return;
-    }
-
-    const hoursAmount = Number(hoursInput);
-    if (Number.isNaN(hoursAmount) || hoursAmount < 0) {
-      setValidationError("Vnesite veljavno število ur.");
-      return;
-    }
-
-    setValidationError(null);
-    setIsSubmitting(true);
-
-    try {
-      await createAdditionalActivityAssignment({
-        teacherId: teacher.id,
-        additionalActivityId: selectedActivityId,
-        hoursAmount,
-      });
-      await loadTeacher(teacher.id);
-      onTeacherUpdated?.();
-      setSelectedActivityId(null);
-      setHoursInput("");
-      toast.success("Dodatne ure so bile uspešno dodane.");
-    } catch {
-      toast.error("Dodajanje dodatnih ur ni uspelo.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleRemoveAdditionalHours = async (additionalActivityId: number) => {
+  async function handleAddAdditionalHours(
+    values: CreateAdditionalActivityAssignmentFormValues,
+  ) {
     if (!teacher) {
       return;
     }
 
-    const key = String(additionalActivityId);
-    setRemovingKey(key);
+    try {
+      await createAssignment.mutateAsync({
+        teacherId: teacher.id,
+        additionalActivityId: Number(values.additionalActivityId),
+        hoursAmount: Number(values.hoursAmount),
+      });
+      form.reset({
+        additionalActivityId: "",
+        hoursAmount: "",
+      });
+      toast.success("Dodatne ure so bile uspešno dodane.");
+    } catch {
+      toast.error("Dodajanje dodatnih ur ni uspelo.");
+    }
+  }
+
+  async function handleRemoveAdditionalHours(additionalActivityId: number) {
+    if (!teacher) {
+      return;
+    }
 
     try {
-      await deleteAdditionalActivityAssignment({
+      await deleteAssignment.mutateAsync({
         teacherId: teacher.id,
         additionalActivityId,
       });
-      await loadTeacher(teacher.id);
-      onTeacherUpdated?.();
       toast.success("Dodatne ure so bile odstranjene.");
     } catch {
       toast.error("Odstranitev dodatnih ur ni uspela.");
-    } finally {
-      setRemovingKey(null);
     }
-  };
+  }
+
+  const isSubmitting = createAssignment.isPending;
+  const removingActivityId = deleteAssignment.isPending
+    ? deleteAssignment.variables?.additionalActivityId
+    : null;
+
+  const activityItems = additionalActivities.map((activity) => ({
+    value: String(activity.id),
+    label: activity.name,
+  }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -206,7 +188,14 @@ export function TeacherDetailDialog({
             <DialogHeader className="shrink-0 border-b px-4 pt-4 pb-3">
               <div className="space-y-1 pr-8">
                 <DialogTitle className="text-lg">
-                  {teacher.name} {teacher.surname}
+                  <div className="flex items-center gap-4">
+                    <p>
+                      {teacher.name} {teacher.surname}
+                    </p>
+                    <Link href={`/teachers/${teacherId}`}>
+                      <ExternalLink className="size-5 text-primary" />
+                    </Link>
+                  </div>
                 </DialogTitle>
                 <DialogDescription className="flex items-center gap-1.5">
                   <Mail className="size-3.5 shrink-0" />
@@ -254,7 +243,8 @@ export function TeacherDetailDialog({
                     ) : (
                       <ul className="divide-y divide-border rounded-lg border">
                         {teacher.assignments.map((assignment, index) => {
-                          const { class: classRoom, programSubject } = assignment;
+                          const { class: classRoom, programSubject } =
+                            assignment;
                           const assignmentKey = [
                             classRoom.programYear.year.name,
                             classRoom.label,
@@ -272,7 +262,8 @@ export function TeacherDetailDialog({
                                   {programSubject.subject.name}
                                 </p>
                                 <Badge variant="outline" className="shrink-0">
-                                  {formatHours(programSubject.requiredHours)} h/teden
+                                  {formatHours(programSubject.requiredHours)}{" "}
+                                  h/teden
                                 </Badge>
                               </div>
                               <p className="text-xs text-muted-foreground">
@@ -294,70 +285,102 @@ export function TeacherDetailDialog({
                   <section className="space-y-3 pb-2">
                     <div className="flex items-center gap-2 text-sm font-medium">
                       <Sparkles className="size-4 text-primary" />
-                      Dodatne ure ({teacher.additionalActivityAssignments.length})
+                      Dodatne ure (
+                      {teacher.additionalActivityAssignments.length})
                     </div>
 
-                    <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="additional-activity">Dejavnost</Label>
-                        <Select
-                          value={selectedActivityId}
-                          onValueChange={setSelectedActivityId}
-                          disabled={isSubmitting || activities.length === 0}
-                          modal={false}
-                          items={activities.map((activity) => ({
-                            value: activity.id,
-                            label: activity.name,
-                          }))}
-                        >
-                          <SelectTrigger
-                            id="additional-activity"
-                            className="w-full"
-                          >
-                            <SelectValue placeholder="Izberite dejavnost …" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {activities.map((activity) => (
-                              <SelectItem key={activity.id} value={activity.id}>
-                                {activity.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="additional-hours">Število ur</Label>
-                        <Input
-                          id="additional-hours"
-                          type="number"
-                          min={0}
-                          step="0.0001"
-                          inputMode="decimal"
-                          placeholder="npr. 12"
-                          value={hoursInput}
-                          onChange={(event) => setHoursInput(event.target.value)}
-                          disabled={isSubmitting}
+                    <form
+                      className="rounded-lg border bg-muted/20 p-3"
+                      onSubmit={form.handleSubmit(handleAddAdditionalHours)}
+                      noValidate
+                    >
+                      <FieldGroup>
+                        <Controller
+                          name="additionalActivityId"
+                          control={form.control}
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel htmlFor="additional-activity">
+                                Dejavnost
+                              </FieldLabel>
+                              <Select
+                                value={field.value || null}
+                                onValueChange={(value) =>
+                                  field.onChange(
+                                    value == null ? "" : String(value),
+                                  )
+                                }
+                                disabled={
+                                  isSubmitting ||
+                                  additionalActivities.length === 0
+                                }
+                                modal={false}
+                                items={activityItems}
+                              >
+                                <SelectTrigger
+                                  id="additional-activity"
+                                  className="w-full"
+                                  aria-invalid={fieldState.invalid}
+                                >
+                                  <SelectValue placeholder="Izberite dejavnost …" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {additionalActivities.map((activity) => (
+                                    <SelectItem
+                                      key={activity.id}
+                                      value={String(activity.id)}
+                                    >
+                                      {activity.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {fieldState.invalid ? (
+                                <FieldError errors={[fieldState.error]} />
+                              ) : null}
+                            </Field>
+                          )}
                         />
-                      </div>
 
-                      {validationError && (
-                        <p className="text-sm text-destructive" role="alert">
-                          {validationError}
-                        </p>
-                      )}
+                        <Controller
+                          name="hoursAmount"
+                          control={form.control}
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel htmlFor="additional-hours">
+                                Število ur
+                              </FieldLabel>
+                              <Input
+                                {...field}
+                                id="additional-hours"
+                                type="number"
+                                min={0}
+                                step="0.0001"
+                                inputMode="decimal"
+                                placeholder="npr. 12"
+                                aria-invalid={fieldState.invalid}
+                                disabled={isSubmitting}
+                              />
+                              {fieldState.invalid ? (
+                                <FieldError errors={[fieldState.error]} />
+                              ) : null}
+                            </Field>
+                          )}
+                        />
 
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="w-full"
-                        disabled={isSubmitting || !selectedActivityId || !hoursInput}
-                        onClick={() => void handleAddAdditionalHours()}
-                      >
-                        <Plus className="size-4" />
-                        Dodaj
-                      </Button>
-                    </div>
+                        <Field>
+                          <Button
+                            type="submit"
+                            size="sm"
+                            className="w-full"
+                            disabled={isSubmitting}
+                          >
+                            <Plus className="size-4" />
+                            Dodaj
+                          </Button>
+                        </Field>
+                      </FieldGroup>
+                    </form>
 
                     {teacher.additionalActivityAssignments.length === 0 ? (
                       <p className="text-sm text-muted-foreground">
@@ -385,7 +408,7 @@ export function TeacherDetailDialog({
                                   variant="ghost"
                                   size="icon-sm"
                                   aria-label={`Odstrani ${assignment.additionalActivity.name}`}
-                                  disabled={removingKey !== null}
+                                  disabled={removingActivityId != null}
                                   onClick={() =>
                                     void handleRemoveAdditionalHours(
                                       assignment.additionalActivityId,

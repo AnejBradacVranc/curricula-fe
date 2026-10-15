@@ -13,23 +13,25 @@ type SubjectTeacher = Omit<Teacher, "schoolId">;
 
 type SubjectAssignmentSlotProps = {
   teacher?: SubjectTeacher;
-  isPending: boolean;
+  isLoading: boolean;
   disabled?: boolean;
   onAssign: (teacherId: number) => void;
   onRemove: () => void;
+  onClick: () => void;
 };
 
 export function SubjectAssignmentSlot({
   teacher,
-  isPending,
+  isLoading,
   disabled = false,
   onAssign,
   onRemove,
+  onClick,
 }: SubjectAssignmentSlotProps) {
   const [isDragOver, setIsDragOver] = useState(false);
 
   function handleDragOver(event: React.DragEvent<HTMLDivElement>) {
-    if (disabled || isPending) {
+    if (disabled) {
       return;
     }
 
@@ -49,7 +51,7 @@ export function SubjectAssignmentSlot({
     event.stopPropagation();
     setIsDragOver(false);
 
-    if (disabled || isPending) {
+    if (disabled || isLoading) {
       return;
     }
 
@@ -79,11 +81,11 @@ export function SubjectAssignmentSlot({
           "flex items-center gap-2 rounded-lg text-sm transition-colors",
           "px-2 py-1 text-[10px]",
           !teacherColor && "bg-muted/60",
-          isPending && "opacity-60",
+          isLoading && "opacity-60",
           isDragOver &&
-          (teacherColor
-            ? "ring-2 ring-primary/40"
-            : "border-primary bg-primary/10 text-foreground"),
+            (teacherColor
+              ? "ring-2 ring-primary/40"
+              : "border-primary bg-primary/10 text-foreground"),
         )}
       >
         {teacherColor ? (
@@ -96,7 +98,7 @@ export function SubjectAssignmentSlot({
         <span className="min-w-0 flex-1 truncate font-medium">
           {teacher.name} {teacher.surname}
         </span>
-        {isPending ? (
+        {isLoading ? (
           <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
         ) : (
           <Button
@@ -119,23 +121,29 @@ export function SubjectAssignmentSlot({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      onClick={() => {
+        if (disabled || isLoading) {
+          return;
+        }
+        onClick();
+      }}
       className={cn(
         "rounded-lg border border-dashed text-muted-foreground transition-colors",
         "px-2 py-1 text-[10px]",
         !disabled &&
-        !isPending &&
-        "cursor-copy hover:border-primary/40 hover:bg-primary/5",
+          !isLoading &&
+          "cursor-pointer hover:border-primary/40 hover:bg-primary/5",
         isDragOver && "border-primary bg-primary/10 text-foreground",
-        isPending && "opacity-60",
+        isLoading && "opacity-60",
       )}
     >
-      {isPending ? (
+      {isLoading ? (
         <span className="flex items-center gap-2">
           <Loader2 className="size-4 animate-spin" />
           Dodeljevanje...
         </span>
       ) : (
-        "Povleci"
+        "Klikni ali povleci"
       )}
     </div>
   );

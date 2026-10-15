@@ -1,42 +1,55 @@
 "use client";
 
-import { Fragment, useState } from "react";
-import { Pencil, Plus } from "lucide-react";
+import { useState } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import { AssignSubjectDialog } from "@/app/(protected)/programs/_components/assign-subject-dialog";
+import { DeleteProgramSubjectDialog } from "@/app/(protected)/programs/_components/delete-program-subject-dialog";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { formatHours, sumHours } from "@/lib/curriculum/format-hours";
-import type { ProgramSubjectItem, ProgramWithRelations } from "@/types";
+import { useProgram } from "@/lib/queries/programs/queries";
+import type { ProgramSubjectItem } from "@/types";
 
 type ProgramSubjectsTableProps = {
-  program: ProgramWithRelations;
-  onSubjectSaved?: () => void | Promise<void>;
+  programId: number;
 };
 
 export function ProgramSubjectsTable({
-  program,
-  onSubjectSaved,
+  programId,
 }: ProgramSubjectsTableProps) {
-  const years = [...program.programYears].sort((a, b) => a.yearId - b.yearId);
+  const { data: program } = useProgram(programId);
+  const years = program?.programYears ?? [];
+  const programSubjects = program?.programSubjects ?? [];
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProgramSubject, setEditingProgramSubject] =
     useState<ProgramSubjectItem | null>(null);
+  const [deletingProgramSubject, setDeletingProgramSubject] =
+    useState<ProgramSubjectItem | null>(null);
 
   const sections = years
     .map((programYear) => {
-      const subjects = program.programSubjects
+      const yearSubjects = programSubjects
         .filter((item) => item.yearId === programYear.yearId)
         .sort((a, b) => a.subject.name.localeCompare(b.subject.name, "sl"));
 
       return {
         programYear,
-        subjects,
-        totalHours: sumHours(subjects.map((item) => item.requiredHours)),
+        subjects: yearSubjects,
+        totalHours: sumHours(yearSubjects.map((item) => item.requiredHours)),
       };
     })
     .filter((section) => section.subjects.length > 0);
+
+  const isMobile = useIsMobile();
 
   function openCreateDialog() {
     setEditingProgramSubject(null);
@@ -50,19 +63,21 @@ export function ProgramSubjectsTable({
 
   return (
     <>
-      <Card className="overflow-hidden py-0">
+      <Card className="min-w-0 overflow-hidden py-0">
         <CardHeader className="border-b py-4">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
               <CardTitle className="text-base">Predmeti</CardTitle>
               <p className="text-sm text-muted-foreground">
                 Predmeti po letnikih z zahtevanimi urami na teden.
               </p>
             </div>
-            <Button type="button" onClick={openCreateDialog}>
-              <Plus />
-              Dodaj
-            </Button>
+            <div className={isMobile ? "flex shrink-0 self-end" : undefined}>
+              <Button type="button" onClick={openCreateDialog}>
+                <Plus />
+                {!isMobile && "Dodaj predmet"}
+              </Button>
+            </div>
           </div>
         </CardHeader>
 
@@ -71,97 +86,178 @@ export function ProgramSubjectsTable({
             Ta program še nima dodeljenih predmetov.
           </CardContent>
         ) : (
-          <CardContent className="overflow-x-auto p-0">
-            <table className="w-full min-w-[520px] border-collapse text-sm">
-              <thead>
-                <tr className="border-b bg-muted/20">
-                  <th className="px-4 py-2.5 text-left text-xs font-medium">
-                    Predmet
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium">
-                    Kategorija
-                  </th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium">
-                    Ure / teden
-                  </th>
-                  <th className="w-12 px-2 py-2.5">
-                    <span className="sr-only">Dejanja</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sections.map((section, sectionIndex) => (
-                  <Fragment key={section.programYear.yearId}>
-                    <tr className="border-b bg-muted/40">
-                      <td
-                        colSpan={4}
-                        className="px-4 py-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
-                      >
+          <CardContent className="min-w-0 p-0">
+            <Accordion
+              multiple
+              defaultValue={sections.map((section) =>
+                String(section.programYear.yearId),
+              )}
+              className="w-full min-w-0"
+            >
+              {sections.map((section) => (
+                <AccordionItem
+                  key={section.programYear.yearId}
+                  value={String(section.programYear.yearId)}
+                  className="border-b px-3 last:border-b-0 sm:px-4"
+                >
+                  <AccordionTrigger className="cursor-pointer hover:no-underline">
+                    <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                      <span className="text-md font-semibold tracking-wide text-primary uppercase">
                         {section.programYear.year.name}
-                        <span className="ml-2 font-normal normal-case text-muted-foreground/80">
-                          · {section.programYear.numWeeks} tednov
-                        </span>
-                      </td>
-                    </tr>
-
-                    {section.subjects.map((item) => (
-                      <tr
-                        key={`${item.subjectId}-${item.yearId}`}
-                        className="border-b border-border/70 hover:bg-muted/10"
-                      >
-                        <td className="px-4 py-2.5 align-top">
-                          <div className="flex items-baseline gap-2">
-                            <span className="shrink-0 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                              {item.subject.abbrevation}
-                            </span>
-                            <span className="min-w-0 truncate font-medium">
-                              {item.subject.name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-2.5 align-top text-muted-foreground">
-                          {item.subject.category?.name ?? "—"}
-                        </td>
-                        <td className="px-4 py-2.5 text-right align-top tabular-nums font-medium">
-                          {formatHours(item.requiredHours)}
-                        </td>
-                        <td className="px-2 py-2.5 text-right align-top">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="text-muted-foreground"
-                            aria-label={`Uredi ${item.subject.name}`}
-                            onClick={() => openEditDialog(item)}
+                      </span>
+                      <span className="text-xs font-normal text-muted-foreground/80">
+                        · {section.programYear.numWeeks} tednov
+                      </span>
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    {isMobile ? (
+                      <ul className="divide-y divide-border overflow-hidden rounded-md border">
+                        {section.subjects.map((item) => (
+                          <li
+                            key={`${item.subjectId}-${item.yearId}`}
+                            className="flex items-start gap-2 px-3 py-2.5"
                           >
-                            <Pencil className="size-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
+                            <div className="min-w-0 flex-1 space-y-0.5">
+                              <div className="flex min-w-0 items-baseline gap-2">
+                                <span className="shrink-0 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                  {item.subject.abbrevation}
+                                </span>
+                                <span className="min-w-0 truncate font-medium">
+                                  {item.subject.name}
+                                </span>
+                              </div>
+                              <p className="truncate text-xs text-muted-foreground">
+                                {item.subject.category?.name ?? "—"}
+                                <span className="mx-1.5 text-border">·</span>
+                                <span className="tabular-nums">
+                                  {formatHours(item.requiredHours)} h/teden
+                                </span>
+                              </p>
+                            </div>
+                            <div className="flex shrink-0 items-center">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                className="text-muted-foreground"
+                                aria-label={`Uredi ${item.subject.name}`}
+                                onClick={() => openEditDialog(item)}
+                              >
+                                <Pencil className="size-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                className="text-muted-foreground hover:text-destructive"
+                                aria-label={`Odstrani ${item.subject.name}`}
+                                onClick={() => setDeletingProgramSubject(item)}
+                              >
+                                <Trash2 className="size-4" />
+                              </Button>
+                            </div>
+                          </li>
+                        ))}
+                        <li className="flex items-center justify-between gap-2 bg-muted/20 px-3 py-2 text-sm font-medium">
+                          <span className="text-xs text-muted-foreground">
+                            Skupaj ur / teden
+                          </span>
+                          <span className="tabular-nums">
+                            {formatHours(section.totalHours)}
+                          </span>
+                        </li>
+                      </ul>
+                    ) : (
+                      <div className="overflow-x-auto rounded-md border">
+                        <table className="w-full border-collapse text-sm">
+                          <thead>
+                            <tr className="border-b bg-muted/20">
+                              <th className="px-4 py-2.5 text-left text-xs font-medium">
+                                Predmet
+                              </th>
+                              <th className="px-4 py-2.5 text-left text-xs font-medium">
+                                Kategorija
+                              </th>
+                              <th className="px-4 py-2.5 text-right text-xs font-medium">
+                                Ure / teden
+                              </th>
+                              <th className="w-20 px-2 py-2.5">
+                                <span className="sr-only">Dejanja</span>
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {section.subjects.map((item) => (
+                              <tr
+                                key={`${item.subjectId}-${item.yearId}`}
+                                className="border-b border-border/70 hover:bg-muted/10"
+                              >
+                                <td className="px-4 py-2.5 align-top">
+                                  <div className="flex items-baseline gap-2">
+                                    <span className="shrink-0 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                      {item.subject.abbrevation}
+                                    </span>
+                                    <span className="min-w-0 truncate font-medium">
+                                      {item.subject.name}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-2.5 align-top text-muted-foreground">
+                                  {item.subject.category?.name ?? "—"}
+                                </td>
+                                <td className="px-4 py-2.5 text-right align-top font-medium tabular-nums">
+                                  {formatHours(item.requiredHours)}
+                                </td>
+                                <td className="px-2 py-2.5 text-right align-top">
+                                  <div className="flex items-center justify-end gap-0.5">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon-sm"
+                                      className="text-muted-foreground"
+                                      aria-label={`Uredi ${item.subject.name}`}
+                                      onClick={() => openEditDialog(item)}
+                                    >
+                                      <Pencil className="size-4" />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon-sm"
+                                      className="text-muted-foreground hover:text-destructive"
+                                      aria-label={`Odstrani ${item.subject.name}`}
+                                      onClick={() =>
+                                        setDeletingProgramSubject(item)
+                                      }
+                                    >
+                                      <Trash2 className="size-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
 
-                    <tr className="border-b bg-muted/20 font-medium">
-                      <td
-                        colSpan={2}
-                        className="px-4 py-2 text-xs text-muted-foreground"
-                      >
-                        Skupaj ur / teden
-                      </td>
-                      <td className="px-4 py-2 text-right tabular-nums">
-                        {formatHours(section.totalHours)}
-                      </td>
-                      <td />
-                    </tr>
-
-                    {sectionIndex < sections.length - 1 && (
-                      <tr aria-hidden="true">
-                        <td colSpan={4} className="h-1 bg-muted/10 p-0" />
-                      </tr>
+                            <tr className="bg-muted/20 font-medium">
+                              <td
+                                colSpan={2}
+                                className="px-4 py-2 text-xs text-muted-foreground"
+                              >
+                                Skupaj ur / teden
+                              </td>
+                              <td className="px-4 py-2 text-right tabular-nums">
+                                {formatHours(section.totalHours)}
+                              </td>
+                              <td />
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     )}
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </CardContent>
         )}
       </Card>
@@ -174,11 +270,19 @@ export function ProgramSubjectsTable({
             setEditingProgramSubject(null);
           }
         }}
-        programYears={program.programYears}
-        programSubjects={program.programSubjects}
-        programId={program.id}
+        programId={programId}
         editingProgramSubject={editingProgramSubject}
-        onSubjectSaved={onSubjectSaved}
+      />
+
+      <DeleteProgramSubjectDialog
+        open={deletingProgramSubject !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeletingProgramSubject(null);
+          }
+        }}
+        programId={programId}
+        programSubject={deletingProgramSubject}
       />
     </>
   );

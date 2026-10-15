@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { deleteClass } from "@/lib/api";
+import { useDeleteClass } from "@/lib/queries/classes/mutations";
 import type { ProgramClass, ProgramYear } from "@/types";
 
 type DeleteClassTarget = {
@@ -26,7 +26,6 @@ type DeleteClassDialogProps = {
   onOpenChange: (open: boolean) => void;
   programId: number;
   target: DeleteClassTarget | null;
-  onDeleted?: () => void | Promise<void>;
 };
 
 export function DeleteClassDialog({
@@ -34,10 +33,9 @@ export function DeleteClassDialog({
   onOpenChange,
   programId,
   target,
-  onDeleted,
 }: DeleteClassDialogProps) {
   const [error, setError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteClassMutation = useDeleteClass();
 
   const classLabel = target
     ? `${target.programYear.year.name.slice(0, 1)}. ${target.programClass.label.toUpperCase()}`
@@ -46,7 +44,6 @@ export function DeleteClassDialog({
   useEffect(() => {
     if (!open) {
       setError(null);
-      setIsDeleting(false);
     }
   }, [open]);
 
@@ -55,11 +52,10 @@ export function DeleteClassDialog({
       return;
     }
 
-    setIsDeleting(true);
     setError(null);
 
     try {
-      await deleteClass({
+      await deleteClassMutation.mutateAsync({
         id: target.programClass.id,
         programId,
         yearId: target.programYear.yearId,
@@ -68,12 +64,12 @@ export function DeleteClassDialog({
         description: classLabel ?? undefined,
       });
       onOpenChange(false);
-      await onDeleted?.();
     } catch {
       setError("Razreda ni bilo mogoče izbrisati. Poskusite znova.");
-      setIsDeleting(false);
     }
   }
+
+  const isDeleting = deleteClassMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

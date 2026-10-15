@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil, Plus } from "lucide-react";
-
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,8 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -22,36 +29,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
-  createProgramSubject,
-  getSubjects,
-  updateProgramSubject,
-} from "@/lib/api";
-import type { ProgramSubjectItem, ProgramYear, Subject } from "@/types";
+  useCreateProgramSubject,
+  useUpdateProgramSubject,
+} from "@/lib/queries/program-subjects/mutations";
+import { useProgram } from "@/lib/queries/programs/queries";
+import { useSubjects } from "@/lib/queries/subjects/queries";
+import {
+  type AssignSubjectFormValues,
+  assignSubjectFormSchema,
+} from "@/lib/schemas/programs";
+import type { ProgramSubjectItem } from "@/types";
 
 type AssignSubjectDialogProps = {
   open: boolean;
   programId: number;
-  programYears: ProgramYear[];
-  programSubjects: ProgramSubjectItem[];
   editingProgramSubject: ProgramSubjectItem | null;
   onOpenChange: (open: boolean) => void;
-  onSubjectSaved?: () => void | Promise<void>;
 };
-
-function AssignSubjectSkeleton() {
-  return (
-    <div className="space-y-4 px-4 pb-4">
-      <div className="space-y-2">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-4 w-56" />
-        <Skeleton className="h-5 w-24" />
-      </div>
-    </div>
-  );
-}
 
 function getAssignedYearIdsForSubject(
   programSubjects: ProgramSubjectItem[],
@@ -67,86 +62,96 @@ function getAssignedYearIdsForSubject(
 export function AssignSubjectDialog({
   open,
   programId,
-  programYears,
-  programSubjects,
   editingProgramSubject,
   onOpenChange,
-  onSubjectSaved,
 }: AssignSubjectDialogProps) {
   const isEditing = editingProgramSubject !== null;
 
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(
-    null,
-  );
-  const [selectedYearId, setSelectedYearId] = useState<number | null>(null);
-  const [requiredHours, setRequiredHours] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: program } = useProgram(programId);
+  const { data: subjects = [] } = useSubjects();
+  const createProgramSubjectMutation = useCreateProgramSubject();
+  const updateProgramSubjectMutation = useUpdateProgramSubject();
+
+  const programYears = program?.programYears ?? [];
+  const programSubjects = program?.programSubjects ?? [];
+
+  const form = useForm<AssignSubjectFormValues>({
+    resolver: zodResolver(assignSubjectFormSchema),
+    defaultValues: {
+      subjectId: "",
+      yearId: "",
+      requiredHours: "",
+    },
+  });
+
+  const selectedSubjectId = useWatch({
+    control: form.control,
+    name: "subjectId",
+  });
 
   useEffect(() => {
     if (!open) {
       return;
     }
 
-    let cancelled = false;
-
-    async function load() {
-      setIsLoading(true);
-      setValidationError(null);
-      setIsSubmitting(false);
-      setSelectedSubjectId(editingProgramSubject?.subjectId ?? null);
-      setSelectedYearId(editingProgramSubject?.yearId ?? null);
-      setRequiredHours(
-        editingProgramSubject
-          ? String(editingProgramSubject.requiredHours)
+    form.reset({
+      subjectId:
+        editingProgramSubject?.subjectId != null
+          ? String(editingProgramSubject.subjectId)
           : "",
-      );
+      yearId:
+        editingProgramSubject?.yearId != null
+          ? String(editingProgramSubject.yearId)
+          : "",
+      requiredHours: editingProgramSubject
+        ? String(editingProgramSubject.requiredHours)
+        : "",
+    });
+  }, [open, editingProgramSubject, form]);
 
-      try {
-        const subjectsData = await getSubjects();
-
-        if (!cancelled) {
-          setSubjects(subjectsData);
-        }
-      } catch {
-        if (!cancelled) {
-          toast.error("Predmetov ni bilo mogoče pridobiti.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
+  const subjectOptions = useMemo(() => {
+    if (isEditing && editingProgramSubject) {
+      return [
+        {
+          id: editingProgramSubject.subject.id,
+          name: editingProgramSubject.subject.name,
+        },
+      ];
     }
 
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open, editingProgramSubject]);
-
-  const subjectOptions =
-    isEditing && editingProgramSubject
-      ? [editingProgramSubject.subject]
-      : subjects;
+    return [...subjects]
+      .map((subject) => ({ id: subject.id, name: subject.name }))
+      .sort((a, b) => a.name.localeCompare(b.name, "sl"));
+  }, [editingProgramSubject, isEditing, subjects]);
 
   const selectableProgramYears = useMemo(() => {
+    if (isEditing) {
+      return programYears;
+    }
+
     if (!selectedSubjectId) {
       return programYears;
     }
 
     const assignedYearIds = getAssignedYearIdsForSubject(
       programSubjects,
-      selectedSubjectId,
+      Number(selectedSubjectId),
     );
 
     return programYears.filter(
       (programYear) => !assignedYearIds.has(programYear.yearId),
     );
-  }, [programSubjects, programYears, selectedSubjectId]);
+  }, [isEditing, programSubjects, programYears, selectedSubjectId]);
+
+  const programYearsOptions =
+    isEditing && editingProgramSubject
+      ? [editingProgramSubject.programYear]
+      : selectableProgramYears;
+
+  const selectedYearId = useWatch({
+    control: form.control,
+    name: "yearId",
+  });
 
   useEffect(() => {
     if (isEditing) {
@@ -154,212 +159,231 @@ export function AssignSubjectDialog({
     }
 
     if (
-      selectedYearId === null ||
+      !selectedYearId ||
       selectableProgramYears.some(
-        (programYear) => programYear.yearId === selectedYearId,
+        (programYear) => String(programYear.yearId) === selectedYearId,
       )
     ) {
       return;
     }
 
-    setSelectedYearId(null);
-  }, [isEditing, selectableProgramYears, selectedYearId]);
+    form.setValue("yearId", "");
+  }, [isEditing, selectableProgramYears, selectedYearId, form]);
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
-      setValidationError(null);
-      setIsSubmitting(false);
+      form.reset({
+        subjectId: "",
+        yearId: "",
+        requiredHours: "",
+      });
     }
 
     onOpenChange(nextOpen);
   }
 
-  async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const hoursAmount = Number(requiredHours);
-    if (Number.isNaN(hoursAmount) || hoursAmount < 0) {
-      setValidationError("Vnesite veljavno število ur na teden.");
-      return;
-    }
-
-    if (!programId || !selectedSubjectId || !selectedYearId || !requiredHours) {
-      setValidationError("Izpolnite vsa vnosna polja.");
-      return;
-    }
-
-    setValidationError(null);
-    setIsSubmitting(true);
+  async function handleSubmit(values: AssignSubjectFormValues) {
+    const subjectId = Number(values.subjectId);
+    const yearId = Number(values.yearId);
+    const requiredHours = Number(values.requiredHours);
 
     try {
       if (isEditing && editingProgramSubject) {
-        await updateProgramSubject({
+        await updateProgramSubjectMutation.mutateAsync({
           programId,
-          subjectId: selectedSubjectId,
+          subjectId,
           yearId: editingProgramSubject.yearId,
-          requiredHours: hoursAmount,
+          requiredHours,
         });
         toast.success("Predmet je bil uspešno posodobljen.");
       } else {
-        await createProgramSubject({
+        await createProgramSubjectMutation.mutateAsync({
           programId,
-          subjectId: selectedSubjectId,
-          yearId: selectedYearId,
-          requiredHours: hoursAmount,
+          subjectId,
+          yearId,
+          requiredHours,
         });
         toast.success("Predmet je bil uspešno dodan na predmetnik.");
       }
 
       handleOpenChange(false);
-      await onSubjectSaved?.();
     } catch {
       toast.error(
         isEditing
           ? "Predmeta ni bilo mogoče posodobiti. Poskusite znova."
           : "Predmeta ni bilo mogoče dodati programu. Poskusite znova.",
       );
-      setIsSubmitting(false);
     }
   }
+
+  const isSubmitting =
+    createProgramSubjectMutation.isPending ||
+    updateProgramSubjectMutation.isPending;
+
+  const subjectItems = subjectOptions.map((subject) => ({
+    value: String(subject.id),
+    label: subject.name,
+  }));
+
+  const yearItems = programYearsOptions.map((programYear) => ({
+    value: String(programYear.yearId),
+    label: programYear.year.name,
+  }));
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
-        {isLoading ? (
-          <>
-            <DialogHeader className="shrink-0 border-b px-4 pt-4 pb-3">
-              <DialogTitle>Nalaganje predmetov</DialogTitle>
-              <DialogDescription>Prosimo počakajte …</DialogDescription>
-            </DialogHeader>
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <ScrollArea className="h-full">
-                <AssignSubjectSkeleton />
-              </ScrollArea>
-            </div>
-          </>
-        ) : (
-          <>
-            <DialogHeader>
-              <DialogTitle>
-                {isEditing ? "Urejanje predmeta" : "Dodajanje predmeta"}
-              </DialogTitle>
-              <DialogDescription>
-                {isEditing
-                  ? "Posodobite število ur na teden za izbrani predmet."
-                  : "Izberite predmet, ki ga želite dodati temu programu."}
-              </DialogDescription>
-            </DialogHeader>
+        <DialogHeader>
+          <DialogTitle>
+            {isEditing ? "Urejanje predmeta" : "Dodajanje predmeta"}
+          </DialogTitle>
+          <DialogDescription>
+            {isEditing
+              ? "Posodobite število ur na teden za izbrani predmet."
+              : "Izberite predmet, ki ga želite dodati temu programu."}
+          </DialogDescription>
+        </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="subject">Predmet</Label>
-                <Select
-                  value={selectedSubjectId}
-                  onValueChange={setSelectedSubjectId}
-                  disabled={
-                    isSubmitting || isEditing || subjectOptions.length === 0
-                  }
-                  modal={false}
-                  items={subjectOptions.map((subject) => ({
-                    value: subject.id,
-                    label: subject.name,
-                  }))}
-                >
-                  <SelectTrigger id="subject" className="w-full">
-                    <SelectValue placeholder="Izberite predmet …" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subjectOptions.map((subject) => (
-                      <SelectItem key={subject.id} value={subject.id}>
-                        {subject.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="year">Letnik</Label>
-                <Select
-                  value={selectedYearId}
-                  onValueChange={setSelectedYearId}
-                  disabled={
-                    isSubmitting ||
-                    isEditing ||
-                    !selectedSubjectId ||
-                    selectableProgramYears.length === 0
-                  }
-                  modal={false}
-                  items={(isEditing && editingProgramSubject
-                    ? [editingProgramSubject.programYear]
-                    : selectableProgramYears
-                  ).map((programYear) => ({
-                    value: programYear.yearId,
-                    label: programYear.year.name,
-                  }))}
-                >
-                  <SelectTrigger id="year" className="w-full">
-                    <SelectValue placeholder="Izberite letnik …" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(isEditing && editingProgramSubject
-                      ? [editingProgramSubject.programYear]
-                      : selectableProgramYears
-                    ).map((programYear) => (
-                      <SelectItem
-                        key={programYear.yearId}
-                        value={programYear.yearId}
-                      >
-                        {programYear.year.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="hours-per-week">Število ur na teden</Label>
-                <Input
-                  id="hours-per-week"
-                  type="number"
-                  min={0}
-                  max={40}
-                  step="0.0001"
-                  inputMode="decimal"
-                  placeholder="npr. 2"
-                  value={requiredHours}
-                  onChange={(event) => setRequiredHours(event.target.value)}
-                  disabled={isSubmitting}
-                />
-              </div>
-
-              {validationError && (
-                <p className="text-sm text-destructive" role="alert">
-                  {validationError}
-                </p>
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-4"
+          noValidate
+        >
+          <FieldGroup>
+            <Controller
+              name="subjectId"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="subject">Predmet</FieldLabel>
+                  <Select
+                    value={field.value || null}
+                    onValueChange={(value) =>
+                      field.onChange(value == null ? "" : String(value))
+                    }
+                    disabled={
+                      isSubmitting || isEditing || subjectOptions.length === 0
+                    }
+                    modal={false}
+                    items={subjectItems}
+                  >
+                    <SelectTrigger
+                      id="subject"
+                      className="w-full"
+                      aria-invalid={fieldState.invalid}
+                    >
+                      <SelectValue placeholder="Izberite predmet …" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjectOptions.map((subject) => (
+                        <SelectItem
+                          key={`subject-${subject.id}`}
+                          value={String(subject.id)}
+                        >
+                          {subject.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : null}
+                </Field>
               )}
+            />
 
-              <DialogFooter className="sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleOpenChange(false)}
-                  disabled={isSubmitting}
-                >
-                  Prekliči
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isEditing ? <Pencil /> : <Plus />}
-                  {isSubmitting
-                    ? "Shranjevanje..."
-                    : isEditing
-                      ? "Shrani spremembe"
-                      : "Dodaj predmet"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </>
-        )}
+            <Controller
+              name="yearId"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="year">Letnik</FieldLabel>
+                  <Select
+                    value={field.value || null}
+                    onValueChange={(value) =>
+                      field.onChange(value == null ? "" : String(value))
+                    }
+                    disabled={
+                      isSubmitting ||
+                      isEditing ||
+                      !selectedSubjectId ||
+                      selectableProgramYears.length === 0
+                    }
+                    modal={false}
+                    items={yearItems}
+                  >
+                    <SelectTrigger
+                      id="year"
+                      className="w-full"
+                      aria-invalid={fieldState.invalid}
+                    >
+                      <SelectValue placeholder="Izberite letnik …" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {programYearsOptions.map((programYear) => (
+                        <SelectItem
+                          key={`year-${programYear.yearId}`}
+                          value={String(programYear.yearId)}
+                        >
+                          {programYear.year.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : null}
+                </Field>
+              )}
+            />
+
+            <Controller
+              name="requiredHours"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="hours-per-week">
+                    Število ur na teden
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id="hours-per-week"
+                    type="number"
+                    min={0}
+                    max={40}
+                    step="0.0001"
+                    inputMode="decimal"
+                    placeholder="npr. 2"
+                    aria-invalid={fieldState.invalid}
+                    disabled={isSubmitting}
+                  />
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : null}
+                </Field>
+              )}
+            />
+          </FieldGroup>
+
+          <DialogFooter className="sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Prekliči
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isEditing ? <Pencil /> : <Plus />}
+              {isSubmitting
+                ? "Shranjevanje..."
+                : isEditing
+                  ? "Shrani spremembe"
+                  : "Dodaj predmet"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

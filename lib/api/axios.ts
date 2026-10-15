@@ -17,6 +17,18 @@ export function getAccessToken() {
   return accessToken;
 }
 
+export function isAccessTokenValid(): boolean {
+  const token = getAccessToken();
+  if (!token) return false;
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return typeof payload.exp === "number" && Date.now() < payload.exp * 1000;
+  } catch {
+    return false;
+  }
+}
+
 export function setAccessToken(token: string | null) {
   accessToken = token;
 
@@ -45,3 +57,23 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
   return config;
 });
+
+let onUnauthorized: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: () => void) {
+  onUnauthorized = handler;
+}
+
+api.interceptors.response.use(
+  (resp) => resp,
+  (error) => {
+    const status = error.response?.status;
+    const url = error.config?.url ?? "";
+    const isAuthLogin = url.includes("/auth/login");
+    if (status === 401 && !isAuthLogin && getAccessToken()) {
+      setAccessToken(null);
+      onUnauthorized?.();
+    }
+    return Promise.reject(error);
+  },
+);

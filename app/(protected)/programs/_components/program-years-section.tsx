@@ -12,15 +12,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useProgram } from "@/lib/queries/programs/queries";
 import { cn } from "@/lib/utils";
-import type { ProgramClass, ProgramWithRelations, ProgramYear } from "@/types";
-import { ProgramYearDialog } from "./program-year-dialog";
+import type { ProgramClass, ProgramYear } from "@/types";
+
 import { CreateClassDialog } from "./create-class-dialog";
 import { DeleteClassDialog } from "./delete-class-dialog";
+import { ProgramYearDialog } from "./program-year-dialog";
 
 type ProgramYearsSectionProps = {
-  program: ProgramWithRelations;
-  onProgramYearSaved?: () => void | Promise<void>;
+  programId: number;
 };
 
 type DeleteClassTarget = {
@@ -28,10 +30,7 @@ type DeleteClassTarget = {
   programClass: ProgramClass;
 };
 
-export function ProgramYearsSection({
-  program,
-  onProgramYearSaved,
-}: ProgramYearsSectionProps) {
+export function ProgramYearsSection({ programId }: ProgramYearsSectionProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProgramYear, setEditingProgramYear] =
     useState<ProgramYear | null>(null);
@@ -40,9 +39,9 @@ export function ProgramYearsSection({
   const [deletingTarget, setDeletingTarget] =
     useState<DeleteClassTarget | null>(null);
 
-  const programYears = [...program.programYears].sort(
-    (a, b) => a.yearId - b.yearId,
-  );
+  const { data: program } = useProgram(programId);
+  const programYears = program?.programYears ?? [];
+  const isMobile = useIsMobile();
 
   function openCreateDialog() {
     setEditingProgramYear(null);
@@ -67,7 +66,7 @@ export function ProgramYearsSection({
             </div>
             <Button type="button" onClick={openCreateDialog}>
               <Plus />
-              Dodaj letnik
+              {!isMobile && "Dodaj letnik"}
             </Button>
           </div>
         </CardHeader>
@@ -81,7 +80,7 @@ export function ProgramYearsSection({
             {programYears.map((programYear) => (
               <div
                 key={programYear.yearId}
-                className="min-w-[160px] flex-1 rounded-lg border bg-muted p-3"
+                className="min-w-40 flex-1 rounded-lg border bg-muted p-3"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 space-y-0.5">
@@ -174,11 +173,14 @@ export function ProgramYearsSection({
 
       <ProgramYearDialog
         open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        programId={program.id}
-        programYears={program.programYears}
+        onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setEditingProgramYear(null);
+          }
+        }}
+        programId={programId}
         editingProgramYear={editingProgramYear}
-        onProgramYearSaved={onProgramYearSaved}
       />
 
       <CreateClassDialog
@@ -188,9 +190,8 @@ export function ProgramYearsSection({
             setAddingProgramYear(null);
           }
         }}
-        programId={program.id}
+        programId={programId}
         programYear={addingProgramYear}
-        onCreated={onProgramYearSaved}
       />
 
       <DeleteClassDialog
@@ -200,9 +201,8 @@ export function ProgramYearsSection({
             setDeletingTarget(null);
           }
         }}
-        programId={program.id}
+        programId={programId}
         target={deletingTarget}
-        onDeleted={onProgramYearSaved}
       />
     </>
   );

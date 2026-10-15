@@ -12,3 +12,6 @@ export const createClass = (data: CreateClassRequest) =>
 
 export const deleteClass = (data: DeleteClassRequest) =>
   unwrap(api.delete<ApiResponse<null>>("/schools/classes", { data }));
+
+export const getClasses = () =>
+  unwrap(api.get<ApiResponse<any>>("/schools/classes"));

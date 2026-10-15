@@ -9,19 +9,36 @@ export { getSchools, getMySchool, createSchool } from "./schools";
 
 export { getUsers, getUserByEmail } from "./users";
 
-export { getTeachers, getTeacher, createTeacher } from "./teachers";
+export { getTeachers, getTeacher, createTeacher, createTeachers, updateTeacher, deleteTeacher } from "./teachers";
 
-export { getPrograms, getProgram, createProgram, deleteProgram } from "./programs";
+export { extractTeachers, extractProgram } from "./extract";
 
-export { getSubjects, createSubject } from "./subjects";
+export { exportTeacherPdf } from "./export";
 
-export { getProgramSubjects, createProgramSubject, updateProgramSubject } from "./program-subjects";
+export {
+  getPrograms,
+  getProgram,
+  createProgram,
+  importProgram,
+  deleteProgram,
+} from "./programs";
+
+export { getSubjects, createSubject, updateSubject } from "./subjects";
+
+export { getCategories } from "./categories";
+
+export {
+  getProgramSubjects,
+  createProgramSubject,
+  updateProgramSubject,
+  deleteProgramSubject,
+} from "./program-subjects";
 
 export { getYears } from "./years";
 
 export { createProgramYear, updateProgramYear } from "./program-years";
 
-export { createClass, deleteClass } from "./classes";
+export { createClass, deleteClass, getClasses } from "./classes";
 
 export { assignTeacher, unassignTeacher } from "./assignments";
 export {
