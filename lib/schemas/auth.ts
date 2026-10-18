@@ -24,14 +24,6 @@ export const registerSchema = z
       .min(1, "Vnesite e-pošto."),
     password: z.string().min(1, "Vnesite geslo."),
     repeat_password: z.string().min(1, "Ponovno vnesite geslo."),
-    schoolId: z
-      .string()
-      .trim()
-      .min(1, "Vnesite ID šole.")
-      .regex(/^\d+$/, "ID šole mora biti celo število.")
-      .refine((value) => Number(value) >= 1, {
-        message: "ID šole mora biti vsaj 1.",
-      }),
   })
   .refine((data) => data.password === data.repeat_password, {
     message: "Gesli se ne ujemata.",

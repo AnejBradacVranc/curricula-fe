@@ -1,5 +1,3 @@
-import type { Role } from "../enums/role";
-
 export interface LoginRequest {
   email: string;
   password: string;
@@ -8,10 +6,9 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
-  schoolId: number;
+  inviteToken: string;
   name?: string;
   surname?: string;
-  role?: Role;
 }
 
 export interface LoginResponse {
