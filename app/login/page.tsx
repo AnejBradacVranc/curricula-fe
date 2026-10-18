@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { AuthForm } from "@/components/auth/auth-form";
+import { AuthLoginForm } from "@/components/auth/auth-login-form";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -27,7 +27,7 @@ export default function LoginPage() {
 
   return (
     <div className="container flex flex-1 items-center py-12">
-      <AuthForm />
+      <AuthLoginForm />
     </div>
   );
 }
