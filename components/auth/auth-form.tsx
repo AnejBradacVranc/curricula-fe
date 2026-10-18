@@ -72,6 +72,7 @@ export function AuthForm() {
       surname: "",
       email: "",
       password: "",
+      repeat_password: "",
       schoolId: "1",
     },
   });
@@ -261,6 +262,25 @@ export function AuthForm() {
                         id="register-password"
                         type="password"
                         autoComplete="new-password"
+                        aria-invalid={fieldState.invalid}
+                        disabled={loading}
+                      />
+                      {fieldState.invalid ? (
+                        <FieldError errors={[fieldState.error]} />
+                      ) : null}
+                    </Field>
+                  )}
+                />
+                <Controller
+                  name="repeat_password"
+                  control={registerForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="register-password">Ponovite geslo</FieldLabel>
+                      <Input
+                        {...field}
+                        id="register-password"
+                        type="password"
                         aria-invalid={fieldState.invalid}
                         disabled={loading}
                       />
