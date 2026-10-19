@@ -19,19 +19,17 @@ export function hasColor(color: string | null | undefined): color is string {
   return Boolean(color && isHexColor(color));
 }
 
+/** Mix into the card surface so tints stay readable in light and dark. */
 export function colorWithOpacity(
   color: string,
-  opacity = 0.5,
+  opacity = 0.28,
   fallback = "var(--primary)",
 ): string {
+  const amount = Math.round(opacity * 100);
+
   if (!isHexColor(color)) {
-    return `color-mix(in srgb, ${fallback} ${Math.round(opacity * 100)}%, transparent)`;
+    return `color-mix(in srgb, ${fallback} ${amount}%, var(--card))`;
   }
 
-  const hex = expandHex(color.slice(1));
-  const red = Number.parseInt(hex.slice(0, 2), 16);
-  const green = Number.parseInt(hex.slice(2, 4), 16);
-  const blue = Number.parseInt(hex.slice(4, 6), 16);
-
-  return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
+  return `color-mix(in srgb, ${color} ${amount}%, var(--card))`;
 }

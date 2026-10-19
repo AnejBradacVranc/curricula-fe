@@ -220,7 +220,7 @@ export function ProgramAssignmentTable({
                     <tr className="border-b border-border bg-muted/40">
                       <td
                         colSpan={years.length + 1}
-                        className="bg-primary/50 px-3 py-2 text-xs font-semibold tracking-wide text-primary-foreground uppercase"
+                        className="bg-primary px-3 py-2 text-xs font-semibold tracking-wide text-primary-foreground uppercase"
                       >
                         {section.categoryName}
                       </td>

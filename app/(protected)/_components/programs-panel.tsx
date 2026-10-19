@@ -105,7 +105,7 @@ export function ProgramsPanel({
                         "w-full cursor-pointer px-3 py-2.5 text-left text-sm transition-colors",
                         "hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                         isSelected
-                          ? "bg-primary/50 font-medium text-foreground hover:bg-primary/25"
+                          ? "bg-primary font-medium text-primary-foreground hover:bg-primary"
                           : "text-muted-foreground",
                       )}
                     >

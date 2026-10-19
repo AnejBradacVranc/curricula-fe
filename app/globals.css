@@ -5,24 +5,25 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #ba5454;
+  /* Soft stone page + solid brick red (no washed opacity reds) */
+  --background: #f7f8fa;
+  --foreground: #1c222d;
+  --primary: #b24b4b;
   --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #171717;
-  --muted: #f4f4f5;
-  --muted-foreground: #525252;
-  --accent: #f4f4f5;
-  --accent-foreground: #171717;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: #e5e5e5;
-  --input: #e5e5e5;
-  --ring: #ba5454;
+  --secondary: #eceff4;
+  --secondary-foreground: #1c222d;
+  --muted: #eceff4;
+  --muted-foreground: #667085;
+  --accent: #f4eaea;
+  --accent-foreground: #7a3535;
+  --destructive: #c23b3b;
+  --border: #dde2ea;
+  --input: #dde2ea;
+  --ring: #b24b4b;
   --card: #ffffff;
-  --card-foreground: #171717;
+  --card-foreground: #1c222d;
   --popover: #ffffff;
-  --popover-foreground: #171717;
+  --popover-foreground: #1c222d;
   --container-padding-inline-sm: 1.5rem;
   --container-padding-inline-md: 2rem;
   --container-padding-inline-lg: 2rem;
@@ -35,20 +36,20 @@
   --container-max-width-xl: 1280px;
   --container-max-width-2xl: 1736px;
   --container-padding-inline: 1rem;
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --chart-1: #b24b4b;
+  --chart-2: #6f7b90;
+  --chart-3: #3a4254;
+  --chart-4: #d48a8a;
+  --chart-5: #c9d0db;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #f1f3f7;
+  --sidebar-foreground: #1c222d;
+  --sidebar-primary: #b24b4b;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4eaea;
+  --sidebar-accent-foreground: #7a3535;
+  --sidebar-border: #dde2ea;
+  --sidebar-ring: #b24b4b;
 }
 
 @theme inline {
@@ -95,28 +96,6 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --card: #171717;
-    --card-foreground: #ededed;
-    --popover: #171717;
-    --popover-foreground: #ededed;
-    --primary: #ba5454;
-    --primary-foreground: #ffffff;
-    --secondary: #262626;
-    --secondary-foreground: #ededed;
-    --muted: #262626;
-    --muted-foreground: #9e9e9e;
-    --accent: #262626;
-    --accent-foreground: #ededed;
-    --border: #2e2e2e;
-    --input: #2e2e2e;
-    --ring: #ba5454;
-  }
-}
-
 @utility container {
   margin-inline: auto;
   padding-inline: var(--container-padding-inline);
@@ -154,37 +133,38 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Graphite field + brick red — not pure black, not cool zinc */
+  --background: #12141a;
+  --foreground: #eceef2;
+  --card: #1b1e27;
+  --card-foreground: #eceef2;
+  --popover: #1b1e27;
+  --popover-foreground: #eceef2;
+  --primary: #c96565;
+  --primary-foreground: #ffffff;
+  --secondary: #2a2f3b;
+  --secondary-foreground: #eceef2;
+  --muted: #2a2f3b;
+  --muted-foreground: #9aa3b5;
+  --accent: #3a2a2c;
+  --accent-foreground: #f0c7c7;
+  --destructive: #e06b6b;
+  --border: #343a48;
+  --input: #343a48;
+  --ring: #c96565;
+  --chart-1: #c96565;
+  --chart-2: #8b95a8;
+  --chart-3: #eceef2;
+  --chart-4: #9e6b6b;
+  --chart-5: #4a5162;
+  --sidebar: #161922;
+  --sidebar-foreground: #eceef2;
+  --sidebar-primary: #c96565;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #3a2a2c;
+  --sidebar-accent-foreground: #f0c7c7;
+  --sidebar-border: #343a48;
+  --sidebar-ring: #c96565;
 }
 
 @layer base {
