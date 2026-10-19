@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "../theme-toggle";
 
 export type NavLink = {
   href: string;
@@ -201,6 +202,8 @@ export function Navigation() {
             )}
           </nav>
         )}
+        <ThemeToggle />
+
       </div>
     </header>
   );
