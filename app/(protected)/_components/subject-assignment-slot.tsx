@@ -74,18 +74,18 @@ export function SubjectAssignmentSlot({
         onDrop={handleDrop}
         style={
           teacherColor
-            ? { backgroundColor: colorWithOpacity(teacherColor, 0.2) }
+            ? { backgroundColor: colorWithOpacity(teacherColor, 0.28) }
             : undefined
         }
         className={cn(
           "flex items-center gap-2 rounded-lg text-sm transition-colors",
           "px-2 py-1 text-[10px]",
-          !teacherColor && "bg-muted/60",
+          !teacherColor && "bg-muted",
           isLoading && "opacity-60",
           isDragOver &&
             (teacherColor
-              ? "ring-2 ring-primary/40"
-              : "border-primary bg-primary/10 text-foreground"),
+              ? "ring-2 ring-primary"
+              : "border-primary bg-accent text-accent-foreground"),
         )}
       >
         {teacherColor ? (
@@ -132,8 +132,8 @@ export function SubjectAssignmentSlot({
         "px-2 py-1 text-[10px]",
         !disabled &&
           !isLoading &&
-          "cursor-pointer hover:border-primary/40 hover:bg-primary/5",
-        isDragOver && "border-primary bg-primary/10 text-foreground",
+          "cursor-pointer hover:border-primary hover:bg-accent hover:text-accent-foreground",
+        isDragOver && "border-primary bg-accent text-accent-foreground",
         isLoading && "opacity-60",
       )}
     >

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "../theme-toggle";
 
 export type NavLink = {
   href: string;
@@ -99,108 +100,111 @@ export function Navigation() {
           Curricula
         </Link>
 
-        {isMobile ? (
-          !isLoading && isAuthenticated && (
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger
-                render={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon-sm"
-                    aria-label="Odpri meni"
-                  />
-                }
-              >
-                <Menu />
-              </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="w-[min(100%,20rem)] gap-0 p-0"
-              >
-                <SheetHeader className="border-b">
-                  <SheetTitle>Meni</SheetTitle>
-                  <SheetDescription>
-                    Navigacija po aplikaciji Curricula.
-                  </SheetDescription>
-                </SheetHeader>
+        <div className="flex gap-2">
+          {isMobile ? (
+            !isLoading && isAuthenticated && (
+              <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+                <SheetTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-sm"
+                      aria-label="Odpri meni"
+                    />
+                  }
+                >
+                  <Menu />
+                </SheetTrigger>
+                <SheetContent
+                  side="right"
+                  className="w-[min(100%,20rem)] gap-0 p-0"
+                >
+                  <SheetHeader className="border-b">
+                    <SheetTitle>Meni</SheetTitle>
+                    <SheetDescription>
+                      Navigacija po aplikaciji Curricula.
+                    </SheetDescription>
+                  </SheetHeader>
 
-                <nav className="flex flex-1 flex-col gap-1 p-3">
-                  {visibleLinks.map((link) => {
-                    const Icon = link.icon;
+                  <nav className="flex flex-1 flex-col gap-1 p-3">
+                    {visibleLinks.map((link) => {
+                      const Icon = link.icon;
 
-                    return (
-                      <Button
-                        key={link.href}
-                        nativeButton={false}
-                        variant="ghost"
-                        className={cn(
-                          "h-auto justify-start gap-3 px-3 py-3",
-                          isActive(link.href) &&
-                          "bg-primary text-foreground hover:bg-primary/50",
-                        )}
-                        render={
-                          <Link
-                            href={link.href}
-                            onClick={() => setMobileOpen(false)}
-                          />
-                        }
-                      >
-                        <Icon className="size-4 shrink-0" />
-                        <span className="flex min-w-0 flex-col items-start gap-0.5">
-                          <span className="font-medium">{link.label}</span>
-                          <span
-                            className={cn(
-                              "text-xs font-normal text-muted-foreground text-wrap",
-                              isActive(link.href) && "text-primary-foreground",
-                            )}
-                          >
-                            {link.description}
+                      return (
+                        <Button
+                          key={link.href}
+                          nativeButton={false}
+                          variant="ghost"
+                          className={cn(
+                            "h-auto justify-start gap-3 px-3 py-3",
+                            isActive(link.href) &&
+                            "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                          )}
+                          render={
+                            <Link
+                              href={link.href}
+                              onClick={() => setMobileOpen(false)}
+                            />
+                          }
+                        >
+                          <Icon className="size-4 shrink-0" />
+                          <span className="flex min-w-0 flex-col items-start gap-0.5">
+                            <span className="font-medium">{link.label}</span>
+                            <span
+                              className={cn(
+                                "text-xs font-normal text-muted-foreground text-wrap",
+                                isActive(link.href) && "text-primary-foreground",
+                              )}
+                            >
+                              {link.description}
+                            </span>
                           </span>
-                        </span>
-                      </Button>
-                    );
-                  })}
-                </nav>
+                        </Button>
+                      );
+                    })}
+                  </nav>
 
-                <div className="mt-auto border-t flex justify-end p-3">
-                  <Button
-                    variant="outline"
-                    className="w-fit justify-start gap-2"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="size-4" />
-                    Odjava
-                  </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
-          )
-        ) : (
-          <nav className="flex items-center gap-1">
-            {visibleLinks.map((link) => (
-              <Button
-                nativeButton={false}
-                key={link.href}
-                variant="ghost"
-                size="sm"
-                render={<Link href={link.href} />}
-                className={cn(
-                  isActive(link.href) &&
-                  "bg-primary text-foreground hover:bg-primary/50",
-                )}
-              >
-                {link.label}
-              </Button>
-            ))}
+                  <div className="mt-auto border-t flex justify-end p-3">
+                    <Button
+                      variant="outline"
+                      className="w-fit justify-start gap-2"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="size-4" />
+                      Odjava
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )
+          ) : (
+            <nav className="flex items-center gap-1">
+              {visibleLinks.map((link) => (
+                <Button
+                  nativeButton={false}
+                  key={link.href}
+                  variant="ghost"
+                  size="sm"
+                  render={<Link href={link.href} />}
+                  className={cn(
+                    isActive(link.href) &&
+                    "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                  )}
+                >
+                  {link.label}
+                </Button>
+              ))}
 
-            {!isLoading && isAuthenticated && (
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut />
-              </Button>
-            )}
-          </nav>
-        )}
+              {!isLoading && isAuthenticated && (
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  <LogOut />
+                </Button>
+              )}
+            </nav>
+          )}
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );

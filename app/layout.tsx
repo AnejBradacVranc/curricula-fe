@@ -1,3 +1,5 @@
+import { ThemeProvider } from "@/components/theme-provider"
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/auth/auth-provider";
@@ -30,17 +32,26 @@ export default function RootLayout({
     <html
       lang="sl"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
-        <QueryProvider>
-          <AuthProvider>
-            <Navigation />
-            <main className="flex flex-1 flex-col bg-background text-foreground">
-              {children}
-            </main>
-            <AppToaster />
-          </AuthProvider>
-        </QueryProvider>
+
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <QueryProvider>
+            <AuthProvider>
+              <Navigation />
+              <main className="flex flex-1 flex-col bg-background text-foreground">
+                {children}
+              </main>
+              <AppToaster />
+            </AuthProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

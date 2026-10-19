@@ -153,7 +153,7 @@ export function TeachersPanel() {
                         <div className="flex shrink-0 flex-col items-end gap-1">
                           <Badge variant="default" className="gap-1.5">
                             <Clock className="size-3" />
-                            <span className="font-medium text-foreground tabular-nums">
+                            <span className="font-medium text-primary-foreground tabular-nums">
                               {formatHours(teacher.totalHours)}h
                             </span>
                           </Badge>
