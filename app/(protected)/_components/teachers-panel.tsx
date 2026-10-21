@@ -53,7 +53,7 @@ export function TeachersPanel() {
 
   return (
     <>
-      <Card className="flex min-h-0 w-full flex-1 flex-col gap-0 overflow-hidden py-0">
+      <Card className="flex min-h-0 w-full flex-1 flex-col gap-0 overflow-hidden py-0 lg:max-h-full">
         <CardHeader className="shrink-0 space-y-3 border-b py-3">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between gap-2">
