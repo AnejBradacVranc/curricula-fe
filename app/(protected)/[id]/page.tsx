@@ -18,24 +18,17 @@ export default function AssignmentsPage() {
   };
 
   return (
-    <div className="container py-8">
+    <div className="container">
       <div className="space-y-6">
-        {isMobile && (
-          <ProgramsPanel
-            selectedProgramId={programId}
-            onSelectProgram={handleNavigate}
-          />
-        )}
-
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div className="min-w-0">
-            <ProgramAssignmentTable programId={programId} />
-          </div>
-          <aside className="hidden md:flex w-full max-w-90 shrink-0 flex-col gap-4 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:min-h-0">
-            <ProgramsPanel
-              selectedProgramId={programId}
+            <ProgramAssignmentTable
+              programId={programId}
               onSelectProgram={handleNavigate}
             />
+          </div>
+
+          <aside className="hidden min-h-0 w-full flex-col md:flex lg:sticky lg:top-18 lg:h-[calc(100vh-5.5rem)]">
             <TeachersPanel />
           </aside>
         </div>

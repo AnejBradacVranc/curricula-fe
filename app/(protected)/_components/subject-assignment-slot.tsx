@@ -83,9 +83,9 @@ export function SubjectAssignmentSlot({
           !teacherColor && "bg-muted",
           isLoading && "opacity-60",
           isDragOver &&
-            (teacherColor
-              ? "ring-2 ring-primary"
-              : "border-primary bg-accent text-accent-foreground"),
+          (teacherColor
+            ? "ring-2 ring-primary"
+            : "border-primary bg-accent text-accent-foreground"),
         )}
       >
         {teacherColor ? (
@@ -128,11 +128,11 @@ export function SubjectAssignmentSlot({
         onClick();
       }}
       className={cn(
-        "rounded-lg border border-dashed text-muted-foreground transition-colors",
-        "px-2 py-1 text-[10px]",
+        "rounded-lg border border-dashed border-muted-foreground text-muted-foreground transition-colors",
+        "px-2 py-2 text-[0.7rem]",
         !disabled &&
-          !isLoading &&
-          "cursor-pointer hover:border-primary hover:bg-accent hover:text-accent-foreground",
+        !isLoading &&
+        "cursor-pointer hover:border-primary hover:bg-accent hover:text-accent-foreground",
         isDragOver && "border-primary bg-accent text-accent-foreground",
         isLoading && "opacity-60",
       )}
