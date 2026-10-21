@@ -3,15 +3,12 @@
 import { useParams, useRouter } from "next/navigation";
 
 import { ProgramAssignmentTable } from "@/app/(protected)/_components/program-assignment-table";
-import { ProgramsPanel } from "@/app/(protected)/_components/programs-panel";
 import { TeachersPanel } from "@/app/(protected)/_components/teachers-panel";
-import { useIsMobile } from "@/hooks/use-is-mobile";
 
 export default function AssignmentsPage() {
   const params = useParams();
   const programId = Number(params.id);
   const router = useRouter();
-  const isMobile = useIsMobile();
 
   const handleNavigate = (nextProgramId: number) => {
     router.push(`/${nextProgramId}`);
