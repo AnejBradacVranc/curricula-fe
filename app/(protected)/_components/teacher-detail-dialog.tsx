@@ -197,10 +197,12 @@ export function TeacherDetailDialog({
                     </Link>
                   </div>
                 </DialogTitle>
-                <DialogDescription className="flex items-center gap-1.5">
-                  <Mail className="size-3.5 shrink-0" />
-                  {teacher.email}
-                </DialogDescription>
+                {teacher.email ? (
+                  <DialogDescription className="flex items-center gap-1.5">
+                    <Mail className="size-3.5 shrink-0" />
+                    {teacher.email}
+                  </DialogDescription>
+                ) : null}
               </div>
 
               <div className="mt-3 grid grid-cols-3 gap-px overflow-hidden rounded-lg border bg-border">
@@ -245,6 +247,7 @@ export function TeacherDetailDialog({
                         {teacher.assignments.map((assignment, index) => {
                           const { class: classRoom, programSubject } =
                             assignment;
+
                           const assignmentKey = [
                             classRoom.programYear.year.name,
                             classRoom.label,

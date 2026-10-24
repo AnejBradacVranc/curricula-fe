@@ -30,7 +30,7 @@ export const updateTeacher = (
     const formData = new FormData();
     formData.append("name", data.name);
     formData.append("surname", data.surname);
-    formData.append("email", data.email);
+    formData.append("email", data.email ?? "");
     if (data.color !== undefined) {
       formData.append("color", data.color ?? "");
     }

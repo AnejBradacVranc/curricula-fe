@@ -26,17 +26,30 @@ export const createClassFormSchema = z.object({
 
 export type CreateClassFormValues = z.infer<typeof createClassFormSchema>;
 
+const requiredHoursSchema = z
+  .string()
+  .trim()
+  .min(1, "Vnesite veljavno število ur na teden.")
+  .refine((value) => {
+    const hours = Number(value);
+    return !Number.isNaN(hours) && hours >= 0;
+  }, "Vnesite veljavno število ur na teden.");
+
 export const assignSubjectFormSchema = z.object({
   subjectId: z.string().min(1, "Izberite predmet."),
   yearId: z.string().min(1, "Izberite letnik."),
-  requiredHours: z
-    .string()
-    .trim()
-    .min(1, "Vnesite veljavno število ur na teden.")
-    .refine((value) => {
-      const hours = Number(value);
-      return !Number.isNaN(hours) && hours >= 0;
-    }, "Vnesite veljavno število ur na teden."),
+  requiredHours: requiredHoursSchema,
 });
 
 export type AssignSubjectFormValues = z.infer<typeof assignSubjectFormSchema>;
+
+export const editProgramSubjectFormSchema = z.object({
+  name: z.string().trim().min(1, "Vnesite ime predmeta."),
+  abbrevation: z.string().trim().min(1, "Vnesite kratico predmeta."),
+  categoryId: z.string().min(1, "Izberite kategorijo."),
+  requiredHours: requiredHoursSchema,
+});
+
+export type EditProgramSubjectFormValues = z.infer<
+  typeof editProgramSubjectFormSchema
+>;

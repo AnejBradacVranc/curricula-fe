@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { FileUp, Loader2, ScanText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FileInput } from "@/components/ui/file-input";
 import { useExtractTeachers } from "@/lib/queries/extract/mutations";
 import { useCreateTeachers } from "@/lib/queries/teachers/mutations";
 import type { ExtractedTeacher } from "@/types";
@@ -26,7 +27,6 @@ export function ExtractTeachersDialog({
   open,
   onOpenChange,
 }: ExtractTeachersDialogProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<ExtractedTeacher[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,9 +39,6 @@ export function ExtractTeachersDialog({
       setFile(null);
       setPreview(null);
       setError(null);
-      if (inputRef.current) {
-        inputRef.current.value = "";
-      }
     }
   }, [open]);
 
@@ -90,9 +87,7 @@ export function ExtractTeachersDialog({
       });
       onOpenChange(false);
     } catch {
-      setError(
-        "Učiteljev ni bilo mogoče uvoziti. Preverite, ali e-poštni naslovi že obstajajo.",
-      );
+      setError("Učiteljev ni bilo mogoče uvoziti. Poskusite znova.");
     }
   }
 
@@ -106,30 +101,21 @@ export function ExtractTeachersDialog({
           <DialogTitle>Uvoz učiteljev</DialogTitle>
           <DialogDescription>
             Naložite PDF, CSV, Excel ali Word datoteko. AI bo razbral ime,
-            priimek in e-pošto. Pred uvozom lahko pregledate rezultate.
+            priimek in e-pošto, če je na voljo. Pred uvozom lahko pregledate
+            rezultate.
           </DialogDescription>
         </DialogHeader>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
-          <div className="space-y-2">
-            <input
-              ref={inputRef}
-              type="file"
-              accept=".pdf,.csv,.xls,.xlsx,.doc,.docx,application/pdf,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              className="block w-full cursor-pointer text-sm file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground"
-              onChange={(event) => {
-                const nextFile = event.target.files?.[0] ?? null;
-                setFile(nextFile);
-                setPreview(null);
-                setError(null);
-              }}
-            />
-            {file && (
-              <p className="text-xs text-muted-foreground">
-                Izbrano: {file.name} ({Math.round(file.size / 1024)} KB)
-              </p>
-            )}
-          </div>
+          <FileInput
+            accept=".pdf,.csv,.xls,.xlsx,.doc,.docx,application/pdf,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            file={file}
+            onFileChange={(nextFile) => {
+              setFile(nextFile);
+              setPreview(null);
+              setError(null);
+            }}
+          />
 
           {preview && preview.length > 0 && (
             <div className="overflow-hidden rounded-md border">
@@ -154,13 +140,13 @@ export function ExtractTeachersDialog({
                   <tbody>
                     {preview.map((teacher, index) => (
                       <tr
-                        key={`${teacher.email}-${index}`}
+                        key={`${teacher.name}-${teacher.surname}-${index}`}
                         className="border-b border-border/70 last:border-b-0"
                       >
                         <td className="px-3 py-2 font-medium">{teacher.name}</td>
                         <td className="px-3 py-2">{teacher.surname}</td>
                         <td className="px-3 py-2 text-muted-foreground">
-                          {teacher.email}
+                          {teacher.email ?? "—"}
                         </td>
                         <td className="px-2 py-2 text-right">
                           <Button

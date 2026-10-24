@@ -2,9 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Clock, FileDown, FileUp, Mail, Trash2, Users } from "lucide-react";
+import {
+  ChevronRight,
+  Clock,
+  FileDown,
+  FileUp,
+  Mail,
+  Plus,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 
+import { CreateTeacherDialog } from "@/app/(protected)/teachers/_components/create-teacher-dialog";
 import { DeleteTeacherDialog } from "@/app/(protected)/teachers/_components/delete-teacher-dialog";
 import { ExtractTeachersDialog } from "@/app/(protected)/teachers/_components/extract-teachers-dialog";
 import { TeacherAvatar } from "@/app/(protected)/teachers/_components/teacher-avatar";
@@ -41,6 +51,7 @@ function TeachersSkeleton() {
 }
 
 export default function TeachersPage() {
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isExtractOpen, setIsExtractOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
   const isMobile = useIsMobile();
@@ -110,6 +121,10 @@ export default function TeachersPage() {
           </div>
 
           <div className={cn("space-x-2", isMobile && "flex self-end")}>
+            <Button type="button" onClick={() => setIsCreateOpen(true)}>
+              <Plus />
+              {!isMobile && "Dodaj učitelja"}
+            </Button>
             <Button type="button" onClick={() => setIsExtractOpen(true)}>
               <FileUp />
               {!isMobile && "Uvozi"}
@@ -125,12 +140,31 @@ export default function TeachersPage() {
           </div>
         </div>
 
-        <Card className="overflow-hidden py-0">
-          {teachers.length === 0 ? (
-            <CardContent className="px-4 py-8 text-center text-sm text-muted-foreground">
-              Šola še nima dodanih učiteljev. Uvozite jih iz datoteke.
+        {teachers.length === 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Ni učiteljev</CardTitle>
+              <CardDescription>
+                Ustvarite prvega učitelja ali jih uvozite iz datoteke.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              <Button type="button" onClick={() => setIsCreateOpen(true)}>
+                <Plus />
+                Dodaj učitelja
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsExtractOpen(true)}
+              >
+                <FileUp />
+                Uvozi
+              </Button>
             </CardContent>
-          ) : (
+          </Card>
+        ) : (
+          <Card className="overflow-hidden py-0">
             <CardContent className="p-0">
               <ul className="divide-y divide-border">
                 {teachers.map((teacher) => (
@@ -162,10 +196,12 @@ export default function TeachersPage() {
                         <p className="font-medium group-hover:text-primary transition-colors">
                           {teacher.name} {teacher.surname}
                         </p>
-                        <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                          <Mail className="size-3 shrink-0" />
-                          <span>{teacher.email}</span>
-                        </p>
+                        {teacher.email ? (
+                          <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                            <Mail className="size-3 shrink-0" />
+                            <span>{teacher.email}</span>
+                          </p>
+                        ) : null}
                       </div>
                       <Badge
                         variant="secondary"
@@ -192,9 +228,14 @@ export default function TeachersPage() {
                 ))}
               </ul>
             </CardContent>
-          )}
-        </Card>
+          </Card>
+        )}
       </div>
+
+      <CreateTeacherDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+      />
 
       <ExtractTeachersDialog
         open={isExtractOpen}

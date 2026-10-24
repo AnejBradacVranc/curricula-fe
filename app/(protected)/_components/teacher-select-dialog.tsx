@@ -44,7 +44,7 @@ export function TeacherSelectDialog({
       const fullName = `${teacher.name} ${teacher.surname}`.toLowerCase();
       return (
         fullName.includes(normalized) ||
-        teacher.email.toLowerCase().includes(normalized)
+        (teacher.email?.toLowerCase().includes(normalized) ?? false)
       );
     });
   }, [teachers, query]);
@@ -118,10 +118,12 @@ export function TeacherSelectDialog({
                             {teacher.name} {teacher.surname}
                           </span>
                         </p>
-                        <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                          <Mail className="size-3 shrink-0" />
-                          <span className="truncate">{teacher.email}</span>
-                        </p>
+                        {teacher.email ? (
+                          <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                            <Mail className="size-3 shrink-0" />
+                            <span className="truncate">{teacher.email}</span>
+                          </p>
+                        ) : null}
                       </div>
 
                       <Badge variant="secondary" className="shrink-0 gap-1.5">

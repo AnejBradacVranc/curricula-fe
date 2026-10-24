@@ -4,7 +4,7 @@ export interface Teacher extends Timestamps {
   id: number;
   name: string;
   surname: string;
-  email: string;
+  email: string | null;
   color: string | null;
   profileImage: string | null;
   schoolId: number;

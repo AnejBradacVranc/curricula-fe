@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Pencil, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -29,10 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  useCreateProgramSubject,
-  useUpdateProgramSubject,
-} from "@/lib/queries/program-subjects/mutations";
+import { useCreateProgramSubject } from "@/lib/queries/program-subjects/mutations";
 import { useProgram } from "@/lib/queries/programs/queries";
 import { useSubjects } from "@/lib/queries/subjects/queries";
 import {
@@ -44,7 +41,6 @@ import type { ProgramSubjectItem } from "@/types";
 type AssignSubjectDialogProps = {
   open: boolean;
   programId: number;
-  editingProgramSubject: ProgramSubjectItem | null;
   onOpenChange: (open: boolean) => void;
 };
 
@@ -62,15 +58,11 @@ function getAssignedYearIdsForSubject(
 export function AssignSubjectDialog({
   open,
   programId,
-  editingProgramSubject,
   onOpenChange,
 }: AssignSubjectDialogProps) {
-  const isEditing = editingProgramSubject !== null;
-
   const { data: program } = useProgram(programId);
   const { data: subjects = [] } = useSubjects();
   const createProgramSubjectMutation = useCreateProgramSubject();
-  const updateProgramSubjectMutation = useUpdateProgramSubject();
 
   const programYears = program?.programYears ?? [];
   const programSubjects = program?.programSubjects ?? [];
@@ -89,46 +81,32 @@ export function AssignSubjectDialog({
     name: "subjectId",
   });
 
+  const selectedYearId = useWatch({
+    control: form.control,
+    name: "yearId",
+  });
+
   useEffect(() => {
     if (!open) {
       return;
     }
 
     form.reset({
-      subjectId:
-        editingProgramSubject?.subjectId != null
-          ? String(editingProgramSubject.subjectId)
-          : "",
-      yearId:
-        editingProgramSubject?.yearId != null
-          ? String(editingProgramSubject.yearId)
-          : "",
-      requiredHours: editingProgramSubject
-        ? String(editingProgramSubject.requiredHours)
-        : "",
+      subjectId: "",
+      yearId: "",
+      requiredHours: "",
     });
-  }, [open, editingProgramSubject, form]);
+  }, [open, form]);
 
-  const subjectOptions = useMemo(() => {
-    if (isEditing && editingProgramSubject) {
-      return [
-        {
-          id: editingProgramSubject.subject.id,
-          name: editingProgramSubject.subject.name,
-        },
-      ];
-    }
-
-    return [...subjects]
-      .map((subject) => ({ id: subject.id, name: subject.name }))
-      .sort((a, b) => a.name.localeCompare(b.name, "sl"));
-  }, [editingProgramSubject, isEditing, subjects]);
+  const subjectOptions = useMemo(
+    () =>
+      [...subjects]
+        .map((subject) => ({ id: subject.id, name: subject.name }))
+        .sort((a, b) => a.name.localeCompare(b.name, "sl")),
+    [subjects],
+  );
 
   const selectableProgramYears = useMemo(() => {
-    if (isEditing) {
-      return programYears;
-    }
-
     if (!selectedSubjectId) {
       return programYears;
     }
@@ -141,23 +119,9 @@ export function AssignSubjectDialog({
     return programYears.filter(
       (programYear) => !assignedYearIds.has(programYear.yearId),
     );
-  }, [isEditing, programSubjects, programYears, selectedSubjectId]);
-
-  const programYearsOptions =
-    isEditing && editingProgramSubject
-      ? [editingProgramSubject.programYear]
-      : selectableProgramYears;
-
-  const selectedYearId = useWatch({
-    control: form.control,
-    name: "yearId",
-  });
+  }, [programSubjects, programYears, selectedSubjectId]);
 
   useEffect(() => {
-    if (isEditing) {
-      return;
-    }
-
     if (
       !selectedYearId ||
       selectableProgramYears.some(
@@ -168,7 +132,7 @@ export function AssignSubjectDialog({
     }
 
     form.setValue("yearId", "");
-  }, [isEditing, selectableProgramYears, selectedYearId, form]);
+  }, [selectableProgramYears, selectedYearId, form]);
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
@@ -183,49 +147,28 @@ export function AssignSubjectDialog({
   }
 
   async function handleSubmit(values: AssignSubjectFormValues) {
-    const subjectId = Number(values.subjectId);
-    const yearId = Number(values.yearId);
-    const requiredHours = Number(values.requiredHours);
-
     try {
-      if (isEditing && editingProgramSubject) {
-        await updateProgramSubjectMutation.mutateAsync({
-          programId,
-          subjectId,
-          yearId: editingProgramSubject.yearId,
-          requiredHours,
-        });
-        toast.success("Predmet je bil uspešno posodobljen.");
-      } else {
-        await createProgramSubjectMutation.mutateAsync({
-          programId,
-          subjectId,
-          yearId,
-          requiredHours,
-        });
-        toast.success("Predmet je bil uspešno dodan na predmetnik.");
-      }
-
+      await createProgramSubjectMutation.mutateAsync({
+        programId,
+        subjectId: Number(values.subjectId),
+        yearId: Number(values.yearId),
+        requiredHours: Number(values.requiredHours),
+      });
+      toast.success("Predmet je bil uspešno dodan na predmetnik.");
       handleOpenChange(false);
     } catch {
-      toast.error(
-        isEditing
-          ? "Predmeta ni bilo mogoče posodobiti. Poskusite znova."
-          : "Predmeta ni bilo mogoče dodati programu. Poskusite znova.",
-      );
+      toast.error("Predmeta ni bilo mogoče dodati programu. Poskusite znova.");
     }
   }
 
-  const isSubmitting =
-    createProgramSubjectMutation.isPending ||
-    updateProgramSubjectMutation.isPending;
+  const isSubmitting = createProgramSubjectMutation.isPending;
 
   const subjectItems = subjectOptions.map((subject) => ({
     value: String(subject.id),
     label: subject.name,
   }));
 
-  const yearItems = programYearsOptions.map((programYear) => ({
+  const yearItems = selectableProgramYears.map((programYear) => ({
     value: String(programYear.yearId),
     label: programYear.year.name,
   }));
@@ -234,13 +177,9 @@ export function AssignSubjectDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Urejanje predmeta" : "Dodajanje predmeta"}
-          </DialogTitle>
+          <DialogTitle>Dodajanje predmeta</DialogTitle>
           <DialogDescription>
-            {isEditing
-              ? "Posodobite število ur na teden za izbrani predmet."
-              : "Izberite predmet, ki ga želite dodati temu programu."}
+            Izberite predmet, ki ga želite dodati temu programu.
           </DialogDescription>
         </DialogHeader>
 
@@ -255,20 +194,18 @@ export function AssignSubjectDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="subject">Predmet</FieldLabel>
+                  <FieldLabel htmlFor="assign-subject">Predmet</FieldLabel>
                   <Select
                     value={field.value || null}
                     onValueChange={(value) =>
                       field.onChange(value == null ? "" : String(value))
                     }
-                    disabled={
-                      isSubmitting || isEditing || subjectOptions.length === 0
-                    }
+                    disabled={isSubmitting || subjectOptions.length === 0}
                     modal={false}
                     items={subjectItems}
                   >
                     <SelectTrigger
-                      id="subject"
+                      id="assign-subject"
                       className="w-full"
                       aria-invalid={fieldState.invalid}
                     >
@@ -297,7 +234,7 @@ export function AssignSubjectDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="year">Letnik</FieldLabel>
+                  <FieldLabel htmlFor="assign-year">Letnik</FieldLabel>
                   <Select
                     value={field.value || null}
                     onValueChange={(value) =>
@@ -305,7 +242,6 @@ export function AssignSubjectDialog({
                     }
                     disabled={
                       isSubmitting ||
-                      isEditing ||
                       !selectedSubjectId ||
                       selectableProgramYears.length === 0
                     }
@@ -313,14 +249,14 @@ export function AssignSubjectDialog({
                     items={yearItems}
                   >
                     <SelectTrigger
-                      id="year"
+                      id="assign-year"
                       className="w-full"
                       aria-invalid={fieldState.invalid}
                     >
                       <SelectValue placeholder="Izberite letnik …" />
                     </SelectTrigger>
                     <SelectContent>
-                      {programYearsOptions.map((programYear) => (
+                      {selectableProgramYears.map((programYear) => (
                         <SelectItem
                           key={`year-${programYear.yearId}`}
                           value={String(programYear.yearId)}
@@ -342,12 +278,12 @@ export function AssignSubjectDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="hours-per-week">
+                  <FieldLabel htmlFor="assign-hours-per-week">
                     Število ur na teden
                   </FieldLabel>
                   <Input
                     {...field}
-                    id="hours-per-week"
+                    id="assign-hours-per-week"
                     type="number"
                     min={0}
                     max={40}
@@ -375,12 +311,8 @@ export function AssignSubjectDialog({
               Prekliči
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isEditing ? <Pencil /> : <Plus />}
-              {isSubmitting
-                ? "Shranjevanje..."
-                : isEditing
-                  ? "Shrani spremembe"
-                  : "Dodaj predmet"}
+              <Plus />
+              {isSubmitting ? "Shranjevanje..." : "Dodaj predmet"}
             </Button>
           </DialogFooter>
         </form>

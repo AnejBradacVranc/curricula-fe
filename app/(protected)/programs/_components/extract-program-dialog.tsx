@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FileInput } from "@/components/ui/file-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -81,7 +82,6 @@ export function ExtractProgramDialog({
   open,
   onOpenChange,
 }: ExtractProgramDialogProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<Step>("extract");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<ResolvedExtractProgram | null>(null);
@@ -99,9 +99,6 @@ export function ExtractProgramDialog({
       setPreview(null);
       setNewSubjects([]);
       setError(null);
-      if (inputRef.current) {
-        inputRef.current.value = "";
-      }
     }
   }, [open]);
 
@@ -259,27 +256,17 @@ export function ExtractProgramDialog({
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
           {step === "extract" ? (
             <>
-              <div className="space-y-2">
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept=".pdf,.csv,.xls,.xlsx,.doc,.docx,application/pdf,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  className="block w-full cursor-pointer text-sm file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground"
-                  onChange={(event) => {
-                    const nextFile = event.target.files?.[0] ?? null;
-                    setFile(nextFile);
-                    setPreview(null);
-                    setNewSubjects([]);
-                    setError(null);
-                    setStep("extract");
-                  }}
-                />
-                {file && (
-                  <p className="text-xs text-muted-foreground">
-                    Izbrano: {file.name} ({Math.round(file.size / 1024)} KB)
-                  </p>
-                )}
-              </div>
+              <FileInput
+                accept=".pdf,.csv,.xls,.xlsx,.doc,.docx,application/pdf,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                file={file}
+                onFileChange={(nextFile) => {
+                  setFile(nextFile);
+                  setPreview(null);
+                  setNewSubjects([]);
+                  setError(null);
+                  setStep("extract");
+                }}
+              />
 
               {preview && (
                 <div className="space-y-4">

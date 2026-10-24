@@ -2,6 +2,7 @@ import { createSubject, updateSubject } from "@/lib/api";
 import type { CreateSubjectRequest, UpdateSubjectRequest } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { programKeys } from "../programs/keys";
 import { subjectKeys } from "./keys";
 
 export function useCreateSubject() {
@@ -20,8 +21,10 @@ export function useUpdateSubject() {
 
   return useMutation({
     mutationFn: (data: UpdateSubjectRequest) => updateSubject(data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: subjectKeys.lists() });
-    },
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: subjectKeys.lists() }),
+        queryClient.invalidateQueries({ queryKey: programKeys.all }),
+      ]),
   });
 }

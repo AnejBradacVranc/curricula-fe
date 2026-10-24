@@ -34,6 +34,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { FileInput } from "@/components/ui/file-input";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -86,11 +87,7 @@ export default function TeacherDetailPage() {
   const params = useParams();
   const teacherId = Number(params.id);
 
-  const {
-    data: teacher = null,
-    isLoading,
-    isError,
-  } = useTeacher(teacherId);
+  const { data: teacher = null, isLoading, isError } = useTeacher(teacherId);
 
   const updateTeacherMutation = useUpdateTeacher(teacherId);
   const exportPdfMutation = useExportTeacherPdf();
@@ -131,7 +128,7 @@ export default function TeacherDetailPage() {
     form.reset({
       name: data.name,
       surname: data.surname,
-      email: data.email,
+      email: data.email ?? "",
       color: data.color ?? "",
     });
     setProfileImage(undefined);
@@ -197,7 +194,7 @@ export default function TeacherDetailPage() {
         data: {
           name: values.name,
           surname: values.surname,
-          email: values.email,
+          email: values.email || null,
           color: values.color || null,
         },
         profileImage,
@@ -299,10 +296,12 @@ export default function TeacherDetailPage() {
                 <h1 className="text-2xl font-semibold tracking-tight">
                   {teacher.name} {teacher.surname}
                 </h1>
-                <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Mail className="size-3.5 shrink-0" />
-                  {teacher.email}
-                </p>
+                {teacher.email ? (
+                  <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Mail className="size-3.5 shrink-0" />
+                    {teacher.email}
+                  </p>
+                ) : null}
               </div>
             </div>
             <Button
@@ -406,22 +405,18 @@ export default function TeacherDetailPage() {
                     </div>
                   ) : null}
                   <div className="space-y-1.5">
-                    <input
-                      //key={profileImageInputKey}
-                      className="block w-full cursor-pointer text-sm file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground"
+                    <FileInput
                       id="teacher-profile-image"
-                      type="file"
                       accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
-                      onChange={(event) => {
-                        setProfileImage(event.target.files?.[0] ?? undefined);
-                      }}
+                      buttonLabel="Izberi sliko"
+                      emptyLabel="Slika ni izbrana"
+                      file={profileImage instanceof File ? profileImage : null}
                       disabled={isSubmitting || profileImage === null}
+                      onFileChange={(nextFile) => {
+                        setProfileImage(nextFile ?? undefined);
+                      }}
                     />
-                    {profileImage instanceof File ? (
-                      <p className="truncate text-xs text-muted-foreground">
-                        Izbrano: {profileImage.name}
-                      </p>
-                    ) : profileImage === null ? (
+                    {profileImage === null ? (
                       <p className="text-xs text-muted-foreground">
                         Slika bo odstranjena ob shranjevanju.
                       </p>

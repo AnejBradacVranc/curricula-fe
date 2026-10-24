@@ -5,6 +5,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import { AssignSubjectDialog } from "@/app/(protected)/programs/_components/assign-subject-dialog";
 import { DeleteProgramSubjectDialog } from "@/app/(protected)/programs/_components/delete-program-subject-dialog";
+import { EditProgramSubjectDialog } from "@/app/(protected)/programs/_components/edit-program-subject-dialog";
 import {
   Accordion,
   AccordionContent,
@@ -29,7 +30,7 @@ export function ProgramSubjectsTable({
   const years = program?.programYears ?? [];
   const programSubjects = program?.programSubjects ?? [];
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [editingProgramSubject, setEditingProgramSubject] =
     useState<ProgramSubjectItem | null>(null);
   const [deletingProgramSubject, setDeletingProgramSubject] =
@@ -52,13 +53,11 @@ export function ProgramSubjectsTable({
   const isMobile = useIsMobile();
 
   function openCreateDialog() {
-    setEditingProgramSubject(null);
-    setIsDialogOpen(true);
+    setIsAssignOpen(true);
   }
 
   function openEditDialog(programSubject: ProgramSubjectItem) {
     setEditingProgramSubject(programSubject);
-    setIsDialogOpen(true);
   }
 
   return (
@@ -263,15 +262,20 @@ export function ProgramSubjectsTable({
       </Card>
 
       <AssignSubjectDialog
-        open={isDialogOpen}
+        open={isAssignOpen}
+        onOpenChange={setIsAssignOpen}
+        programId={programId}
+      />
+
+      <EditProgramSubjectDialog
+        open={editingProgramSubject !== null}
         onOpenChange={(open) => {
-          setIsDialogOpen(open);
           if (!open) {
             setEditingProgramSubject(null);
           }
         }}
         programId={programId}
-        editingProgramSubject={editingProgramSubject}
+        programSubject={editingProgramSubject}
       />
 
       <DeleteProgramSubjectDialog

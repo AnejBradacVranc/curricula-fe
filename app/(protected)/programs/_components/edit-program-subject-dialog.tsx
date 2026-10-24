@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Pencil, Plus } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -30,56 +30,56 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCategories } from "@/lib/queries/categories/queries";
+import { useUpdateProgramSubject } from "@/lib/queries/program-subjects/mutations";
+import { useUpdateSubject } from "@/lib/queries/subjects/mutations";
 import {
-  useCreateSubject,
-  useUpdateSubject,
-} from "@/lib/queries/subjects/mutations";
-import {
-  type SubjectFormValues,
-  subjectFormSchema,
-} from "@/lib/schemas/subjects";
-import type { Subject } from "@/types";
+  type EditProgramSubjectFormValues,
+  editProgramSubjectFormSchema,
+} from "@/lib/schemas/programs";
+import type { ProgramSubjectItem } from "@/types";
 
-type SubjectDialogProps = {
+type EditProgramSubjectDialogProps = {
   open: boolean;
-  editingSubject: Subject | null;
+  programId: number;
+  programSubject: ProgramSubjectItem | null;
   onOpenChange: (open: boolean) => void;
 };
 
-export function SubjectDialog({
+export function EditProgramSubjectDialog({
   open,
-  editingSubject,
+  programId,
+  programSubject,
   onOpenChange,
-}: SubjectDialogProps) {
-  const isEditing = editingSubject !== null;
-
+}: EditProgramSubjectDialogProps) {
   const { data: categories = [] } = useCategories({ enabled: open });
-  const createSubjectMutation = useCreateSubject();
   const updateSubjectMutation = useUpdateSubject();
+  const updateProgramSubjectMutation = useUpdateProgramSubject();
 
-  const form = useForm<SubjectFormValues>({
-    resolver: zodResolver(subjectFormSchema),
+  const form = useForm<EditProgramSubjectFormValues>({
+    resolver: zodResolver(editProgramSubjectFormSchema),
     defaultValues: {
       name: "",
       abbrevation: "",
       categoryId: "",
+      requiredHours: "",
     },
   });
 
   useEffect(() => {
-    if (!open) {
+    if (!open || !programSubject) {
       return;
     }
 
     form.reset({
-      name: editingSubject?.name ?? "",
-      abbrevation: editingSubject?.abbrevation ?? "",
+      name: programSubject.subject.name,
+      abbrevation: programSubject.subject.abbrevation,
       categoryId:
-        editingSubject?.categoryId != null
-          ? String(editingSubject.categoryId)
+        programSubject.subject.categoryId != null
+          ? String(programSubject.subject.categoryId)
           : "",
+      requiredHours: String(programSubject.requiredHours),
     });
-  }, [open, editingSubject, form]);
+  }, [open, programSubject, form]);
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
@@ -87,60 +87,59 @@ export function SubjectDialog({
         name: "",
         abbrevation: "",
         categoryId: "",
+        requiredHours: "",
       });
     }
 
     onOpenChange(nextOpen);
   }
 
-  async function handleSubmit(values: SubjectFormValues) {
-    try {
-      if (isEditing && editingSubject) {
-        await updateSubjectMutation.mutateAsync({
-          id: editingSubject.id,
-          name: values.name,
-          abbrevation: values.abbrevation,
-          categoryId: Number(values.categoryId),
-        });
-        toast.success("Predmet je bil uspešno posodobljen.");
-      } else {
-        await createSubjectMutation.mutateAsync({
-          name: values.name,
-          abbrevation: values.abbrevation,
-          categoryId: Number(values.categoryId),
-        });
-        toast.success("Predmet je bil uspešno ustvarjen.");
-      }
+  async function handleSubmit(values: EditProgramSubjectFormValues) {
+    if (!programSubject) {
+      return;
+    }
 
+    try {
+      await Promise.all([
+        updateSubjectMutation.mutateAsync({
+          id: programSubject.subjectId,
+          name: values.name,
+          abbrevation: values.abbrevation,
+          categoryId: Number(values.categoryId),
+        }),
+        updateProgramSubjectMutation.mutateAsync({
+          programId,
+          subjectId: programSubject.subjectId,
+          yearId: programSubject.yearId,
+          requiredHours: Number(values.requiredHours),
+        }),
+      ]);
+      toast.success("Predmet je bil uspešno posodobljen.");
       handleOpenChange(false);
     } catch {
-      toast.error(
-        isEditing
-          ? "Predmeta ni bilo mogoče posodobiti. Poskusite znova."
-          : "Predmeta ni bilo mogoče ustvariti. Poskusite znova.",
-      );
+      toast.error("Predmeta ni bilo mogoče posodobiti. Poskusite znova.");
     }
   }
 
   const isSubmitting =
-    createSubjectMutation.isPending || updateSubjectMutation.isPending;
+    updateSubjectMutation.isPending || updateProgramSubjectMutation.isPending;
 
   const categoryItems = categories.map((category) => ({
     value: String(category.id),
     label: category.name,
   }));
 
+  const yearLabel = programSubject?.programYear.year.name;
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Urejanje predmeta" : "Nov predmet"}
-          </DialogTitle>
+          <DialogTitle>Urejanje predmeta</DialogTitle>
           <DialogDescription>
-            {isEditing
-              ? "Posodobite ime, kratico ali kategorijo predmeta."
-              : "Izberite kategorijo in vnesite ime ter kratico predmeta."}
+            {yearLabel
+              ? `Posodobite podatke predmeta in ure na teden (${yearLabel}).`
+              : "Posodobite podatke predmeta in ure na teden."}
           </DialogDescription>
         </DialogHeader>
 
@@ -155,7 +154,9 @@ export function SubjectDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="subject-category">Kategorija</FieldLabel>
+                  <FieldLabel htmlFor="edit-program-subject-category">
+                    Kategorija
+                  </FieldLabel>
                   <Select
                     value={field.value || null}
                     onValueChange={(value) =>
@@ -166,7 +167,7 @@ export function SubjectDialog({
                     items={categoryItems}
                   >
                     <SelectTrigger
-                      id="subject-category"
+                      id="edit-program-subject-category"
                       className="w-full"
                       aria-invalid={fieldState.invalid}
                     >
@@ -195,10 +196,12 @@ export function SubjectDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="subject-name">Ime predmeta</FieldLabel>
+                  <FieldLabel htmlFor="edit-program-subject-name">
+                    Ime predmeta
+                  </FieldLabel>
                   <Input
                     {...field}
-                    id="subject-name"
+                    id="edit-program-subject-name"
                     placeholder="npr. Matematika"
                     autoFocus
                     aria-invalid={fieldState.invalid}
@@ -216,11 +219,40 @@ export function SubjectDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="subject-abbrevation">Kratica</FieldLabel>
+                  <FieldLabel htmlFor="edit-program-subject-abbrevation">
+                    Kratica
+                  </FieldLabel>
                   <Input
                     {...field}
-                    id="subject-abbrevation"
+                    id="edit-program-subject-abbrevation"
                     placeholder="npr. MAT"
+                    aria-invalid={fieldState.invalid}
+                    disabled={isSubmitting}
+                  />
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : null}
+                </Field>
+              )}
+            />
+
+            <Controller
+              name="requiredHours"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="edit-program-subject-hours">
+                    Število ur na teden
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id="edit-program-subject-hours"
+                    type="number"
+                    min={0}
+                    max={40}
+                    step="0.0001"
+                    inputMode="decimal"
+                    placeholder="npr. 2"
                     aria-invalid={fieldState.invalid}
                     disabled={isSubmitting}
                   />
@@ -241,13 +273,9 @@ export function SubjectDialog({
             >
               Prekliči
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isEditing ? <Pencil /> : <Plus />}
-              {isSubmitting
-                ? "Shranjevanje..."
-                : isEditing
-                  ? "Shrani spremembe"
-                  : "Ustvari predmet"}
+            <Button type="submit" disabled={isSubmitting || !programSubject}>
+              <Pencil />
+              {isSubmitting ? "Shranjevanje..." : "Shrani spremembe"}
             </Button>
           </DialogFooter>
         </form>

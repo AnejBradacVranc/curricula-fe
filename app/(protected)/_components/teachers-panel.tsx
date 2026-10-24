@@ -1,9 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Clock, GripVertical, Mail, Search, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Clock,
+  GripVertical,
+  Mail,
+  Search,
+  Users,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -46,7 +54,7 @@ export function TeachersPanel() {
       const fullName = `${teacher.name} ${teacher.surname}`.toLowerCase();
       return (
         fullName.includes(normalized) ||
-        teacher.email.toLowerCase().includes(normalized)
+        (teacher.email?.toLowerCase().includes(normalized) ?? false)
       );
     });
   }, [teachers, query]);
@@ -64,8 +72,7 @@ export function TeachersPanel() {
               <Badge variant="secondary">{filteredTeachers.length}</Badge>
             </div>
             <CardDescription>
-              Povlecite učitelja na predmet za dodelitev ali kliknite za
-              podrobnosti.
+              Povlecite učitelja na predmet za dodelitev.
             </CardDescription>
           </div>
 
@@ -104,80 +111,84 @@ export function TeachersPanel() {
                 {filteredTeachers.map((teacher) => (
                   <li key={teacher.id}>
                     <div
+                      draggable
+                      onDragStart={(event) => {
+                        setTeacherDragData(event.dataTransfer, {
+                          id: teacher.id,
+                          name: teacher.name,
+                          surname: teacher.surname,
+                          color: teacher.color,
+                        });
+                        setDraggingTeacherId(teacher.id);
+                      }}
+                      onDragEnd={() => setDraggingTeacherId(null)}
+                      aria-label={`Povleci ${teacher.name} ${teacher.surname}`}
                       className={cn(
-                        "flex items-center rounded-md transition-opacity",
+                        "flex cursor-grab items-center gap-2 rounded-md px-2 py-2.5 transition-colors hover:bg-muted/60 active:cursor-grabbing",
                         draggingTeacherId === teacher.id && "opacity-50",
                       )}
                     >
-                      <div
-                        draggable
-                        onDragStart={(event) => {
-                          setTeacherDragData(event.dataTransfer, {
-                            id: teacher.id,
-                            name: teacher.name,
-                            surname: teacher.surname,
-                            color: teacher.color,
-                          });
-                          setDraggingTeacherId(teacher.id);
-                        }}
-                        onDragEnd={() => setDraggingTeacherId(null)}
-                        className="flex shrink-0 cursor-grab items-center self-stretch rounded-md px-1 text-primary hover:bg-primary/10 active:cursor-grabbing"
-                        aria-label={`Povleci ${teacher.name} ${teacher.surname}`}
-                      >
-                        <GripVertical className="size-4" />
-                      </div>
+                      <GripVertical className="size-4 shrink-0 text-primary" />
 
-                      <button
-                        type="button"
-                        onClick={() => setDetailTeacherId(teacher.id)}
-                        className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                      >
-                        <div className="min-w-0 flex-1 space-y-1 overflow-hidden">
-                          <p className="flex min-w-0 items-center gap-2 truncate font-medium">
-                            {hasColor(teacher.color) ? (
-                              <span
-                                className="size-2.5 shrink-0 rounded-full ring-1 ring-border"
-                                style={{ backgroundColor: teacher.color }}
-                                aria-hidden
-                              />
-                            ) : null}
-                            <span className="truncate">
-                              {teacher.name} {teacher.surname}
-                            </span>
-                          </p>
+                      <div className="min-w-0 flex-1 space-y-1 overflow-hidden">
+                        <p className="flex min-w-0 items-center gap-2 truncate font-medium">
+                          {hasColor(teacher.color) ? (
+                            <span
+                              className="size-2.5 shrink-0 rounded-full ring-1 ring-border"
+                              style={{ backgroundColor: teacher.color }}
+                              aria-hidden
+                            />
+                          ) : null}
+                          <span className="truncate">
+                            {teacher.name} {teacher.surname}
+                          </span>
+                        </p>
+                        {teacher.email ? (
                           <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                             <Mail className="size-3 shrink-0" />
                             <span className="truncate">{teacher.email}</span>
                           </p>
-                        </div>
-                        <div className="flex shrink-0 flex-col items-end gap-1">
-                          <Badge variant="default" className="gap-1.5">
-                            <Clock className="size-3" />
-                            <span className="font-medium text-primary-foreground tabular-nums">
-                              {formatHours(teacher.totalHours)}h
-                            </span>
-                          </Badge>
+                        ) : null}
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          data-no-drag
+                          className="h-auto cursor-pointer px-0 text-xs mt-2"
+                          draggable={false}
+                          onClick={() => setDetailTeacherId(teacher.id)}
+                        >
+                          Prikaži več
+                          <ArrowRight />
+                        </Button>
+                      </div>
 
-                          <div className="flex flex-col items-end gap-0.5 text-[11px] leading-tight text-muted-foreground">
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <Badge variant="default" className="gap-1.5">
+                          <Clock className="size-3" />
+                          <span className="font-medium text-primary-foreground tabular-nums">
+                            {formatHours(teacher.totalHours)}h
+                          </span>
+                        </Badge>
+
+                        <div className="flex flex-col items-end gap-0.5 text-[11px] leading-tight text-muted-foreground">
+                          <span className="whitespace-nowrap">
+                            Predmeti{" "}
+                            <span className="font-medium text-foreground tabular-nums">
+                              {formatHours(teacher.assignedHours)}h
+                            </span>
+                          </span>
+
+                          {Number(teacher.additionalActivityHours) > 0 && (
                             <span className="whitespace-nowrap">
-                              Predmeti{" "}
+                              Dodatno{" "}
                               <span className="font-medium text-foreground tabular-nums">
-                                {formatHours(teacher.assignedHours)}h
+                                {formatHours(teacher.additionalActivityHours)}h
                               </span>
                             </span>
-
-                            {Number(teacher.additionalActivityHours) > 0 && (
-                              <span className="whitespace-nowrap">
-                                Dodatno{" "}
-                                <span className="font-medium text-foreground tabular-nums">
-                                  {formatHours(teacher.additionalActivityHours)}
-                                  h
-                                </span>
-                              </span>
-                            )}
-                          </div>
+                          )}
                         </div>
-                      </button>
+                      </div>
                     </div>
                   </li>
                 ))}

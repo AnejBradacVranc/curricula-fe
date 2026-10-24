@@ -15,6 +15,7 @@ import {
 } from "@tanstack/react-query";
 
 import { programKeys } from "../programs/keys";
+import { teacherKeys } from "../teachers/keys";
 import { programSubjectKeys } from "./keys";
 
 function invalidateProgramSubjectQueries(
@@ -29,6 +30,7 @@ function invalidateProgramSubjectQueries(
       queryKey: programKeys.detail(programId),
     }),
     queryClient.invalidateQueries({ queryKey: programKeys.lists() }),
+    queryClient.invalidateQueries({ queryKey: teacherKeys.all }),
   ]);
 }
 

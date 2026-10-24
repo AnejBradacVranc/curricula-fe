@@ -51,13 +51,6 @@ export const navLinks: NavLink[] = [
     auth: true,
   },
   {
-    href: "/subjects",
-    label: "Predmeti",
-    description: "Urejajte predmete in njihove kratice.",
-    icon: BookOpen,
-    auth: true,
-  },
-  {
     href: "/teachers",
     label: "Učitelji",
     description: "Upravljajte učitelje in uvozite jih iz datoteke.",
@@ -102,7 +95,8 @@ export function Navigation() {
 
         <div className="flex gap-2">
           {isMobile ? (
-            !isLoading && isAuthenticated && (
+            !isLoading &&
+            isAuthenticated && (
               <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                 <SheetTrigger
                   render={
@@ -139,7 +133,7 @@ export function Navigation() {
                           className={cn(
                             "h-auto justify-start gap-3 px-3 py-3",
                             isActive(link.href) &&
-                            "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                              "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
                           )}
                           render={
                             <Link
@@ -154,7 +148,8 @@ export function Navigation() {
                             <span
                               className={cn(
                                 "text-xs font-normal text-muted-foreground text-wrap",
-                                isActive(link.href) && "text-primary-foreground",
+                                isActive(link.href) &&
+                                  "text-primary-foreground",
                               )}
                             >
                               {link.description}
@@ -189,7 +184,7 @@ export function Navigation() {
                   render={<Link href={link.href} />}
                   className={cn(
                     isActive(link.href) &&
-                    "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                      "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
                   )}
                 >
                   {link.label}

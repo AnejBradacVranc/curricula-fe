@@ -54,7 +54,7 @@ export function AppToaster() {
           toast:
             "group toast !bg-popover !text-popover-foreground !border-border rounded-xl shadow-lg ring-1 ring-foreground/10",
           title: "text-sm font-medium",
-          description: "text-sm text-muted-foreground",
+          description: "text-sm text-popover-foreground/75",
           closeButton:
             "!bg-muted !text-muted-foreground !border-border hover:!bg-accent",
           success: "!border-border",
