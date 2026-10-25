@@ -13,6 +13,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+import {
+  formatClassLabel,
+  formatYearLabel,
+} from "@/lib/curriculum/format-year";
 import { useProgram } from "@/lib/queries/programs/queries";
 import { cn } from "@/lib/utils";
 import type { ProgramClass, ProgramYear } from "@/types";
@@ -82,7 +86,7 @@ export function ProgramYearsSection({ programId }: ProgramYearsSectionProps) {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 space-y-0.5">
                     <p className="text-sm font-medium">
-                      {programYear.year.name}
+                      {formatYearLabel(programYear.year.year)}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {programYear.numWeeks} tednov
@@ -94,7 +98,7 @@ export function ProgramYearsSection({ programId }: ProgramYearsSectionProps) {
                       variant="ghost"
                       size="icon-sm"
                       className="text-muted-foreground"
-                      aria-label={`Uredi ${programYear.year.name}`}
+                      aria-label={`Uredi ${formatYearLabel(programYear.year.year)}`}
                       onClick={() => setUpdatingProgramYear(programYear)}
                     >
                       <Pencil className="size-4" />
@@ -105,7 +109,7 @@ export function ProgramYearsSection({ programId }: ProgramYearsSectionProps) {
                       variant="ghost"
                       size="icon-sm"
                       className="text-muted-foreground"
-                      aria-label={`Odstrani ${programYear.year.name}`}
+                      aria-label={`Odstrani ${formatYearLabel(programYear.year.year)}`}
                       onClick={() => setDeletingProgramYear(programYear)}
                     >
                       <Trash2 className="size-4" />
@@ -115,7 +119,10 @@ export function ProgramYearsSection({ programId }: ProgramYearsSectionProps) {
 
                 <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                   {programYear.classes.map((programClass) => {
-                    const label = `${programYear.year.name.slice(0, 1)}. ${programClass.label.toUpperCase()}`;
+                    const label = formatClassLabel(
+                      programYear.year.year,
+                      programClass.label,
+                    );
 
                     return (
                       <Badge
@@ -162,7 +169,7 @@ export function ProgramYearsSection({ programId }: ProgramYearsSectionProps) {
                     render={
                       <button
                         type="button"
-                        aria-label={`Dodaj razred v ${programYear.year.name}`}
+                        aria-label={`Dodaj razred v ${formatYearLabel(programYear.year.year)}`}
                         onClick={() => setCreatingClassForYear(programYear)}
                       />
                     }

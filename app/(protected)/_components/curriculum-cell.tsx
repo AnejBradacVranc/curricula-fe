@@ -1,9 +1,9 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 
-import { formatHours } from "@/lib/curriculum/format-hours";
 import { findAssignmentForClass } from "@/lib/curriculum/curriculum-data";
+import { formatHours } from "@/lib/curriculum/format-hours";
+import { formatClassLabel } from "@/lib/curriculum/format-year";
 import type { ProgramClass, ProgramSubjectItem } from "@/types";
 import { SubjectAssignmentSlot } from "./subject-assignment-slot";
 
@@ -60,8 +60,10 @@ export function CurriculumCell({
           return (
             <div key={programClass.id} className="space-y-0.5">
               <p className="px-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                {programSubject.programYear.year.name.slice(0, 1)}{" "}
-                {programClass.label}
+                {formatClassLabel(
+                  programSubject.programYear.year.year,
+                  programClass.label,
+                )}
               </p>
 
               <SubjectAssignmentSlot

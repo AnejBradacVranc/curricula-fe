@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatYearLabel } from "@/lib/curriculum/format-year";
 import { useCreateProgramSubject } from "@/lib/queries/program-subjects/mutations";
 import { useProgram } from "@/lib/queries/programs/queries";
 import { useSubjects } from "@/lib/queries/subjects/queries";
@@ -170,7 +171,7 @@ export function CreateProgramSubjectDialog({
 
   const yearItems = selectableProgramYears.map((programYear) => ({
     value: String(programYear.yearId),
-    label: programYear.year.name,
+    label: formatYearLabel(programYear.year.year),
   }));
 
   return (
@@ -265,7 +266,7 @@ export function CreateProgramSubjectDialog({
                           key={`year-${programYear.yearId}`}
                           value={String(programYear.yearId)}
                         >
-                          {programYear.year.name}
+                          {formatYearLabel(programYear.year.year)}
                         </SelectItem>
                       ))}
                     </SelectContent>

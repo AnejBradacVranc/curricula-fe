@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { formatYearLabel } from "@/lib/curriculum/format-year";
 import { useDeleteProgramSubject } from "@/lib/queries/program-subjects/mutations";
 import type { ProgramSubjectItem } from "@/types";
 
@@ -33,7 +34,7 @@ export function DeleteProgramSubjectDialog({
   const deleteProgramSubjectMutation = useDeleteProgramSubject();
 
   const subjectLabel = programSubject
-    ? `${programSubject.subject.name} (${programSubject.programYear.year.name})`
+    ? `${programSubject.subject.name} (${formatYearLabel(programSubject.programYear.year.year)})`
     : null;
 
   useEffect(() => {

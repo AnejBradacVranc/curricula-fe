@@ -22,6 +22,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { formatYearLabel } from "@/lib/curriculum/format-year";
 import { useUpdateProgramYear } from "@/lib/queries/program-years/mutations";
 import {
   type UpdateProgramYearFormValues,
@@ -105,7 +106,11 @@ export function UpdateProgramYearDialog({
           noValidate
         >
           <FieldGroup>
-            <p className="text-sm font-medium">{programYear?.year.name}</p>
+            <p className="text-sm font-medium">
+              {programYear
+                ? formatYearLabel(programYear.year.year)
+                : null}
+            </p>
 
             <Controller
               name="numWeeks"

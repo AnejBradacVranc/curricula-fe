@@ -19,13 +19,20 @@ export interface TeacherDetailSubject {
   category: TeacherDetailCategory;
 }
 
+export interface TeacherDetailProgram {
+  id: number;
+  name: string;
+}
+
 export interface TeacherDetailProgramSubject {
   requiredHours: string | number;
+  program: TeacherDetailProgram;
   subject: TeacherDetailSubject;
 }
 
 export interface TeacherDetailYear {
-  name: string;
+  id: number;
+  year: number;
 }
 
 export interface TeacherDetailProgramYear {

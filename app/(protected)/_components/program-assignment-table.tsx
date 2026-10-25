@@ -14,6 +14,7 @@ import {
   buildCurriculumSections,
   getAssignmentKey,
 } from "@/lib/curriculum/curriculum-data";
+import { formatYearLabel } from "@/lib/curriculum/format-year";
 import {
   useAssignTeacher,
   useUnassignTeacher,
@@ -250,7 +251,9 @@ export function ProgramAssignmentTable({
                             key={programYear.yearId}
                             className="min-w-35 border-r px-2 py-2 text-center text-xs font-medium last:border-r-0"
                           >
-                            <div>{programYear.year.name}</div>
+                            <div>
+                              {formatYearLabel(programYear.year.year)}
+                            </div>
                             <div className="mt-0.5 font-normal text-muted-foreground">
                               {programYear.numWeeks} tednov
                             </div>

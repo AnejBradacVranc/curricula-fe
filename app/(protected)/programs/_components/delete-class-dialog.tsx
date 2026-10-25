@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { formatClassLabel } from "@/lib/curriculum/format-year";
 import { useDeleteClass } from "@/lib/queries/classes/mutations";
 import type { ProgramClass, ProgramYear } from "@/types";
 
@@ -38,7 +39,10 @@ export function DeleteClassDialog({
   const deleteClassMutation = useDeleteClass();
 
   const classLabel = target
-    ? `${target.programYear.year.name.slice(0, 1)}. ${target.programClass.label.toUpperCase()}`
+    ? formatClassLabel(
+        target.programYear.year.year,
+        target.programClass.label,
+      )
     : null;
 
   useEffect(() => {

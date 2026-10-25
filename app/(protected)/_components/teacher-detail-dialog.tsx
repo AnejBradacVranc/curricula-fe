@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -14,6 +14,12 @@ import {
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,19 +46,20 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useCreateAdditionalActivityAssignment,
   useDeleteAdditionalActivityAssignment,
 } from "@/lib/queries/additional-activities/mutations";
 import { useTeacher } from "@/lib/queries/teachers/queries";
 import { formatHours } from "@/lib/curriculum/format-hours";
+import { formatClassLabel } from "@/lib/curriculum/format-year";
 import {
   type CreateAdditionalActivityAssignmentFormValues,
   createAdditionalActivityAssignmentSchema,
 } from "@/lib/schemas/additional-activities";
+import { buildTeacherAssignmentsByProgram } from "@/lib/teacher/teacher-data";
 import type { AdditionalActivity } from "@/types";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { buildTeacherAssignmentSections } from "@/lib/teacher/teacher-data";
 
 type TeacherDetailDialogProps = {
   teacherId: number | null;
@@ -170,10 +177,7 @@ export function TeacherDetailDialog({
     label: activity.name,
   }));
 
-  const sections = useMemo(
-    () => (teacher ? buildTeacherAssignmentSections(teacher) : []),
-    [teacher],
-  );
+  const assignmentsByProgram = buildTeacherAssignmentsByProgram(teacher);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -250,76 +254,119 @@ export function TeacherDetailDialog({
                         Ta učitelj še nima dodeljenih predmetov.
                       </p>
                     ) : (
-                      <>
-                        <Tabs
-                          key={teacherId}
-                          defaultValue={String(sections[0]?.categoryId)}
-                          className="gap-3"
-                        >
-                          <TabsList className="flex min-h-0 w-full flex-col gap-1 p-1 md:flex-row">
-                            {sections.map((section) => (
-                              <TabsTrigger
-                                key={section.categoryId}
-                                value={String(section.categoryId)}
-                                className="min-h-0 w-full px-3 py-2 text-xs whitespace-normal uppercase after:hidden data-active:bg-primary data-active:text-primary-foreground data-active:shadow-none data-active:hover:bg-primary data-active:hover:text-primary-foreground sm:text-sm dark:data-active:bg-primary dark:data-active:text-primary-foreground dark:data-active:hover:bg-primary dark:data-active:hover:text-primary-foreground"
-                              >
-                                {section.categoryName}
-                              </TabsTrigger>
-                            ))}
-                          </TabsList>
-                          {sections.map((section) => (
-                            <TabsContent
-                              key={section.categoryId}
-                              value={String(section.categoryId)}
-                              className="mt-0"
+                      <Accordion
+                        multiple
+                        className="w-full min-w-0 overflow-hidden rounded-lg border"
+                      >
+                        {assignmentsByProgram.map((programGroup) => {
+                          const assignmentCount = programGroup.sections.reduce(
+                            (sum, section) => sum + section.rows.length,
+                            0,
+                          );
+
+                          return (
+                            <AccordionItem
+                              key={programGroup.programId}
+                              value={String(programGroup.programId)}
+                              className="border-b px-3 last:border-b-0"
                             >
-                              <ul className="divide-y divide-border rounded-lg border">
-                                {section.rows.map((assignment, index) => {
-                                  const { class: classRoom, programSubject } =
-                                    assignment;
+                              <AccordionTrigger className="cursor-pointer py-3 hover:no-underline">
+                                <span className="flex min-w-0 flex-1 items-baseline gap-2 pr-2">
+                                  <span className="min-w-0 text-base font-semibold tracking-tight text-primary">
+                                    {programGroup.programName}
+                                  </span>
+                                  <span className="shrink-0 text-xs font-normal text-muted-foreground tabular-nums">
+                                    {assignmentCount}
+                                  </span>
+                                </span>
+                              </AccordionTrigger>
 
-                                  const assignmentKey = [
-                                    section.categoryId,
-                                    classRoom.programYear.year.name,
-                                    classRoom.label,
-                                    programSubject.subject.name,
-                                    index,
-                                  ].join("-");
+                              <AccordionContent className="pb-3">
+                                <Tabs
+                                  key={`${teacherId}-${programGroup.programId}`}
+                                  defaultValue={String(
+                                    programGroup.sections[0]?.categoryId,
+                                  )}
+                                  className="gap-2"
+                                >
+                                  <TabsList
+                                    variant="line"
+                                    className="h-auto w-full flex-wrap justify-start gap-0 rounded-none border-b bg-transparent p-0"
+                                  >
+                                    {programGroup.sections.map((section) => (
+                                      <TabsTrigger
+                                        key={section.categoryId}
+                                        value={String(section.categoryId)}
+                                        className="h-auto flex-none rounded-none px-2.5 py-1.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase after:bg-primary group-data-horizontal/tabs:after:-bottom-px data-active:bg-transparent data-active:text-primary data-active:shadow-none dark:data-active:bg-transparent"
+                                      >
+                                        {section.categoryName}
+                                      </TabsTrigger>
+                                    ))}
+                                  </TabsList>
 
-                                  return (
-                                    <li
-                                      key={assignmentKey}
-                                      className="space-y-1 px-3 py-3 text-sm"
+                                  {programGroup.sections.map((section) => (
+                                    <TabsContent
+                                      key={section.categoryId}
+                                      value={String(section.categoryId)}
+                                      className="mt-0"
                                     >
-                                      <div className="flex items-start justify-between gap-3">
-                                        <p className="font-medium">
-                                          {programSubject.subject.name}
-                                        </p>
-                                        <Badge
-                                          variant="outline"
-                                          className="shrink-0"
-                                        >
-                                          {formatHours(
-                                            programSubject.requiredHours,
-                                          )}{" "}
-                                          h/teden
-                                        </Badge>
-                                      </div>
-                                      <p className="text-xs text-muted-foreground">
-                                        {classRoom.programYear.year.name.slice(
-                                          0,
-                                          1,
+                                      <ul className="divide-y divide-border rounded-md border">
+                                        {section.rows.map(
+                                          (assignment, index) => {
+                                            const {
+                                              class: classRoom,
+                                              programSubject,
+                                            } = assignment;
+
+                                            const assignmentKey = [
+                                              programGroup.programId,
+                                              section.categoryId,
+                                              classRoom.programYear.year.year,
+                                              classRoom.label,
+                                              programSubject.subject.name,
+                                              index,
+                                            ].join("-");
+
+                                            return (
+                                              <li
+                                                key={assignmentKey}
+                                                className="flex items-center justify-between gap-3 px-2.5 py-2 text-sm"
+                                              >
+                                                <div className="flex gap-2">
+                                                  <p className="font-medium">
+                                                    {
+                                                      programSubject.subject
+                                                        .name
+                                                    }
+                                                  </p>
+                                                  <span>-</span>
+                                                  <Badge variant="outline">
+                                                    {formatClassLabel(
+                                                      classRoom.programYear.year
+                                                        .year,
+                                                      classRoom.label,
+                                                    )}
+                                                  </Badge>
+                                                </div>
+                                                <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                                                  {formatHours(
+                                                    programSubject.requiredHours,
+                                                  )}
+                                                  h/teden
+                                                </span>
+                                              </li>
+                                            );
+                                          },
                                         )}
-                                        .{classRoom.label.toUpperCase()}
-                                      </p>
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </TabsContent>
-                          ))}
-                        </Tabs>
-                      </>
+                                      </ul>
+                                    </TabsContent>
+                                  ))}
+                                </Tabs>
+                              </AccordionContent>
+                            </AccordionItem>
+                          );
+                        })}
+                      </Accordion>
                     )}
                   </section>
 

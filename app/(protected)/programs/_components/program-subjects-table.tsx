@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { formatHours, sumHours } from "@/lib/curriculum/format-hours";
+import { formatYearLabel } from "@/lib/curriculum/format-year";
 import { useProgram } from "@/lib/queries/programs/queries";
 import type { ProgramSubjectItem } from "@/types";
 
@@ -103,7 +104,7 @@ export function ProgramSubjectsTable({
                   <AccordionTrigger className="cursor-pointer hover:no-underline">
                     <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
                       <span className="text-md font-semibold tracking-wide text-primary uppercase">
-                        {section.programYear.year.name}
+                        {formatYearLabel(section.programYear.year.year)}
                       </span>
                       <span className="text-xs font-normal text-muted-foreground/80">
                         · {section.programYear.numWeeks} tednov

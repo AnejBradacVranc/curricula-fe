@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatHours } from "@/lib/curriculum/format-hours";
+import { formatClassLabel } from "@/lib/curriculum/format-year";
 import {
   useCreateAdditionalActivityAssignment,
   useDeleteAdditionalActivityAssignment,
@@ -580,7 +581,7 @@ export default function TeacherDetailPage() {
                 {teacher.assignments.map((assignment, index) => {
                   const { class: classRoom, programSubject } = assignment;
                   const key = [
-                    classRoom.programYear.year.name,
+                    classRoom.programYear.year.year,
                     classRoom.label,
                     programSubject.subject.name,
                     index,
@@ -597,8 +598,10 @@ export default function TeacherDetailPage() {
                         </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {classRoom.programYear.year.name.slice(0, 1)}.
-                        {classRoom.label.toUpperCase()}
+                        {formatClassLabel(
+                          classRoom.programYear.year.year,
+                          classRoom.label,
+                        )}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {programSubject.subject.category.name}

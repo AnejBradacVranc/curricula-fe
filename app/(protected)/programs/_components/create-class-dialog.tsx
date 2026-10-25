@@ -22,6 +22,10 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  formatClassLabel,
+  formatYearLabel,
+} from "@/lib/curriculum/format-year";
 import { useCreateClass } from "@/lib/queries/classes/mutations";
 import {
   type CreateClassFormValues,
@@ -88,7 +92,7 @@ export function CreateClassDialog({
         label: trimmedLabel,
       });
       toast.success("Razred je bil uspešno dodan.", {
-        description: `${programYear.year.name.slice(0, 1)}. ${created.label.toUpperCase()}`,
+        description: formatClassLabel(programYear.year.year, created.label),
       });
       handleOpenChange(false);
     } catch {
@@ -108,7 +112,7 @@ export function CreateClassDialog({
           <DialogTitle>Dodaj razred</DialogTitle>
           <DialogDescription>
             {programYear
-              ? `Vnesite oznako razreda za ${programYear.year.name} (npr. a, b, bt).`
+              ? `Vnesite oznako razreda za ${formatYearLabel(programYear.year.year)} (npr. a, b, bt).`
               : "Vnesite oznako razreda."}
           </DialogDescription>
         </DialogHeader>

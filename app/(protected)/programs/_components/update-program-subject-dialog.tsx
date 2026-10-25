@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatYearLabel } from "@/lib/curriculum/format-year";
 import { useCategories } from "@/lib/queries/categories/queries";
 import { useUpdateProgramSubject } from "@/lib/queries/program-subjects/mutations";
 import { useUpdateSubject } from "@/lib/queries/subjects/mutations";
@@ -129,7 +130,9 @@ export function UpdateProgramSubjectDialog({
     label: category.name,
   }));
 
-  const yearLabel = programSubject?.programYear.year.name;
+  const yearLabel = programSubject
+    ? formatYearLabel(programSubject.programYear.year.year)
+    : undefined;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
