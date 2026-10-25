@@ -9,6 +9,7 @@ export interface TeacherDetailAdditionalActivityAssignment {
 }
 
 export interface TeacherDetailCategory {
+  id: number;
   name: string;
 }
 

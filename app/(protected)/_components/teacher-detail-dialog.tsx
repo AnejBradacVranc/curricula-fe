@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -51,6 +51,8 @@ import {
   createAdditionalActivityAssignmentSchema,
 } from "@/lib/schemas/additional-activities";
 import type { AdditionalActivity } from "@/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { buildTeacherAssignmentSections } from "@/lib/teacher/teacher-data";
 
 type TeacherDetailDialogProps = {
   teacherId: number | null;
@@ -168,6 +170,11 @@ export function TeacherDetailDialog({
     label: activity.name,
   }));
 
+  const sections = useMemo(
+    () => (teacher ? buildTeacherAssignmentSections(teacher) : []),
+    [teacher],
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[min(88vh,800px)] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
@@ -243,43 +250,76 @@ export function TeacherDetailDialog({
                         Ta učitelj še nima dodeljenih predmetov.
                       </p>
                     ) : (
-                      <ul className="divide-y divide-border rounded-lg border">
-                        {teacher.assignments.map((assignment, index) => {
-                          const { class: classRoom, programSubject } =
-                            assignment;
-
-                          const assignmentKey = [
-                            classRoom.programYear.year.name,
-                            classRoom.label,
-                            programSubject.subject.name,
-                            index,
-                          ].join("-");
-
-                          return (
-                            <li
-                              key={assignmentKey}
-                              className="space-y-1 px-3 py-3 text-sm"
+                      <>
+                        <Tabs
+                          key={teacherId}
+                          defaultValue={String(sections[0]?.categoryId)}
+                          className="gap-3"
+                        >
+                          <TabsList className="flex min-h-0 w-full flex-col gap-1 p-1 md:flex-row">
+                            {sections.map((section) => (
+                              <TabsTrigger
+                                key={section.categoryId}
+                                value={String(section.categoryId)}
+                                className="min-h-0 w-full px-3 py-2 text-xs whitespace-normal uppercase after:hidden data-active:bg-primary data-active:text-primary-foreground data-active:shadow-none data-active:hover:bg-primary data-active:hover:text-primary-foreground sm:text-sm dark:data-active:bg-primary dark:data-active:text-primary-foreground dark:data-active:hover:bg-primary dark:data-active:hover:text-primary-foreground"
+                              >
+                                {section.categoryName}
+                              </TabsTrigger>
+                            ))}
+                          </TabsList>
+                          {sections.map((section) => (
+                            <TabsContent
+                              key={section.categoryId}
+                              value={String(section.categoryId)}
+                              className="mt-0"
                             >
-                              <div className="flex items-start justify-between gap-3">
-                                <p className="font-medium">
-                                  {programSubject.subject.name}
-                                </p>
-                                <Badge variant="outline" className="shrink-0">
-                                  {formatHours(programSubject.requiredHours)}{" "}
-                                  h/teden
-                                </Badge>
-                              </div>
-                              <p className="text-xs text-muted-foreground">
-                                {classRoom.programYear.year.name} · razred{" "}
-                                {classRoom.label}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {programSubject.subject.category.name}
-                              </p>
-                            </li>
-                          );
-                        })}
-                      </ul>
+                              <ul className="divide-y divide-border rounded-lg border">
+                                {section.rows.map((assignment, index) => {
+                                  const { class: classRoom, programSubject } =
+                                    assignment;
+
+                                  const assignmentKey = [
+                                    section.categoryId,
+                                    classRoom.programYear.year.name,
+                                    classRoom.label,
+                                    programSubject.subject.name,
+                                    index,
+                                  ].join("-");
+
+                                  return (
+                                    <li
+                                      key={assignmentKey}
+                                      className="space-y-1 px-3 py-3 text-sm"
+                                    >
+                                      <div className="flex items-start justify-between gap-3">
+                                        <p className="font-medium">
+                                          {programSubject.subject.name}
+                                        </p>
+                                        <Badge
+                                          variant="outline"
+                                          className="shrink-0"
+                                        >
+                                          {formatHours(
+                                            programSubject.requiredHours,
+                                          )}{" "}
+                                          h/teden
+                                        </Badge>
+                                      </div>
+                                      <p className="text-xs text-muted-foreground">
+                                        {classRoom.programYear.year.name.slice(
+                                          0,
+                                          1,
+                                        )}
+                                        .{classRoom.label.toUpperCase()}
+                                      </p>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </TabsContent>
+                          ))}
+                        </Tabs>
+                      </>
                     )}
                   </section>
 

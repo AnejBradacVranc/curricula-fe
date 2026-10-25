@@ -597,8 +597,8 @@ export default function TeacherDetailPage() {
                         </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {classRoom.programYear.year.name} · razred{" "}
-                        {classRoom.label}
+                        {classRoom.programYear.year.name.slice(0, 1)}.
+                        {classRoom.label.toUpperCase()}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {programSubject.subject.category.name}

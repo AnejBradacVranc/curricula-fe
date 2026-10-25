@@ -3,7 +3,7 @@
 import { Loader2 } from "lucide-react";
 
 import { formatHours } from "@/lib/curriculum/format-hours";
-import { findAssignmentForClass } from "@/lib/curriculum/build-curriculum-rows";
+import { findAssignmentForClass } from "@/lib/curriculum/curriculum-data";
 import type { ProgramClass, ProgramSubjectItem } from "@/types";
 import { SubjectAssignmentSlot } from "./subject-assignment-slot";
 

@@ -13,7 +13,7 @@ import { useIsMobile } from "@/hooks/use-is-mobile";
 import {
   buildCurriculumSections,
   getAssignmentKey,
-} from "@/lib/curriculum/build-curriculum-rows";
+} from "@/lib/curriculum/curriculum-data";
 import {
   useAssignTeacher,
   useUnassignTeacher,
@@ -60,11 +60,11 @@ export function ProgramAssignmentTable({
 
   const pendingAssignmentKey = pendingMutation
     ? getAssignmentKey(
-      pendingMutation.programId,
-      pendingMutation.subjectId,
-      pendingMutation.yearId,
-      pendingMutation.classId,
-    )
+        pendingMutation.programId,
+        pendingMutation.subjectId,
+        pendingMutation.yearId,
+        pendingMutation.classId,
+      )
     : null;
 
   const handleAssignTeacher = async ({
@@ -173,6 +173,7 @@ export function ProgramAssignmentTable({
 
   const years = program.programYears;
   const sections = buildCurriculumSections(program);
+  
 
   if (years.length === 0) {
     return (
