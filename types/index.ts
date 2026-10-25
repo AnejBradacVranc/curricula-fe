@@ -63,6 +63,7 @@ export type {
 } from "./requests/program-subject";
 export type {
   CreateProgramYearRequest,
+  DeleteProgramYearRequest,
   UpdateProgramYearRequest,
 } from "./requests/program-year";
 export type {

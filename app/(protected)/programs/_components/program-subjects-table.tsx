@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
-import { AssignSubjectDialog } from "@/app/(protected)/programs/_components/assign-subject-dialog";
+import { CreateProgramSubjectDialog } from "@/app/(protected)/programs/_components/create-program-subject-dialog";
 import { DeleteProgramSubjectDialog } from "@/app/(protected)/programs/_components/delete-program-subject-dialog";
-import { EditProgramSubjectDialog } from "@/app/(protected)/programs/_components/edit-program-subject-dialog";
+import { UpdateProgramSubjectDialog } from "@/app/(protected)/programs/_components/update-program-subject-dialog";
 import {
   Accordion,
   AccordionContent,
@@ -30,8 +30,9 @@ export function ProgramSubjectsTable({
   const years = program?.programYears ?? [];
   const programSubjects = program?.programSubjects ?? [];
 
-  const [isAssignOpen, setIsAssignOpen] = useState(false);
-  const [editingProgramSubject, setEditingProgramSubject] =
+  const [isCreateProgramSubjectOpen, setIsCreateProgramSubjectOpen] =
+    useState(false);
+  const [updatingProgramSubject, setUpdatingProgramSubject] =
     useState<ProgramSubjectItem | null>(null);
   const [deletingProgramSubject, setDeletingProgramSubject] =
     useState<ProgramSubjectItem | null>(null);
@@ -53,11 +54,11 @@ export function ProgramSubjectsTable({
   const isMobile = useIsMobile();
 
   function openCreateDialog() {
-    setIsAssignOpen(true);
+    setIsCreateProgramSubjectOpen(true);
   }
 
-  function openEditDialog(programSubject: ProgramSubjectItem) {
-    setEditingProgramSubject(programSubject);
+  function openUpdateDialog(programSubject: ProgramSubjectItem) {
+    setUpdatingProgramSubject(programSubject);
   }
 
   return (
@@ -141,7 +142,7 @@ export function ProgramSubjectsTable({
                                 size="icon-sm"
                                 className="text-muted-foreground"
                                 aria-label={`Uredi ${item.subject.name}`}
-                                onClick={() => openEditDialog(item)}
+                                onClick={() => openUpdateDialog(item)}
                               >
                                 <Pencil className="size-4" />
                               </Button>
@@ -216,7 +217,7 @@ export function ProgramSubjectsTable({
                                       size="icon-sm"
                                       className="text-muted-foreground"
                                       aria-label={`Uredi ${item.subject.name}`}
-                                      onClick={() => openEditDialog(item)}
+                                      onClick={() => openUpdateDialog(item)}
                                     >
                                       <Pencil className="size-4" />
                                     </Button>
@@ -261,21 +262,21 @@ export function ProgramSubjectsTable({
         )}
       </Card>
 
-      <AssignSubjectDialog
-        open={isAssignOpen}
-        onOpenChange={setIsAssignOpen}
+      <CreateProgramSubjectDialog
+        open={isCreateProgramSubjectOpen}
+        onOpenChange={setIsCreateProgramSubjectOpen}
         programId={programId}
       />
 
-      <EditProgramSubjectDialog
-        open={editingProgramSubject !== null}
+      <UpdateProgramSubjectDialog
+        open={updatingProgramSubject !== null}
         onOpenChange={(open) => {
           if (!open) {
-            setEditingProgramSubject(null);
+            setUpdatingProgramSubject(null);
           }
         }}
         programId={programId}
-        programSubject={editingProgramSubject}
+        programSubject={updatingProgramSubject}
       />
 
       <DeleteProgramSubjectDialog

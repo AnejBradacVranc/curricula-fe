@@ -36,7 +36,11 @@ export {
 
 export { getYears } from "./years";
 
-export { createProgramYear, updateProgramYear } from "./program-years";
+export {
+  createProgramYear,
+  deleteProgramYear,
+  updateProgramYear,
+} from "./program-years";
 
 export { createClass, deleteClass, getClasses } from "./classes";
 

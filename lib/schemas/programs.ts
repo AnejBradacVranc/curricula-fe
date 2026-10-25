@@ -6,19 +6,30 @@ export const createProgramSchema = z.object({
 
 export type CreateProgramValues = z.infer<typeof createProgramSchema>;
 
-export const programYearFormSchema = z.object({
+const numWeeksSchema = z
+  .string()
+  .trim()
+  .min(1, "Vnesite veljavno število tednov (vsaj 1).")
+  .refine((value) => {
+    const weeks = Number(value);
+    return Number.isInteger(weeks) && weeks >= 1;
+  }, "Vnesite veljavno število tednov (vsaj 1).");
+
+export const createProgramYearFormSchema = z.object({
   yearId: z.string().min(1, "Izberite letnik."),
-  numWeeks: z
-    .string()
-    .trim()
-    .min(1, "Vnesite veljavno število tednov (vsaj 1).")
-    .refine((value) => {
-      const weeks = Number(value);
-      return Number.isInteger(weeks) && weeks >= 1;
-    }, "Vnesite veljavno število tednov (vsaj 1)."),
+  numWeeks: numWeeksSchema,
 });
 
-export type ProgramYearFormValues = z.infer<typeof programYearFormSchema>;
+export const updateProgramYearFormSchema = z.object({
+  numWeeks: numWeeksSchema,
+});
+
+export type CreateProgramYearFormValues = z.infer<
+  typeof createProgramYearFormSchema
+>;
+export type UpdateProgramYearFormValues = z.infer<
+  typeof updateProgramYearFormSchema
+>;
 
 export const createClassFormSchema = z.object({
   label: z.string().trim().min(1, "Vnesite oznako razreda."),
@@ -35,21 +46,23 @@ const requiredHoursSchema = z
     return !Number.isNaN(hours) && hours >= 0;
   }, "Vnesite veljavno število ur na teden.");
 
-export const assignSubjectFormSchema = z.object({
+export const createProgramSubjectFormSchema = z.object({
   subjectId: z.string().min(1, "Izberite predmet."),
   yearId: z.string().min(1, "Izberite letnik."),
   requiredHours: requiredHoursSchema,
 });
 
-export type AssignSubjectFormValues = z.infer<typeof assignSubjectFormSchema>;
+export type CreateProgramSubjectFormValues = z.infer<
+  typeof createProgramSubjectFormSchema
+>;
 
-export const editProgramSubjectFormSchema = z.object({
+export const updateProgramSubjectFormSchema = z.object({
   name: z.string().trim().min(1, "Vnesite ime predmeta."),
   abbrevation: z.string().trim().min(1, "Vnesite kratico predmeta."),
   categoryId: z.string().min(1, "Izberite kategorijo."),
   requiredHours: requiredHoursSchema,
 });
 
-export type EditProgramSubjectFormValues = z.infer<
-  typeof editProgramSubjectFormSchema
+export type UpdateProgramSubjectFormValues = z.infer<
+  typeof updateProgramSubjectFormSchema
 >;

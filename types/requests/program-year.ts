@@ -9,3 +9,8 @@ export interface UpdateProgramYearRequest {
   yearId: number;
   numWeeks: number;
 }
+
+export interface DeleteProgramYearRequest {
+  programId: number;
+  yearId: number;
+}

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Pencil, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -29,41 +29,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  useCreateProgramYear,
-  useUpdateProgramYear,
-} from "@/lib/queries/program-years/mutations";
+import { useCreateProgramYear } from "@/lib/queries/program-years/mutations";
 import { useProgram } from "@/lib/queries/programs/queries";
 import { useYears } from "@/lib/queries/years/queries";
 import {
-  type ProgramYearFormValues,
-  programYearFormSchema,
+  type CreateProgramYearFormValues,
+  createProgramYearFormSchema,
 } from "@/lib/schemas/programs";
-import type { ProgramYear } from "@/types";
 
-type ProgramYearDialogProps = {
+type CreateProgramYearDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   programId: number;
-  editingProgramYear: ProgramYear | null;
 };
 
-export function ProgramYearDialog({
+export function CreateProgramYearDialog({
   open,
   onOpenChange,
   programId,
-  editingProgramYear,
-}: ProgramYearDialogProps) {
+}: CreateProgramYearDialogProps) {
   const { data: program } = useProgram(programId);
   const { data: years = [] } = useYears({ enabled: open });
   const createProgramYearMutation = useCreateProgramYear();
-  const updateProgramYearMutation = useUpdateProgramYear();
 
   const programYears = program?.programYears ?? [];
-  const isEditing = editingProgramYear !== null;
 
-  const form = useForm<ProgramYearFormValues>({
-    resolver: zodResolver(programYearFormSchema),
+  const form = useForm<CreateProgramYearFormValues>({
+    resolver: zodResolver(createProgramYearFormSchema),
     defaultValues: {
       yearId: "",
       numWeeks: "",
@@ -71,13 +63,9 @@ export function ProgramYearDialog({
   });
 
   const selectableYears = useMemo(() => {
-    if (isEditing) {
-      return years;
-    }
-
     const assignedYearIds = new Set(programYears.map((item) => item.yearId));
     return years.filter((year) => !assignedYearIds.has(year.id));
-  }, [isEditing, programYears, years]);
+  }, [programYears, years]);
 
   useEffect(() => {
     if (!open) {
@@ -85,15 +73,10 @@ export function ProgramYearDialog({
     }
 
     form.reset({
-      yearId:
-        editingProgramYear?.yearId != null
-          ? String(editingProgramYear.yearId)
-          : "",
-      numWeeks: editingProgramYear
-        ? String(editingProgramYear.numWeeks)
-        : "",
+      yearId: "",
+      numWeeks: "",
     });
-  }, [open, editingProgramYear, form]);
+  }, [open, form]);
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
@@ -103,46 +86,23 @@ export function ProgramYearDialog({
     onOpenChange(nextOpen);
   }
 
-  async function handleSubmit(values: ProgramYearFormValues) {
-    const yearId = Number(values.yearId);
-    const numWeeks = Number(values.numWeeks);
-
+  async function handleSubmit(values: CreateProgramYearFormValues) {
     try {
-      if (isEditing) {
-        await updateProgramYearMutation.mutateAsync({
-          programId,
-          yearId,
-          numWeeks,
-        });
-        toast.success("Letnik je bil uspešno posodobljen.");
-      } else {
-        await createProgramYearMutation.mutateAsync({
-          programId,
-          yearId,
-          numWeeks,
-        });
-        toast.success("Letnik je bil uspešno dodan.");
-      }
-
+      await createProgramYearMutation.mutateAsync({
+        programId,
+        yearId: Number(values.yearId),
+        numWeeks: Number(values.numWeeks),
+      });
+      toast.success("Letnik je bil uspešno dodan.");
       handleOpenChange(false);
     } catch {
-      toast.error(
-        isEditing
-          ? "Letnika ni bilo mogoče posodobiti. Poskusite znova."
-          : "Letnika ni bilo mogoče dodati. Poskusite znova.",
-      );
+      toast.error("Letnika ni bilo mogoče dodati. Poskusite znova.");
     }
   }
 
-  const isSubmitting =
-    createProgramYearMutation.isPending || updateProgramYearMutation.isPending;
+  const isSubmitting = createProgramYearMutation.isPending;
 
-  const yearOptions =
-    isEditing && editingProgramYear
-      ? [editingProgramYear.year]
-      : selectableYears;
-
-  const yearItems = yearOptions.map((year) => ({
+  const yearItems = selectableYears.map((year) => ({
     value: String(year.id),
     label: year.name,
   }));
@@ -151,13 +111,9 @@ export function ProgramYearDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Urejanje letnika" : "Dodajanje letnika"}
-          </DialogTitle>
+          <DialogTitle>Dodajanje letnika</DialogTitle>
           <DialogDescription>
-            {isEditing
-              ? "Posodobite število tednov za izbrani letnik."
-              : "Izberite letnik in nastavite število tednov v šolskem letu."}
+            Izberite letnik in nastavite število tednov v šolskem letu.
           </DialogDescription>
         </DialogHeader>
 
@@ -172,27 +128,25 @@ export function ProgramYearDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="program-year">Letnik</FieldLabel>
+                  <FieldLabel htmlFor="create-program-year">Letnik</FieldLabel>
                   <Select
                     value={field.value || null}
                     onValueChange={(value) =>
                       field.onChange(value == null ? "" : String(value))
                     }
-                    disabled={
-                      isSubmitting || isEditing || selectableYears.length === 0
-                    }
+                    disabled={isSubmitting || selectableYears.length === 0}
                     modal={false}
                     items={yearItems}
                   >
                     <SelectTrigger
-                      id="program-year"
+                      id="create-program-year"
                       className="w-full"
                       aria-invalid={fieldState.invalid}
                     >
                       <SelectValue placeholder="Izberite letnik …" />
                     </SelectTrigger>
                     <SelectContent>
-                      {yearOptions.map((year) => (
+                      {selectableYears.map((year) => (
                         <SelectItem key={year.id} value={String(year.id)}>
                           {year.name}
                         </SelectItem>
@@ -201,6 +155,11 @@ export function ProgramYearDialog({
                   </Select>
                   {fieldState.invalid ? (
                     <FieldError errors={[fieldState.error]} />
+                  ) : null}
+                  {selectableYears.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Vsi letniki so že dodani v ta program.
+                    </p>
                   ) : null}
                 </Field>
               )}
@@ -211,10 +170,12 @@ export function ProgramYearDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="num-weeks">Število tednov</FieldLabel>
+                  <FieldLabel htmlFor="create-program-year-weeks">
+                    Število tednov
+                  </FieldLabel>
                   <Input
                     {...field}
-                    id="num-weeks"
+                    id="create-program-year-weeks"
                     type="number"
                     min={1}
                     step={1}
@@ -240,13 +201,12 @@ export function ProgramYearDialog({
             >
               Prekliči
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isEditing ? <Pencil /> : <Plus />}
-              {isSubmitting
-                ? "Shranjevanje..."
-                : isEditing
-                  ? "Shrani spremembe"
-                  : "Dodaj letnik"}
+            <Button
+              type="submit"
+              disabled={isSubmitting || selectableYears.length === 0}
+            >
+              <Plus />
+              {isSubmitting ? "Shranjevanje..." : "Dodaj letnik"}
             </Button>
           </DialogFooter>
         </form>

@@ -18,8 +18,10 @@ import { cn } from "@/lib/utils";
 import type { ProgramClass, ProgramYear } from "@/types";
 
 import { CreateClassDialog } from "./create-class-dialog";
+import { CreateProgramYearDialog } from "./create-program-year-dialog";
 import { DeleteClassDialog } from "./delete-class-dialog";
-import { ProgramYearDialog } from "./program-year-dialog";
+import { DeleteProgramYearDialog } from "./delete-program-year-dialog";
+import { UpdateProgramYearDialog } from "./update-program-year-dialog";
 
 type ProgramYearsSectionProps = {
   programId: number;
@@ -31,10 +33,12 @@ type DeleteClassTarget = {
 };
 
 export function ProgramYearsSection({ programId }: ProgramYearsSectionProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProgramYear, setEditingProgramYear] =
+  const [isCreateProgramYearOpen, setIsCreateProgramYearOpen] = useState(false);
+  const [updatingProgramYear, setUpdatingProgramYear] =
     useState<ProgramYear | null>(null);
-  const [addingProgramYear, setAddingProgramYear] =
+  const [creatingClassForYear, setCreatingClassForYear] =
+    useState<ProgramYear | null>(null);
+  const [deletingProgramYear, setDeletingProgramYear] =
     useState<ProgramYear | null>(null);
   const [deletingTarget, setDeletingTarget] =
     useState<DeleteClassTarget | null>(null);
@@ -42,16 +46,6 @@ export function ProgramYearsSection({ programId }: ProgramYearsSectionProps) {
   const { data: program } = useProgram(programId);
   const programYears = program?.programYears ?? [];
   const isMobile = useIsMobile();
-
-  function openCreateDialog() {
-    setEditingProgramYear(null);
-    setIsDialogOpen(true);
-  }
-
-  function openEditDialog(programYear: ProgramYear) {
-    setEditingProgramYear(programYear);
-    setIsDialogOpen(true);
-  }
 
   return (
     <>
@@ -64,7 +58,10 @@ export function ProgramYearsSection({ programId }: ProgramYearsSectionProps) {
                 Pregled letnikov in razredov v programu.
               </CardDescription>
             </div>
-            <Button type="button" onClick={openCreateDialog}>
+            <Button
+              type="button"
+              onClick={() => setIsCreateProgramYearOpen(true)}
+            >
               <Plus />
               {!isMobile && "Dodaj letnik"}
             </Button>
@@ -91,16 +88,29 @@ export function ProgramYearsSection({ programId }: ProgramYearsSectionProps) {
                       {programYear.numWeeks} tednov
                     </p>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    className="shrink-0 text-muted-foreground"
-                    aria-label={`Uredi ${programYear.year.name}`}
-                    onClick={() => openEditDialog(programYear)}
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
+                  <div className="flex shrink-0 items-center">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      className="text-muted-foreground"
+                      aria-label={`Uredi ${programYear.year.name}`}
+                      onClick={() => setUpdatingProgramYear(programYear)}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      className="text-muted-foreground"
+                      aria-label={`Odstrani ${programYear.year.name}`}
+                      onClick={() => setDeletingProgramYear(programYear)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
@@ -153,7 +163,7 @@ export function ProgramYearsSection({ programId }: ProgramYearsSectionProps) {
                       <button
                         type="button"
                         aria-label={`Dodaj razred v ${programYear.year.name}`}
-                        onClick={() => setAddingProgramYear(programYear)}
+                        onClick={() => setCreatingClassForYear(programYear)}
                       />
                     }
                     className={cn(
@@ -171,27 +181,32 @@ export function ProgramYearsSection({ programId }: ProgramYearsSectionProps) {
         )}
       </Card>
 
-      <ProgramYearDialog
-        open={isDialogOpen}
+      <CreateProgramYearDialog
+        open={isCreateProgramYearOpen}
+        onOpenChange={setIsCreateProgramYearOpen}
+        programId={programId}
+      />
+
+      <UpdateProgramYearDialog
+        open={updatingProgramYear !== null}
         onOpenChange={(open) => {
-          setIsDialogOpen(open);
           if (!open) {
-            setEditingProgramYear(null);
+            setUpdatingProgramYear(null);
           }
         }}
         programId={programId}
-        editingProgramYear={editingProgramYear}
+        programYear={updatingProgramYear}
       />
 
       <CreateClassDialog
-        open={addingProgramYear !== null}
+        open={creatingClassForYear !== null}
         onOpenChange={(open) => {
           if (!open) {
-            setAddingProgramYear(null);
+            setCreatingClassForYear(null);
           }
         }}
         programId={programId}
-        programYear={addingProgramYear}
+        programYear={creatingClassForYear}
       />
 
       <DeleteClassDialog
@@ -203,6 +218,17 @@ export function ProgramYearsSection({ programId }: ProgramYearsSectionProps) {
         }}
         programId={programId}
         target={deletingTarget}
+      />
+
+      <DeleteProgramYearDialog
+        open={deletingProgramYear !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeletingProgramYear(null);
+          }
+        }}
+        programId={programId}
+        programYear={deletingProgramYear}
       />
     </>
   );

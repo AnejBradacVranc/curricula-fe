@@ -33,30 +33,30 @@ import { useCategories } from "@/lib/queries/categories/queries";
 import { useUpdateProgramSubject } from "@/lib/queries/program-subjects/mutations";
 import { useUpdateSubject } from "@/lib/queries/subjects/mutations";
 import {
-  type EditProgramSubjectFormValues,
-  editProgramSubjectFormSchema,
+  type UpdateProgramSubjectFormValues,
+  updateProgramSubjectFormSchema,
 } from "@/lib/schemas/programs";
 import type { ProgramSubjectItem } from "@/types";
 
-type EditProgramSubjectDialogProps = {
+type UpdateProgramSubjectDialogProps = {
   open: boolean;
   programId: number;
   programSubject: ProgramSubjectItem | null;
   onOpenChange: (open: boolean) => void;
 };
 
-export function EditProgramSubjectDialog({
+export function UpdateProgramSubjectDialog({
   open,
   programId,
   programSubject,
   onOpenChange,
-}: EditProgramSubjectDialogProps) {
+}: UpdateProgramSubjectDialogProps) {
   const { data: categories = [] } = useCategories({ enabled: open });
   const updateSubjectMutation = useUpdateSubject();
   const updateProgramSubjectMutation = useUpdateProgramSubject();
 
-  const form = useForm<EditProgramSubjectFormValues>({
-    resolver: zodResolver(editProgramSubjectFormSchema),
+  const form = useForm<UpdateProgramSubjectFormValues>({
+    resolver: zodResolver(updateProgramSubjectFormSchema),
     defaultValues: {
       name: "",
       abbrevation: "",
@@ -94,7 +94,7 @@ export function EditProgramSubjectDialog({
     onOpenChange(nextOpen);
   }
 
-  async function handleSubmit(values: EditProgramSubjectFormValues) {
+  async function handleSubmit(values: UpdateProgramSubjectFormValues) {
     if (!programSubject) {
       return;
     }
@@ -154,7 +154,7 @@ export function EditProgramSubjectDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="edit-program-subject-category">
+                  <FieldLabel htmlFor="update-program-subject-category">
                     Kategorija
                   </FieldLabel>
                   <Select
@@ -167,7 +167,7 @@ export function EditProgramSubjectDialog({
                     items={categoryItems}
                   >
                     <SelectTrigger
-                      id="edit-program-subject-category"
+                      id="update-program-subject-category"
                       className="w-full"
                       aria-invalid={fieldState.invalid}
                     >
@@ -196,12 +196,12 @@ export function EditProgramSubjectDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="edit-program-subject-name">
+                  <FieldLabel htmlFor="update-program-subject-name">
                     Ime predmeta
                   </FieldLabel>
                   <Input
                     {...field}
-                    id="edit-program-subject-name"
+                    id="update-program-subject-name"
                     placeholder="npr. Matematika"
                     autoFocus
                     aria-invalid={fieldState.invalid}
@@ -219,12 +219,12 @@ export function EditProgramSubjectDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="edit-program-subject-abbrevation">
+                  <FieldLabel htmlFor="update-program-subject-abbrevation">
                     Kratica
                   </FieldLabel>
                   <Input
                     {...field}
-                    id="edit-program-subject-abbrevation"
+                    id="update-program-subject-abbrevation"
                     placeholder="npr. MAT"
                     aria-invalid={fieldState.invalid}
                     disabled={isSubmitting}
@@ -241,12 +241,12 @@ export function EditProgramSubjectDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="edit-program-subject-hours">
+                  <FieldLabel htmlFor="update-program-subject-hours">
                     Število ur na teden
                   </FieldLabel>
                   <Input
                     {...field}
-                    id="edit-program-subject-hours"
+                    id="update-program-subject-hours"
                     type="number"
                     min={0}
                     max={40}

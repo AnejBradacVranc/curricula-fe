@@ -27,6 +27,7 @@ export { useYears } from "./years/queries";
 
 export {
   useCreateProgramYear,
+  useDeleteProgramYear,
   useUpdateProgramYear,
 } from "./program-years/mutations";
 

@@ -1,6 +1,7 @@
 import type {
   ApiResponse,
   CreateProgramYearRequest,
+  DeleteProgramYearRequest,
   ProgramYear,
   UpdateProgramYearRequest,
 } from "@/types";
@@ -15,4 +16,9 @@ export const createProgramYear = (data: CreateProgramYearRequest) =>
 export const updateProgramYear = (data: UpdateProgramYearRequest) =>
   unwrap(
     api.patch<ApiResponse<ProgramYear>>("/schools/program-years", data),
+  );
+
+export const deleteProgramYear = (data: DeleteProgramYearRequest) =>
+  unwrap(
+    api.delete<ApiResponse<ProgramYear>>("/schools/program-years", { data }),
   );

@@ -33,12 +33,12 @@ import { useCreateProgramSubject } from "@/lib/queries/program-subjects/mutation
 import { useProgram } from "@/lib/queries/programs/queries";
 import { useSubjects } from "@/lib/queries/subjects/queries";
 import {
-  type AssignSubjectFormValues,
-  assignSubjectFormSchema,
+  type CreateProgramSubjectFormValues,
+  createProgramSubjectFormSchema,
 } from "@/lib/schemas/programs";
 import type { ProgramSubjectItem } from "@/types";
 
-type AssignSubjectDialogProps = {
+type CreateProgramSubjectDialogProps = {
   open: boolean;
   programId: number;
   onOpenChange: (open: boolean) => void;
@@ -55,11 +55,11 @@ function getAssignedYearIdsForSubject(
   );
 }
 
-export function AssignSubjectDialog({
+export function CreateProgramSubjectDialog({
   open,
   programId,
   onOpenChange,
-}: AssignSubjectDialogProps) {
+}: CreateProgramSubjectDialogProps) {
   const { data: program } = useProgram(programId);
   const { data: subjects = [] } = useSubjects();
   const createProgramSubjectMutation = useCreateProgramSubject();
@@ -67,8 +67,8 @@ export function AssignSubjectDialog({
   const programYears = program?.programYears ?? [];
   const programSubjects = program?.programSubjects ?? [];
 
-  const form = useForm<AssignSubjectFormValues>({
-    resolver: zodResolver(assignSubjectFormSchema),
+  const form = useForm<CreateProgramSubjectFormValues>({
+    resolver: zodResolver(createProgramSubjectFormSchema),
     defaultValues: {
       subjectId: "",
       yearId: "",
@@ -146,7 +146,7 @@ export function AssignSubjectDialog({
     onOpenChange(nextOpen);
   }
 
-  async function handleSubmit(values: AssignSubjectFormValues) {
+  async function handleSubmit(values: CreateProgramSubjectFormValues) {
     try {
       await createProgramSubjectMutation.mutateAsync({
         programId,
@@ -194,7 +194,9 @@ export function AssignSubjectDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="assign-subject">Predmet</FieldLabel>
+                  <FieldLabel htmlFor="create-program-subject">
+                    Predmet
+                  </FieldLabel>
                   <Select
                     value={field.value || null}
                     onValueChange={(value) =>
@@ -205,7 +207,7 @@ export function AssignSubjectDialog({
                     items={subjectItems}
                   >
                     <SelectTrigger
-                      id="assign-subject"
+                      id="create-program-subject"
                       className="w-full"
                       aria-invalid={fieldState.invalid}
                     >
@@ -234,7 +236,9 @@ export function AssignSubjectDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="assign-year">Letnik</FieldLabel>
+                  <FieldLabel htmlFor="create-program-subject-year">
+                    Letnik
+                  </FieldLabel>
                   <Select
                     value={field.value || null}
                     onValueChange={(value) =>
@@ -249,7 +253,7 @@ export function AssignSubjectDialog({
                     items={yearItems}
                   >
                     <SelectTrigger
-                      id="assign-year"
+                      id="create-program-subject-year"
                       className="w-full"
                       aria-invalid={fieldState.invalid}
                     >
@@ -278,12 +282,12 @@ export function AssignSubjectDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="assign-hours-per-week">
+                  <FieldLabel htmlFor="create-program-subject-hours">
                     Število ur na teden
                   </FieldLabel>
                   <Input
                     {...field}
-                    id="assign-hours-per-week"
+                    id="create-program-subject-hours"
                     type="number"
                     min={0}
                     max={40}
